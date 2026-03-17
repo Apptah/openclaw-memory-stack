@@ -34,3 +34,6 @@ npm-debug.log*
 
 # Docker
 docker-compose.override.yml
+
+# Worktrees
+.worktrees/
