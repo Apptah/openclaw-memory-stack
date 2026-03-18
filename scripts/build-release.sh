@@ -60,6 +60,16 @@ if [ "$MISSING" -gt 0 ]; then
   exit 1
 fi
 
+# Verify capability.json presence
+for skill_dir in "$PROJECT_ROOT/skills/memory-"*; do
+  [ -d "$skill_dir" ] || continue
+  skill_name=$(basename "$skill_dir")
+  [ "$skill_name" = "memory-router" ] && continue
+  if [ ! -f "$BUILD_DIR/skills/$skill_name/capability.json" ]; then
+    echo "WARNING: Missing capability.json: $skill_name" >&2
+  fi
+done
+
 # Count backends
 BACKEND_COUNT=$(ls -d "$BUILD_DIR/skills/memory-"*/wrapper.sh 2>/dev/null | wc -l | tr -d ' ')
 echo "  $BACKEND_COUNT backends present (all with wrapper.sh)"
