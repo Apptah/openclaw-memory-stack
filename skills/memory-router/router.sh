@@ -179,6 +179,24 @@ else:
     for b in classes.get(fallback_cls, {}).get('backends', []):
         raw_chain.append((b, hint))
 
+# Filter by capability: skip backends that don't support the current hint
+if hint:
+    import os
+    install_root = os.environ.get('OPENCLAW_INSTALL_ROOT', os.path.expanduser('~/.openclaw/memory-stack'))
+    filtered_chain = []
+    for b, h in raw_chain:
+        cap_path = os.path.join(install_root, 'skills', f'memory-{b}', 'capability.json')
+        try:
+            with open(cap_path) as cf:
+                cap = json.load(cf)
+            modes = cap.get('supported_modes', [])
+            if hint in modes or not modes:
+                filtered_chain.append((b, h))
+            # else: skip — backend doesn't support this hint
+        except:
+            filtered_chain.append((b, h))  # no capability.json = allow
+    raw_chain = filtered_chain
+
 # Apply four-state dispatch ordering:
 #   1. ready backends (preserving raw_chain order)
 #   2. degraded backends (preserving raw_chain order)
