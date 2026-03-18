@@ -13,21 +13,14 @@ BACKEND="totalrecall"
 # Discover MEMORY_ROOT
 # ============================================================
 discover_memory_root() {
-  # 1. Try git repo root
-  local git_root
-  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-  if [ -n "$git_root" ]; then
-    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
-      echo "$git_root"
-      return 0
-    fi
-  fi
-  # 2. Fall back to OPENCLAW_REPO_ROOT env var
+  # 1. Explicit env var takes priority
   if [ -n "${OPENCLAW_REPO_ROOT:-}" ]; then
     echo "$OPENCLAW_REPO_ROOT"
     return 0
   fi
-  # 3. Fall back to git root even without memory dir
+  # 2. Try git repo root
+  local git_root
+  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
   if [ -n "$git_root" ]; then
     echo "$git_root"
     return 0
@@ -220,7 +213,7 @@ adapter() {
   local results="[]" count=0 best_score="0.0"
 
   if has_command python3; then
-    read -r results count best_score < <(python3 -c "
+    IFS=$'\t' read -r results count best_score < <(python3 -c "
 import json, os, sys, re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -289,7 +282,7 @@ if os.path.isdir(archive):
 results.sort(key=lambda r: r['relevance'], reverse=True)
 results = results[:20]
 best = max((r['relevance'] for r in results), default=0.0)
-print(json.dumps(results), len(results), round(best, 4))
+print(json.dumps(results) + '\t' + str(len(results)) + '\t' + str(round(best, 4)))
 " 2>/dev/null) || true
   else
     # Fallback: simple grep without scoring
