@@ -27,6 +27,7 @@ Usage:
   openclaw-memory "<query>" [options]    Search across memory backends
   openclaw-memory init [/path/to/repo]   Initialize memory in a project
   openclaw-memory embed [--background]   Enable vector search (run after init)
+  openclaw-memory health [--deep]        Check all backend health status
 
 Options:
   --hint <hint>       Routing hint: exact, semantic, timeline
@@ -46,6 +47,28 @@ HELPEOF
     exit 0
     ;;
 esac
+
+# ── health: no license required ────────────────────────────────────
+if [ "${1:-}" = "health" ]; then
+  shift
+  DEEP_FLAG=""
+  [[ "${1:-}" == "--deep" ]] && DEEP_FLAG="--deep"
+  echo "OpenClaw Memory Stack — Backend Health"
+  echo ""
+  printf "  %-15s %-12s %s\n" "BACKEND" "STATUS" "REASON"
+  printf "  %-15s %-12s %s\n" "-------" "------" "------"
+  for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
+    [ -f "$skill_dir/wrapper.sh" ] || continue
+    backend_name=$(basename "$skill_dir" | sed 's/memory-//')
+    [ "$backend_name" = "router" ] && continue
+    health_json=$(OPENCLAW_INSTALL_ROOT="$INSTALL_ROOT" bash "$skill_dir/wrapper.sh" health $DEEP_FLAG 2>/dev/null) || health_json='{"status":"error","reason":"wrapper failed"}'
+    bstatus=$(echo "$health_json" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status','error'))" 2>/dev/null || echo "error")
+    reason=$(echo "$health_json" | python3 -c "import json,sys; print(json.load(sys.stdin).get('reason',''))" 2>/dev/null || echo "")
+    printf "  %-15s %-12s %s\n" "$backend_name" "$bstatus" "$reason"
+  done
+  echo ""
+  exit 0
+fi
 
 # ── init: lightweight license check ────────────────────────────────
 if [ "${1:-}" = "init" ]; then
