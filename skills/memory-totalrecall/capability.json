@@ -4,12 +4,12 @@
   "supported_modes": ["timeline", "decision", "exact"],
   "requires_credentials": false,
   "requires_external_service": false,
-  "cold_start_ms": 100,
+  "cold_start_ms": 50,
   "probe": {
-    "l1_install": "command -v git",
-    "l2_runtime": "true",
-    "l3_functional": "git branch --list openclaw-memory 2>/dev/null | grep -q openclaw-memory",
+    "l1_install": "true",
+    "l2_runtime": "[ -d \"${OPENCLAW_REPO_ROOT:-.}/memory\" ]",
+    "l3_functional": "find \"${OPENCLAW_REPO_ROOT:-.}/memory\" -name '*.md' -type f 2>/dev/null | head -1 | grep -q .",
     "l3_deep": null
   },
-  "install_hint": "git is required (usually pre-installed)"
+  "install_hint": "Run: openclaw-memory init (creates memory/ directory)"
 }

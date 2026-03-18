@@ -1,0 +1,26 @@
+{
+  "backend": "totalrecall",
+  "branch": "openclaw-memory",
+  "memory_dir": "_memory",
+  "file_format": "markdown",
+  "relevance": {
+    "method": "time_decay",
+    "formula": "max(0.2, 1.0 - (days_ago * 0.043))",
+    "today": 1.0,
+    "this_week": 0.7,
+    "this_month": 0.4,
+    "older": 0.2
+  },
+  "search": {
+    "commit_grep": true,
+    "content_grep": true,
+    "case_sensitive": true,
+    "max_results": 20
+  },
+  "store": {
+    "commit_prefix": "memory:",
+    "filename_format": "{timestamp}_{slug}.md",
+    "timestamp_format": "YYYY-MM-DDTHH-MM-SS"
+  },
+  "tier": "starter"
+}

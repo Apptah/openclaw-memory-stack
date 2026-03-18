@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Total Recall Memory Backend — Full native API + Router Adapter
+# Total Recall Memory Backend — Markdown 4-tier system
+# Tiers: Counter (CLAUDE.local.md), Pantry (registers/), Daily (daily/), Archive (archive/)
 set -euo pipefail
 
 WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -7,62 +8,176 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 source "$INSTALL_ROOT/lib/contracts.sh"
 
 BACKEND="totalrecall"
-MEMORY_BRANCH="openclaw-memory"
-MEMORY_DIR="_memory"
+
+# ============================================================
+# Discover MEMORY_ROOT
+# ============================================================
+discover_memory_root() {
+  # 1. Try git repo root
+  local git_root
+  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+  if [ -n "$git_root" ]; then
+    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
+      echo "$git_root"
+      return 0
+    fi
+  fi
+  # 2. Fall back to OPENCLAW_REPO_ROOT env var
+  if [ -n "${OPENCLAW_REPO_ROOT:-}" ]; then
+    echo "$OPENCLAW_REPO_ROOT"
+    return 0
+  fi
+  # 3. Fall back to git root even without memory dir
+  if [ -n "$git_root" ]; then
+    echo "$git_root"
+    return 0
+  fi
+  echo ""
+  return 1
+}
+
+MEMORY_ROOT="$(discover_memory_root)" || true
 
 # ============================================================
 # Layer A: Native API
 # ============================================================
 cmd_store() {
-  # Usage: wrapper.sh store <slug> <content>
-  local slug="$1" content="${*:2}"
-  local filename
-  filename="$(date -u +"%Y-%m-%dT%H-%M-%S")_${slug}.md"
-  local filepath="$MEMORY_DIR/$filename"
+  # Usage: wrapper.sh store <tier> <slug> <content...>
+  local tier="$1" slug="$2" content="${*:3}"
 
-  local current_branch
-  current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+  case "$tier" in
+    counter)
+      printf '%s\n' "$content" >> "$MEMORY_ROOT/CLAUDE.local.md"
+      echo "$MEMORY_ROOT/CLAUDE.local.md"
+      ;;
+    pantry)
+      mkdir -p "$MEMORY_ROOT/memory/registers"
+      local fp="$MEMORY_ROOT/memory/registers/${slug}.md"
+      printf '%s\n' "$content" > "$fp"
+      echo "$fp"
+      ;;
+    daily)
+      mkdir -p "$MEMORY_ROOT/memory/daily"
+      local fp="$MEMORY_ROOT/memory/daily/$(date -u +%Y-%m-%d)_${slug}.md"
+      printf '%s\n' "$content" > "$fp"
+      echo "$fp"
+      ;;
+    archive)
+      mkdir -p "$MEMORY_ROOT/memory/archive"
+      local fp="$MEMORY_ROOT/memory/archive/${slug}.md"
+      printf '%s\n' "$content" > "$fp"
+      echo "$fp"
+      ;;
+    *)
+      echo "Unknown tier: $tier (use: counter, pantry, daily, archive)" >&2
+      return 1
+      ;;
+  esac
+}
 
-  git checkout --quiet "$MEMORY_BRANCH"
-  mkdir -p "$MEMORY_DIR"
-  printf '%s\n' "$content" > "$filepath"
-  git add "$filepath"
-  git commit --quiet -m "memory: $slug"
-  git checkout --quiet "$current_branch"
-  echo "$filepath"
+cmd_search() {
+  # Usage: wrapper.sh search <query>
+  local query="$1"
+  # Search across all tiers
+  grep -rl "$query" \
+    "$MEMORY_ROOT/CLAUDE.local.md" \
+    "$MEMORY_ROOT/memory/registers/" \
+    "$MEMORY_ROOT/memory/daily/" \
+    "$MEMORY_ROOT/memory/archive/" \
+    2>/dev/null || true
 }
 
 cmd_retrieve() {
   # Usage: wrapper.sh retrieve <query>
-  git log "$MEMORY_BRANCH" --all --grep="$1" --format="%H %s" -- "$MEMORY_DIR/" 2>/dev/null
-}
-
-cmd_search() {
-  # Usage: wrapper.sh search <pattern>
-  git grep -l "$1" "$MEMORY_BRANCH" -- "$MEMORY_DIR/" 2>/dev/null || true
+  local query="$1"
+  local matches
+  matches=$(grep -rl "$query" \
+    "$MEMORY_ROOT/CLAUDE.local.md" \
+    "$MEMORY_ROOT/memory/registers/" \
+    "$MEMORY_ROOT/memory/daily/" \
+    "$MEMORY_ROOT/memory/archive/" \
+    2>/dev/null || true)
+  if [ -z "$matches" ]; then
+    echo "No matches found."
+    return 0
+  fi
+  while IFS= read -r f; do
+    echo "=== $f ==="
+    head -c 500 "$f" 2>/dev/null || true
+    echo ""
+  done <<< "$matches"
 }
 
 cmd_list() {
-  git ls-tree --name-only "$MEMORY_BRANCH" -- "$MEMORY_DIR/" 2>/dev/null
+  # Usage: wrapper.sh list [tier]
+  local tier="${1:-all}"
+  case "$tier" in
+    counter)
+      [ -f "$MEMORY_ROOT/CLAUDE.local.md" ] && echo "$MEMORY_ROOT/CLAUDE.local.md"
+      ;;
+    pantry)
+      find "$MEMORY_ROOT/memory/registers" -name '*.md' 2>/dev/null | sort || true
+      ;;
+    daily)
+      find "$MEMORY_ROOT/memory/daily" -name '*.md' 2>/dev/null | sort || true
+      ;;
+    archive)
+      find "$MEMORY_ROOT/memory/archive" -name '*.md' 2>/dev/null | sort || true
+      ;;
+    all)
+      [ -f "$MEMORY_ROOT/CLAUDE.local.md" ] && echo "$MEMORY_ROOT/CLAUDE.local.md"
+      find "$MEMORY_ROOT/memory" -name '*.md' 2>/dev/null | sort || true
+      ;;
+    *)
+      echo "Unknown tier: $tier" >&2; return 1
+      ;;
+  esac
 }
 
 cmd_forget() {
-  # Usage: wrapper.sh forget <filename>
-  local current_branch
-  current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-  git checkout --quiet "$MEMORY_BRANCH"
-  git rm --quiet "$MEMORY_DIR/$1" 2>/dev/null || true
-  git commit --quiet -m "memory: forget $1"
-  git checkout --quiet "$current_branch"
+  # Usage: wrapper.sh forget <tier> <slug>
+  local tier="$1" slug="$2"
+  case "$tier" in
+    counter)
+      rm -f "$MEMORY_ROOT/CLAUDE.local.md"
+      echo "Removed counter"
+      ;;
+    pantry)
+      rm -f "$MEMORY_ROOT/memory/registers/${slug}.md"
+      echo "Removed pantry/$slug"
+      ;;
+    daily)
+      # slug may be partial; find matching files
+      local found
+      found=$(find "$MEMORY_ROOT/memory/daily" -name "*${slug}*" 2>/dev/null)
+      if [ -n "$found" ]; then
+        echo "$found" | xargs rm -f
+        echo "Removed daily matching '$slug'"
+      else
+        echo "No daily entry matching '$slug'" >&2; return 1
+      fi
+      ;;
+    archive)
+      rm -f "$MEMORY_ROOT/memory/archive/${slug}.md"
+      echo "Removed archive/$slug"
+      ;;
+    *)
+      echo "Unknown tier: $tier" >&2; return 1
+      ;;
+  esac
 }
 
 cmd_status() {
-  echo "branch: $MEMORY_BRANCH"
-  echo "directory: $MEMORY_DIR"
-  local count
-  count=$(git ls-tree --name-only "$MEMORY_BRANCH" -- "$MEMORY_DIR/" 2>/dev/null | wc -l | tr -d ' ')
-  echo "files: $count"
-  echo "commits: $(git log "$MEMORY_BRANCH" --oneline 2>/dev/null | wc -l | tr -d ' ')"
+  echo "memory_root: $MEMORY_ROOT"
+  local counter_lines=0 pantry_count=0 daily_count=0 archive_count=0
+  [ -f "$MEMORY_ROOT/CLAUDE.local.md" ] && counter_lines=$(wc -l < "$MEMORY_ROOT/CLAUDE.local.md" | tr -d ' ')
+  [ -d "$MEMORY_ROOT/memory/registers" ] && pantry_count=$(find "$MEMORY_ROOT/memory/registers" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  [ -d "$MEMORY_ROOT/memory/daily" ] && daily_count=$(find "$MEMORY_ROOT/memory/daily" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  [ -d "$MEMORY_ROOT/memory/archive" ] && archive_count=$(find "$MEMORY_ROOT/memory/archive" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  echo "counter: ${counter_lines} lines"
+  echo "pantry: ${pantry_count} files"
+  echo "daily: ${daily_count} files"
+  echo "archive: ${archive_count} files"
 }
 
 # ============================================================
@@ -88,97 +203,129 @@ adapter() {
     return 0
   fi
 
-  if ! has_command git; then
-    contract_unavailable "$query" "$BACKEND" "git not found"
+  if [ -z "$MEMORY_ROOT" ]; then
+    contract_unavailable "$query" "$BACKEND" "No memory root found. Run setup.sh first."
     return 1
   fi
 
-  # Verify memory branch exists
-  if ! git show-ref --verify --quiet "refs/heads/$MEMORY_BRANCH" 2>/dev/null; then
-    contract_unavailable "$query" "$BACKEND" "Memory branch '$MEMORY_BRANCH' not found. Run setup.sh first."
+  if [ ! -d "$MEMORY_ROOT/memory" ] && [ ! -f "$MEMORY_ROOT/CLAUDE.local.md" ]; then
+    contract_unavailable "$query" "$BACKEND" "Memory directory not found at $MEMORY_ROOT. Run setup.sh first."
     return 1
   fi
 
   local start_ms
   start_ms=$(now_ms)
 
-  # Search in commit messages and file content
-  local commit_results="" content_results=""
-  commit_results=$(git log "$MEMORY_BRANCH" --all --grep="$query" --format="%H|||%s|||%aI" -- "$MEMORY_DIR/" 2>/dev/null || true)
-  content_results=$(git grep -l "$query" "$MEMORY_BRANCH" -- "$MEMORY_DIR/" 2>/dev/null || true)
+  # Search across all 4 tiers, score by tier and recency
+  local results="[]" count=0 best_score="0.0"
 
-  local end_ms duration_ms
-  end_ms=$(now_ms)
-  duration_ms=$(( end_ms - start_ms ))
-
-  if [ -z "$commit_results" ] && [ -z "$content_results" ]; then
-    contract_empty "$query" "$BACKEND" "$duration_ms"
-    return 0
-  fi
-
-  # Build results with time-decay relevance
-  local results count normalized
   if has_command python3; then
-    read -r results count normalized < <(python3 -c "
-import json, sys
+    read -r results count best_score < <(python3 -c "
+import json, os, sys, re
 from datetime import datetime, timezone
+from pathlib import Path
 
+query = '''$query'''
+root = '''$MEMORY_ROOT'''
 now = datetime.now(timezone.utc)
 results = []
-seen = set()
 
-# Process commit results
-for line in '''$commit_results'''.strip().split('\n'):
-    if not line or '|||' not in line: continue
-    parts = line.split('|||')
-    if len(parts) < 3: continue
-    sha, msg, ts = parts[0], parts[1], parts[2]
-    if sha in seen: continue
-    seen.add(sha)
+def file_mod_days(path):
     try:
-        dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
-        days = (now - dt).days
-        relevance = max(0.2, 1.0 - (days * 0.043))
+        mt = os.path.getmtime(path)
+        dt = datetime.fromtimestamp(mt, tz=timezone.utc)
+        return (now - dt).days
     except:
-        relevance = 0.3
+        return 999
+
+def recency_bonus(days):
+    return max(0.0, 0.1 * (1.0 - days / 30.0))
+
+def search_file(path, tier_score):
+    try:
+        content = Path(path).read_text(errors='replace')
+    except:
+        return
+    lines = content.split('\n')
+    matching_lines = [l.strip() for l in lines if query.lower() in l.lower()]
+    if not matching_lines:
+        return
+    days = file_mod_days(path)
+    score = round(tier_score + recency_bonus(days), 4)
+    snippet = matching_lines[0][:200]
     results.append({
-        'content': msg,
-        'relevance': round(relevance, 4),
+        'content': f'{os.path.relpath(path, root)}: {snippet}',
+        'relevance': score,
         'source': 'totalrecall',
-        'timestamp': ts
+        'timestamp': datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc).isoformat()
     })
 
-# Process content results
-for line in '''$content_results'''.strip().split('\n'):
-    if not line: continue
-    path = line.split(':',1)[-1] if ':' in line else line
-    if path in seen: continue
-    seen.add(path)
-    results.append({
-        'content': f'File match: {path}',
-        'relevance': 0.5,
-        'source': 'totalrecall',
-        'timestamp': '$(now_iso)'
-    })
+# Counter tier (score 0.9)
+counter = os.path.join(root, 'CLAUDE.local.md')
+if os.path.isfile(counter):
+    search_file(counter, 0.9)
+
+# Pantry tier (score 0.8)
+pantry = os.path.join(root, 'memory', 'registers')
+if os.path.isdir(pantry):
+    for f in os.listdir(pantry):
+        if f.endswith('.md'):
+            search_file(os.path.join(pantry, f), 0.8)
+
+# Daily tier (score 0.6)
+daily = os.path.join(root, 'memory', 'daily')
+if os.path.isdir(daily):
+    for f in os.listdir(daily):
+        if f.endswith('.md'):
+            search_file(os.path.join(daily, f), 0.6)
+
+# Archive tier (score 0.4)
+archive = os.path.join(root, 'memory', 'archive')
+if os.path.isdir(archive):
+    for f in os.listdir(archive):
+        if f.endswith('.md'):
+            search_file(os.path.join(archive, f), 0.4)
 
 results.sort(key=lambda r: r['relevance'], reverse=True)
 results = results[:20]
 best = max((r['relevance'] for r in results), default=0.0)
 print(json.dumps(results), len(results), round(best, 4))
-" 2>/dev/null)
+" 2>/dev/null) || true
   else
-    results="[]"
-    count=0
-    normalized="0.0"
+    # Fallback: simple grep without scoring
+    local matches
+    matches=$(grep -rl "$query" \
+      "$MEMORY_ROOT/CLAUDE.local.md" \
+      "$MEMORY_ROOT/memory/registers/" \
+      "$MEMORY_ROOT/memory/daily/" \
+      "$MEMORY_ROOT/memory/archive/" \
+      2>/dev/null | head -20 || true)
+    if [ -n "$matches" ]; then
+      count=$(echo "$matches" | wc -l | tr -d ' ')
+      best_score="0.5"
+      results="["
+      local first=true
+      while IFS= read -r f; do
+        [ "$first" = true ] && first=false || results+=","
+        local snippet
+        snippet=$(grep -m1 "$query" "$f" 2>/dev/null | head -c 200 || echo "")
+        results+="$(result_entry "$f: $snippet" "0.5" "totalrecall")"
+      done <<< "$matches"
+      results+="]"
+    fi
   fi
 
+  local end_ms duration_ms
+  end_ms=$(now_ms)
+  duration_ms=$(( end_ms - start_ms ))
+
   [ -z "$count" ] && count=0
-  [ -z "$normalized" ] && normalized="0.0"
+  [ -z "$best_score" ] && best_score="0.0"
 
   if [ "$count" -eq 0 ]; then
     contract_empty "$query" "$BACKEND" "$duration_ms"
   else
-    contract_success "$query" "$BACKEND" "$results" "$count" "$duration_ms" "$normalized"
+    contract_success "$query" "$BACKEND" "$results" "$count" "$duration_ms" "$best_score"
   fi
 }
 
@@ -219,10 +366,22 @@ cmd_health() {
     return 0
   fi
 
-  # L3: functional probe (with timeout)
+  # L3: functional probe (with timeout if available)
   local timeout_sec="${OPENCLAW_PROBE_TIMEOUT:-5}"
-  if ! timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null; then
-    if [[ $? -eq 124 ]]; then
+  local l3_exit
+  if command -v timeout &>/dev/null; then
+    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
+    l3_exit=$?
+  elif command -v gtimeout &>/dev/null; then
+    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
+    l3_exit=$?
+  else
+    # No timeout command (macOS without coreutils) — run directly
+    bash -c "$probe_l3" 2>/dev/null
+    l3_exit=$?
+  fi
+  if [ "$l3_exit" -ne 0 ]; then
+    if [ "$l3_exit" -eq 124 ]; then
       contract_health "$BACKEND" "degraded" "Functional probe timed out (${timeout_sec}s)"
     else
       contract_health "$BACKEND" "degraded" "Functional probe failed"
@@ -240,6 +399,6 @@ case "${1:-}" in
   --adapter) shift; adapter "$@" ;;
   --mock)    shift; cat "$INSTALL_ROOT/tests/fixtures/totalrecall-mock-response.json" 2>/dev/null || contract_empty "${2:-test}" "$BACKEND" 0 ;;
   health)    shift; cmd_health "$@" ;;
-  "")        echo "Usage: wrapper.sh [--adapter \"query\" [--hint X] | <native-command> [args...]]"; exit 1 ;;
+  "")        echo "Usage: wrapper.sh [--adapter \"query\" [--hint X] | health | store|search|list|forget|status [args...]]"; exit 1 ;;
   *)         cmd_name="${1//-/_}"; shift; "cmd_$cmd_name" "$@" ;;
 esac
