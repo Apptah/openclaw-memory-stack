@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+# OpenClaw Memory Stack — CLI Entry Point
+# Usage: openclaw-memory "<query>" [--hint <hint>] [--backend <name>] [--json]
+#        openclaw-memory init [/path/to/repo]
+#        openclaw-memory embed [--background]
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ROUTER="$INSTALL_ROOT/skills/memory-router/router.sh"
+
+# Version
+VERSION="0.1.0"
+
+# Source libraries
+source "$INSTALL_ROOT/lib/platform.sh"
+source "$INSTALL_ROOT/lib/license.sh"
+
+# ── --help and --version: never need license ───────────────────────
+case "${1:-}" in
+  --version|-v) echo "openclaw-memory v$VERSION"; exit 0 ;;
+  --help|-h)
+    cat <<HELPEOF
+OpenClaw Memory Stack v$VERSION
+
+Usage:
+  openclaw-memory "<query>" [options]    Search across memory backends
+  openclaw-memory init [/path/to/repo]   Initialize memory in a project
+  openclaw-memory embed [--background]   Enable vector search (run after init)
+
+Options:
+  --hint <hint>       Routing hint: exact, semantic, timeline
+  --backend <name>    Direct to specific backend (skip router)
+  --json              Force JSON output
+  --version, -v       Show version
+  --help, -h          Show this help
+
+Direct backend access:
+  openclaw-memory --backend <name> search "query"
+  openclaw-memory --backend <name> store slug "content"
+
+Backends: $(ls -d "$INSTALL_ROOT/skills/memory-"*/wrapper.sh 2>/dev/null | sed 's|.*/memory-||;s|/wrapper.sh||' | grep -v router | tr '\n' ', ' | sed 's/,$//')
+
+Run this command from within your project directory.
+HELPEOF
+    exit 0
+    ;;
+esac
+
+# ── init: lightweight license check ────────────────────────────────
+if [ "${1:-}" = "init" ]; then
+  require_installed
+  shift
+  TARGET_PATH="${1:-$(pwd)}"
+
+  # Resolve to absolute path
+  TARGET_PATH="$(cd "$TARGET_PATH" 2>/dev/null && pwd)" || {
+    echo "Error: directory '$1' does not exist." >&2
+    exit 1
+  }
+
+  # Must be a git repo
+  if ! git -C "$TARGET_PATH" rev-parse --is-inside-work-tree &>/dev/null; then
+    echo "Error: '$TARGET_PATH' is not a git repository." >&2
+    exit 1
+  fi
+
+  GIT_ROOT=$(git -C "$TARGET_PATH" rev-parse --show-toplevel)
+
+  # Already initialized?
+  if [ -f "$GIT_ROOT/.openclaw-memory.json" ]; then
+    echo "This repo is already initialized." >&2
+    echo "Config: $GIT_ROOT/.openclaw-memory.json" >&2
+    exit 0
+  fi
+
+  echo "Initializing OpenClaw Memory Stack in: $GIT_ROOT"
+  echo ""
+
+  # Step 1: Total Recall — create orphan branch
+  TOTALRECALL_SETUP="$INSTALL_ROOT/skills/memory-totalrecall/setup.sh"
+  if [ -x "$TOTALRECALL_SETUP" ]; then
+    echo "Setting up Total Recall..."
+    bash "$TOTALRECALL_SETUP" --target "$GIT_ROOT"
+    TR_STATUS="ready"
+    TR_BRANCH="openclaw-memory"
+  else
+    echo "Warning: Total Recall setup script not found." >&2
+    TR_STATUS="failed"
+    TR_BRANCH=""
+  fi
+
+  # Step 2: QMD — create collection (no embed)
+  GLOBAL_BACKENDS="$HOME/.openclaw/state/backends.json"
+  QMD_RUNTIME="unavailable"
+  if [ -f "$GLOBAL_BACKENDS" ]; then
+    QMD_RUNTIME=$(json_nested "$GLOBAL_BACKENDS" "backends.qmd.runtime" 2>/dev/null || echo "unavailable")
+  fi
+
+  QMD_STATUS="skipped"
+  QMD_COLLECTION=""
+  QMD_REASON=""
+
+  if [ "$QMD_RUNTIME" = "ready" ] && has_command qmd; then
+    # Generate collection name: dirname + 4 char hash
+    REPO_NAME=$(basename "$GIT_ROOT")
+    HASH=$(echo -n "$GIT_ROOT" | shasum -a 256 | cut -c1-4)
+    QMD_COLLECTION="${REPO_NAME}-${HASH}"
+
+    echo ""
+    echo "Setting up QMD collection: $QMD_COLLECTION"
+    if qmd collection add "$QMD_COLLECTION" --pattern "**/*.{ts,tsx,js,py,swift,rs,go,md}" --path "$GIT_ROOT" 2>/dev/null; then
+      QMD_STATUS="bm25_ready"
+      echo "QMD collection created. BM25 search ready."
+      echo "Run 'openclaw-memory embed' for vector search (may take a few minutes)."
+    else
+      QMD_STATUS="failed"
+      echo "Warning: QMD collection creation failed." >&2
+    fi
+  else
+    QMD_REASON="bun not installed"
+    echo ""
+    echo "QMD skipped (bun not installed). Total Recall is available."
+  fi
+
+  # Step 3: Write .openclaw-memory.json
+  NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  if has_command python3; then
+    python3 -c "
+import json
+
+config = {
+    'version': '$VERSION',
+    'initialized_at': '$NOW',
+    'backends': {
+        'totalrecall': {
+            'status': '$TR_STATUS',
+            'branch': '$TR_BRANCH'
+        },
+        'qmd': {
+            'status': '$QMD_STATUS',
+            'collection': '$QMD_COLLECTION'
+        }
+    }
+}
+
+# Add reason if qmd was skipped
+if '$QMD_STATUS' == 'skipped' and '$QMD_REASON':
+    config['backends']['qmd']['reason'] = '$QMD_REASON'
+
+with open('$GIT_ROOT/.openclaw-memory.json', 'w') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+"
+  fi
+
+  echo ""
+  echo "Initialized: $GIT_ROOT/.openclaw-memory.json"
+  echo ""
+  echo "Next: openclaw-memory \"your query here\""
+  exit 0
+fi
+
+# ── embed: lightweight license check ──────────────────────────────
+if [ "${1:-}" = "embed" ]; then
+  require_installed
+  shift
+
+  BACKGROUND=false
+  [ "${1:-}" = "--background" ] && BACKGROUND=true
+
+  REPO_CONFIG=$(find_repo_config)
+  QMD_COLLECTION=$(json_nested "$REPO_CONFIG" "backends.qmd.collection" 2>/dev/null)
+
+  if [ -z "$QMD_COLLECTION" ]; then
+    echo "Error: QMD not configured in this repo." >&2
+    echo "QMD may have been skipped during init (bun not installed)." >&2
+    exit 1
+  fi
+
+  QMD_STATUS=$(json_nested "$REPO_CONFIG" "backends.qmd.status" 2>/dev/null)
+  if [ "$QMD_STATUS" = "ready" ]; then
+    echo "Vector search is already enabled for $QMD_COLLECTION."
+    echo "Re-run with 'qmd embed $QMD_COLLECTION' to refresh embeddings."
+    exit 0
+  fi
+
+  # Check for running background job
+  if [ "$BACKGROUND" = false ]; then
+    EMBED_JOB_STATUS=$(json_nested "$REPO_CONFIG" "backends.qmd.embed_job.status" 2>/dev/null)
+    if [ "$EMBED_JOB_STATUS" = "running" ]; then
+      EMBED_PID=$(json_nested "$REPO_CONFIG" "backends.qmd.embed_job.pid" 2>/dev/null)
+      if [ -n "$EMBED_PID" ] && kill -0 "$EMBED_PID" 2>/dev/null; then
+        echo "Embed already running (PID: $EMBED_PID)." >&2
+        echo "Check progress: jq .backends.qmd.embed_job .openclaw-memory.json" >&2
+        exit 1
+      fi
+      # Stale job — allow override
+    fi
+  fi
+
+  if [ "$BACKGROUND" = true ]; then
+    (
+      if qmd embed "$QMD_COLLECTION" 2>/tmp/openclaw-embed-$$.log; then
+        locked_update_json "$REPO_CONFIG" "backends.qmd.status" '"ready"'
+        locked_update_json "$REPO_CONFIG" "backends.qmd.embed_job" '{"status":"completed"}'
+      else
+        locked_update_json "$REPO_CONFIG" "backends.qmd.embed_job" \
+          "{\"status\":\"failed\",\"error\":\"see /tmp/openclaw-embed-$$.log\"}"
+      fi
+    ) &
+    BG_PID=$!
+
+    locked_update_json "$REPO_CONFIG" "backends.qmd.embed_job" \
+      "{\"status\":\"running\",\"started_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"pid\":$BG_PID}"
+
+    echo "Embedding in background (PID: $BG_PID)."
+    echo "Check progress: jq .backends.qmd.embed_job .openclaw-memory.json"
+    exit 0
+  fi
+
+  # Foreground embed
+  echo "Embedding collection: $QMD_COLLECTION"
+  echo "This may take a few minutes for large repos..."
+  if qmd embed "$QMD_COLLECTION"; then
+    locked_update_json "$REPO_CONFIG" "backends.qmd.status" '"ready"'
+    echo ""
+    echo "Vector search enabled for $QMD_COLLECTION."
+  else
+    echo "Embed failed. BM25 still works. Retry: openclaw-memory embed" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+# ── Parse remaining arguments ─────────────────────────────────────
+QUERY="" HINT="" BACKEND="" JSON_OUTPUT=false NATIVE_CMD=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --hint) HINT="$2"; shift 2 ;;
+    --backend) BACKEND="$2"; shift 2 ;;
+    --json) JSON_OUTPUT=true; shift ;;
+    *)
+      if [ -z "$QUERY" ]; then
+        QUERY="$1"
+      else
+        NATIVE_CMD="$NATIVE_CMD $1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+# ── Direct backend access: full license check ─────────────────────
+if [ -n "$BACKEND" ]; then
+  require_licensed
+
+  # Repo context discovery (Steps 2-4 from Appendix A)
+  REPO_CONFIG=$(find_repo_config)
+  EFFECTIVE_JSON=$(merge_backends "$REPO_CONFIG")
+  set_repo_context "$REPO_CONFIG"
+
+  # Check backend availability in effective backends
+  if has_command python3; then
+    BACKEND_AVAILABLE=$(python3 -c "
+import json
+with open('$EFFECTIVE_JSON') as f: d = json.load(f)
+print('yes' if '$BACKEND' in d.get('backends', {}) else 'no')
+" 2>/dev/null || echo "no")
+  else
+    BACKEND_AVAILABLE="yes"  # permissive fallback
+  fi
+
+  if [ "$BACKEND_AVAILABLE" != "yes" ]; then
+    echo "Backend '$BACKEND' not available in this repo." >&2
+    echo "Check .openclaw-memory.json for backend status." >&2
+    rm -f "$EFFECTIVE_JSON"
+    exit 1
+  fi
+
+  WRAPPER="$INSTALL_ROOT/skills/memory-${BACKEND}/wrapper.sh"
+  if [ ! -x "$WRAPPER" ]; then
+    echo "Error: backend '$BACKEND' not found at $WRAPPER" >&2
+    rm -f "$EFFECTIVE_JSON"
+    exit 1
+  fi
+
+  rm -f "$EFFECTIVE_JSON"
+
+  if [ -n "$QUERY" ]; then
+    exec bash "$WRAPPER" "$QUERY" $NATIVE_CMD
+  else
+    echo "Error: no command specified for backend '$BACKEND'" >&2
+    exit 1
+  fi
+fi
+
+# ── Router dispatch: full license check ───────────────────────────
+if [ -z "$QUERY" ]; then
+  echo "Error: no query provided. Use --help for usage." >&2
+  exit 1
+fi
+
+require_licensed
+
+# Repo context discovery
+REPO_CONFIG=$(find_repo_config)
+EFFECTIVE_JSON=$(merge_backends "$REPO_CONFIG")
+set_repo_context "$REPO_CONFIG"
+
+ROUTER_ARGS=("$QUERY")
+[ -n "$HINT" ] && ROUTER_ARGS+=(--hint "$HINT")
+[ -n "$EFFECTIVE_JSON" ] && ROUTER_ARGS+=(--backends-json "$EFFECTIVE_JSON")
+
+exec bash "$ROUTER" "${ROUTER_ARGS[@]}"

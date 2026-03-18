@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Build release artifact — all backends
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+VERSION=$(grep -o '"[0-9]*\.[0-9]*\.[0-9]*"' "$PROJECT_ROOT/bin/openclaw-memory" | head -1 | tr -d '"')
+BUILD_DIR="$PROJECT_ROOT/dist/openclaw-memory-stack-v${VERSION}"
+ARTIFACT="$PROJECT_ROOT/dist/openclaw-memory-stack-v${VERSION}.tar.gz"
+
+echo "Building OpenClaw Memory Stack v${VERSION}"
+echo ""
+
+# Clean
+rm -rf "$BUILD_DIR" "$ARTIFACT"
+mkdir -p "$BUILD_DIR"
+
+# Copy core files
+cp -r "$PROJECT_ROOT/bin" "$BUILD_DIR/"
+cp -r "$PROJECT_ROOT/lib" "$BUILD_DIR/"
+cp "$PROJECT_ROOT/install.sh" "$BUILD_DIR/"
+cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/"
+cp "$PROJECT_ROOT/LICENSE" "$BUILD_DIR/"
+
+# Copy all backend skills dynamically
+mkdir -p "$BUILD_DIR/skills"
+for skill_dir in "$PROJECT_ROOT/skills/memory-"*; do
+  [ -d "$skill_dir" ] || continue
+  skill_name=$(basename "$skill_dir")
+  mkdir -p "$BUILD_DIR/skills/$skill_name"
+  cp -r "$skill_dir/"* "$BUILD_DIR/skills/$skill_name/"
+done
+
+# Remove internal dev files
+rm -f "$BUILD_DIR/skills/memory-router/backends.json"
+
+# Write version.json (no tier field)
+cat > "$BUILD_DIR/version.json" <<JSONEOF
+{
+  "version": "${VERSION}",
+  "built_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+JSONEOF
+
+# Verify artifact completeness
+echo "Verifying artifact..."
+MISSING=0
+for skill_dir in "$PROJECT_ROOT/skills/memory-"*; do
+  [ -d "$skill_dir" ] || continue
+  skill_name=$(basename "$skill_dir")
+  [ "$skill_name" = "memory-router" ] && continue
+  if [ ! -f "$BUILD_DIR/skills/$skill_name/wrapper.sh" ]; then
+    echo "ERROR: Missing wrapper: $skill_name/wrapper.sh" >&2
+    MISSING=$((MISSING + 1))
+  fi
+done
+
+if [ "$MISSING" -gt 0 ]; then
+  echo "ERROR: $MISSING backend(s) missing wrapper.sh" >&2
+  exit 1
+fi
+
+# Count backends
+BACKEND_COUNT=$(ls -d "$BUILD_DIR/skills/memory-"*/wrapper.sh 2>/dev/null | wc -l | tr -d ' ')
+echo "  $BACKEND_COUNT backends present (all with wrapper.sh)"
+
+# Package
+cd "$PROJECT_ROOT/dist"
+tar czf "openclaw-memory-stack-v${VERSION}.tar.gz" "openclaw-memory-stack-v${VERSION}"
+
+echo ""
+echo "Artifact: $ARTIFACT"
+echo "Size: $(du -h "$ARTIFACT" | cut -f1)"
+echo "Done."
