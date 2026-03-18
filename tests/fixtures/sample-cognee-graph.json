@@ -1,0 +1,10 @@
+{
+  "_comment": "Sample Cognee graph traversal output",
+  "entities": [
+    {"id": "AuthMiddleware", "type": "class", "properties": {"file": "src/middleware/auth.ts"}},
+    {"id": "SessionStore", "type": "class", "properties": {"file": "src/stores/session.ts"}}
+  ],
+  "relationships": [
+    {"from": "AuthMiddleware", "to": "SessionStore", "type": "depends_on", "confidence": 0.95}
+  ]
+}

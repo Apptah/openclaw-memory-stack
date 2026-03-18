@@ -1,0 +1,43 @@
+{
+  "version": "2.0",
+  "installed_at": "2026-03-17T14:30:00Z",
+  "updated_at": "2026-03-17T14:30:00Z",
+  "backends": {
+    "qmd": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "totalrecall": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "cognee": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "lossless": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    }
+  }
+}

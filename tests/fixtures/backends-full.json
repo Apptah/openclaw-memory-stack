@@ -1,0 +1,79 @@
+{
+  "version": "2.0",
+  "installed_at": "2026-03-17T14:30:00Z",
+  "updated_at": "2026-03-17T14:30:00Z",
+  "backends": {
+    "qmd": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "totalrecall": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "cognee": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "lossless": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "openviking": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    },
+    "vertex": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": "GCP project my-project, region us-central1",
+      "network_reachable": true,
+      "account_configured": true,
+      "last_health_check": "2026-03-17T16:00:00Z"
+    },
+    "nowledge": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": null,
+      "network_reachable": true,
+      "account_configured": true,
+      "last_health_check": "2026-03-17T15:00:00Z"
+    },
+    "brainx": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T14:30:00Z",
+      "message": "Experimental — API may change",
+      "network_reachable": null,
+      "account_configured": null,
+      "last_health_check": null
+    }
+  }
+}

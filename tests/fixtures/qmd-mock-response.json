@@ -1,0 +1,13 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {"content": "Mock QMD result: function parseAuth in src/auth.ts", "relevance": 0.75, "source": "qmd", "timestamp": "2026-03-17T14:30:00Z"}
+  ],
+  "result_count": 1,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 50,
+  "normalized_relevance": 0.75,
+  "backend": "qmd"
+}

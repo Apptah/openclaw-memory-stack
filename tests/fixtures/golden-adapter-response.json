@@ -1,0 +1,25 @@
+{
+  "_comment": "Golden reference — all 8 wrappers must produce output matching this structure",
+  "query_echo": "how does the auth middleware work",
+  "results": [
+    {
+      "content": "Auth middleware uses JWT validation with RS256 signing. Tokens are verified against the JWKS endpoint on each request.",
+      "relevance": 0.82,
+      "source": "qmd",
+      "timestamp": "2026-03-10T14:30:00Z"
+    },
+    {
+      "content": "The auth middleware was refactored in PR #142 to support refresh token rotation.",
+      "relevance": 0.65,
+      "source": "qmd",
+      "timestamp": "2026-03-08T09:15:00Z"
+    }
+  ],
+  "result_count": 2,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 230,
+  "normalized_relevance": 0.82,
+  "backend": "qmd"
+}

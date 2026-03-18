@@ -1,0 +1,14 @@
+{
+  "_comment": "Sample Vertex AI Memory Bank response",
+  "memories": [
+    {
+      "id": "mem_001",
+      "content": "We decided to use JWT for auth because of stateless scaling requirements",
+      "relevance": 0.85,
+      "created_at": "2026-03-10T10:00:00Z",
+      "tags": ["auth", "decision", "JWT"]
+    }
+  ],
+  "total": 1,
+  "page": 1
+}

@@ -1,0 +1,13 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {"content": "Mock Cognee: AuthMiddleware depends_on SessionStore", "relevance": 0.9, "source": "cognee", "timestamp": "2026-03-17T14:30:00Z"}
+  ],
+  "result_count": 1,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 120,
+  "normalized_relevance": 0.9,
+  "backend": "cognee"
+}

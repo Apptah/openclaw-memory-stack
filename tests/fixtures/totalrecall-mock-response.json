@@ -1,0 +1,13 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {"content": "Mock Total Recall: decided to use JWT for auth", "relevance": 0.85, "source": "totalrecall", "timestamp": "2026-03-16T10:00:00Z"}
+  ],
+  "result_count": 1,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 30,
+  "normalized_relevance": 0.85,
+  "backend": "totalrecall"
+}

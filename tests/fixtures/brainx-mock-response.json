@@ -1,0 +1,11 @@
+{
+  "query_echo": "test query",
+  "results": [{"content": "Mock BrainX: experimental multi-modal result", "relevance": 0.5, "source": "brainx", "timestamp": "2026-03-17T14:30:00Z"}],
+  "result_count": 1,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 300,
+  "normalized_relevance": 0.5,
+  "backend": "brainx"
+}

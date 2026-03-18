@@ -1,0 +1,24 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {
+      "content": "Mock Nowledge: AuthService \u2192 depends_on \u2192 SessionStore (confidence: 0.92)",
+      "relevance": 0.92,
+      "source": "nowledge",
+      "timestamp": "2026-03-17T14:30:00Z"
+    },
+    {
+      "content": "Mock Nowledge: UserController handles login flow via OAuth2 provider integration",
+      "relevance": 0.85,
+      "source": "nowledge",
+      "timestamp": "2026-03-17T14:25:00Z"
+    }
+  ],
+  "result_count": 2,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 150,
+  "normalized_relevance": 0.92,
+  "backend": "nowledge"
+}

@@ -1,0 +1,38 @@
+{
+  "_comment": "Error response examples — all wrappers must follow this pattern for errors",
+  "examples": {
+    "backend_unavailable": {
+      "query_echo": "test query",
+      "results": [],
+      "result_count": 0,
+      "status": "error",
+      "error_message": "Backend cognee is not available",
+      "error_code": "BACKEND_UNAVAILABLE",
+      "backend_duration_ms": 0,
+      "normalized_relevance": 0.0,
+      "backend": "cognee"
+    },
+    "backend_error": {
+      "query_echo": "test query",
+      "results": [],
+      "result_count": 0,
+      "status": "error",
+      "error_message": "Python process exited with code 1",
+      "error_code": "BACKEND_ERROR",
+      "backend_duration_ms": 150,
+      "normalized_relevance": 0.0,
+      "backend": "cognee"
+    },
+    "empty_result": {
+      "query_echo": "nonexistent symbol xyz123",
+      "results": [],
+      "result_count": 0,
+      "status": "empty",
+      "error_message": null,
+      "error_code": null,
+      "backend_duration_ms": 45,
+      "normalized_relevance": 0.0,
+      "backend": "qmd"
+    }
+  }
+}

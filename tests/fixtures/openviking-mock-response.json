@@ -1,0 +1,14 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {"content": "Mock OpenViking result: authentication flow documentation from docs/auth.md", "relevance": 0.82, "source": "viking://docs/auth.md", "timestamp": "2026-03-17T14:30:00Z"},
+    {"content": "Mock OpenViking result: user session management in src/session.ts", "relevance": 0.67, "source": "viking://src/session.ts", "timestamp": "2026-03-17T14:30:00Z"}
+  ],
+  "result_count": 2,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 120,
+  "normalized_relevance": 0.82,
+  "backend": "openviking"
+}

@@ -1,0 +1,14 @@
+{
+  "query_echo": "test query",
+  "results": [
+    {"content": "Mock Lossless: Decision node — chose JWT over session cookies, reason: stateless scaling", "relevance": 1.0, "source": "lossless", "timestamp": "2026-03-17T14:30:00Z"},
+    {"content": "Mock Lossless: Timeline node — deployed auth service v2 with rate limiting and refresh token rotation", "relevance": 0.85, "source": "lossless", "timestamp": "2026-03-16T10:15:00Z"}
+  ],
+  "result_count": 2,
+  "status": "success",
+  "error_message": null,
+  "error_code": null,
+  "backend_duration_ms": 15,
+  "normalized_relevance": 1.0,
+  "backend": "lossless"
+}
