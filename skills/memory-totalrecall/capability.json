@@ -1,0 +1,15 @@
+{
+  "capability_version": 1,
+  "backend": "totalrecall",
+  "supported_modes": ["timeline", "decision", "exact"],
+  "requires_credentials": false,
+  "requires_external_service": false,
+  "cold_start_ms": 100,
+  "probe": {
+    "l1_install": "command -v git",
+    "l2_runtime": "true",
+    "l3_functional": "git branch --list openclaw-memory 2>/dev/null | grep -q openclaw-memory",
+    "l3_deep": null
+  },
+  "install_hint": "git is required (usually pre-installed)"
+}
