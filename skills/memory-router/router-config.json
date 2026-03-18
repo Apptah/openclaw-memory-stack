@@ -1,0 +1,102 @@
+{
+  "version": "2.0",
+  "fallback_threshold": 0.4,
+  "timeout_ms": 5000,
+  "log_path": "~/.openclaw/state/router.log",
+  "backends_path": "~/.openclaw/state/backends.json",
+  "classes": {
+    "retrieval_engine": { "backends": ["qmd", "openviking"] },
+    "memory_store":     { "backends": ["totalrecall", "vertex"] },
+    "knowledge_graph":  { "backends": ["nowledge"] },
+    "context_engine":   { "backends": ["lossless"] }
+  },
+  "rules": [
+    {
+      "id": "exact_symbol",
+      "description": "Exact symbol, function, class, or method name lookup",
+      "signals": ["find.*(function|class|method)", "find all usages of", "search for \\w+"],
+      "primary_class": "retrieval_engine",
+      "fallback_class": "memory_store",
+      "hint": "exact"
+    },
+    {
+      "id": "relationship",
+      "description": "Relationship and dependency queries requiring graph traversal",
+      "signals": ["relat", "depends on", "dependency", "connection between", "call chain", "trace.*to", "path between"],
+      "primary_class": "knowledge_graph",
+      "fallback_class": "retrieval_engine",
+      "hint": "relationship"
+    },
+    {
+      "id": "recent_decision",
+      "description": "Decision recall — recent/session scope",
+      "signals": ["just decided", "in this session", "a moment ago", "earlier in conversation"],
+      "primary_class": "context_engine",
+      "fallback_class": "memory_store",
+      "hint": "decision"
+    },
+    {
+      "id": "historical_decision",
+      "description": "Decision recall — historical scope",
+      "signals": ["last week.*decid", "last month.*decid", "why did we choose", "what did we decide about", "recall.*decision", "decision.*ago"],
+      "primary_class": "memory_store",
+      "fallback_class": "context_engine",
+      "hint": "timeline"
+    },
+    {
+      "id": "unscoped_decision",
+      "description": "Decision queries without clear temporal signal — interleave Memory Store and Context Engine",
+      "signals": ["decid", "decision", "chose"],
+      "primary_class": "memory_store",
+      "co_primary_class": "context_engine",
+      "fallback_class": "retrieval_engine",
+      "hint": "decision",
+      "dispatch_order": [
+        {"class": "memory_store", "position": "primary"},
+        {"class": "context_engine", "position": "primary"},
+        {"class": "memory_store", "position": "secondary"},
+        {"class": "context_engine", "position": "secondary"},
+        {"class": "retrieval_engine", "position": "primary"}
+      ]
+    },
+    {
+      "id": "concept_behavior",
+      "description": "Conceptual or behavioral queries about how things work",
+      "signals": ["how does.*work", "where is.*handled", "explain", "strategy", "approach for"],
+      "primary_class": "retrieval_engine",
+      "fallback_class": "memory_store",
+      "hint": "semantic"
+    },
+    {
+      "id": "recent_context",
+      "description": "Queries about recently discussed or changed items",
+      "signals": ["just discussed", "few minutes ago", "last change", "recently", "last thing"],
+      "primary_class": "memory_store",
+      "fallback_class": "retrieval_engine",
+      "hint": "timeline"
+    },
+    {
+      "id": "file_path_pattern",
+      "description": "Queries targeting specific files, directories, or glob patterns",
+      "signals": ["path /", "glob \\*", "extension \\.(ts|swift|py|js|md)"],
+      "primary_class": "retrieval_engine",
+      "fallback_class": "memory_store",
+      "hint": "exact"
+    },
+    {
+      "id": "ambiguous_default",
+      "description": "Catch-all for single words, vague references, unclear intent",
+      "signals": [".*"],
+      "primary_class": "retrieval_engine",
+      "fallback_class": "memory_store",
+      "hint": ""
+    }
+  ],
+  "output_envelope": {
+    "fields": [
+      "query_echo", "routed_to", "routed_class", "routed_mode",
+      "fallback_chain", "fallbacks_used", "results", "result_count",
+      "status", "normalized_relevance", "router_duration_ms", "backend_duration_ms"
+    ]
+  }
+}
