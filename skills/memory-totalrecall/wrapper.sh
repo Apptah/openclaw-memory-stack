@@ -363,15 +363,12 @@ cmd_health() {
   local timeout_sec="${OPENCLAW_PROBE_TIMEOUT:-5}"
   local l3_exit
   if command -v timeout &>/dev/null; then
-    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
-    l3_exit=$?
+    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
   elif command -v gtimeout &>/dev/null; then
-    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
-    l3_exit=$?
+    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
   else
     # No timeout command (macOS without coreutils) — run directly
-    bash -c "$probe_l3" 2>/dev/null
-    l3_exit=$?
+    bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
   fi
   if [ "$l3_exit" -ne 0 ]; then
     if [ "$l3_exit" -eq 124 ]; then
