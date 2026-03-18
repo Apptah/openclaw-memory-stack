@@ -37,10 +37,12 @@ header() { printf "\n${BOLD}%s${NC}\n" "$1"; }
 
 # ── Parse arguments ─────────────────────────────────────────────────
 LICENSE_KEY=""
+SKIP_MODELS=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --key=*) LICENSE_KEY="${1#--key=}"; shift ;;
     --key)   LICENSE_KEY="$2"; shift 2 ;;
+    --skip-models) SKIP_MODELS=true; shift ;;
     -h|--help)
       echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx"
       echo ""
@@ -183,6 +185,41 @@ fi
 
 command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
 
+# ── Runtime bootstrap helpers ────────────────────────────────────────
+install_bun() {
+  if command -v bun &>/dev/null; then
+    ok "bun: v$(bun --version 2>/dev/null)"
+    return 0
+  fi
+  info "Installing Bun..."
+  curl -fsSL https://bun.sh/install | bash 2>/dev/null
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
+  ok "bun: v$(bun --version 2>/dev/null)"
+}
+
+install_uv() {
+  if command -v uv &>/dev/null; then
+    ok "uv: $(uv --version 2>/dev/null)"
+    return 0
+  fi
+  info "Installing uv (Python manager)..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
+  export PATH="$HOME/.local/bin:$PATH"
+  ok "uv: $(uv --version 2>/dev/null)"
+}
+
+setup_python_venv() {
+  local venv_dir="$HOME/.openclaw/venv"
+  if [ -f "$venv_dir/bin/activate" ]; then
+    ok "Python venv: $venv_dir (exists)"
+    return 0
+  fi
+  info "Creating Python venv..."
+  uv venv "$venv_dir" --python 3.12 2>/dev/null || python3 -m venv "$venv_dir" 2>/dev/null
+  ok "Python venv: $venv_dir"
+}
+
 # ── Step 4: Install files ──────────────────────────────────────────
 header "Step 4/6 — Installing files"
 
@@ -205,6 +242,29 @@ done
 chmod +x "$INSTALL_ROOT/bin/openclaw-memory"
 
 ok "Files installed to $INSTALL_ROOT"
+
+# ── Step 4b/6 — Installing backend dependencies ─────────────────────
+header "Step 4b/6 — Installing backend dependencies"
+for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
+  [[ -f "$skill_dir/capability.json" ]] || continue
+  bname=$(basename "$skill_dir" | sed 's/memory-//')
+  [[ "$bname" == "router" ]] && continue
+
+  # Skip optional backends
+  is_optional=$(python3 -c "import json; d=json.load(open('$skill_dir/capability.json')); print(d.get('optional', False))" 2>/dev/null || echo "False")
+  [[ "$is_optional" == "True" ]] && { info "Skipping $bname (optional — install manually)"; continue; }
+
+  install_hint=$(python3 -c "import json; print(json.load(open('$skill_dir/capability.json'))['install_hint'])" 2>/dev/null || echo "")
+  [[ -z "$install_hint" ]] && continue
+
+  info "Installing $bname..."
+  eval "$install_hint" 2>/dev/null && ok "$bname installed" || warn "$bname: install failed (non-fatal)"
+done
+
+if ! $SKIP_MODELS && command -v qmd &>/dev/null; then
+  info "Downloading QMD models (~2.1GB)..."
+  qmd embed --download-models 2>/dev/null && ok "QMD models downloaded" || warn "Model download failed (retry: qmd embed --download-models)"
+fi
 
 # ── Step 5: Create symlink ─────────────────────────────────────────
 header "Step 5/6 — Setting up PATH"
