@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
       letter-spacing: -0.02em;
     }
     .nav-logo span { color: var(--muted); }
+    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
       font-weight: 600;
     }
 
+    /* ── FAQ ── */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item[open] {
+      border-color: var(--border-bright);
+    }
+    .faq-item summary {
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--fg-bright);
+      font-size: 0.92rem;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-item summary::after {
+      content: '+';
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 1.1rem;
+      transition: transform 0.2s;
+    }
+    .faq-item[open] summary::after {
+      transform: rotate(45deg);
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item p {
+      padding: 0 1.25rem 1rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .faq-item strong {
+      color: var(--fg);
+    }
+
     /* ── Footer ── */
     footer {
       text-align: center;
@@ -445,21 +494,34 @@ import Layout from "../layouts/Layout.astro";
   </style>
 
   <nav>
-    <div class="nav-logo">openclaw<span>/memory-stack</span></div>
+    <div class="nav-logo">
+      <svg class="nav-claw-icon" width="24" height="24" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff4d4d"/><stop offset="100%" stop-color="#991b1b"/></linearGradient></defs>
+        <path d="M60 10 C30 10 15 35 15 55 C15 75 30 95 45 100 L45 110 L55 110 L55 100 C55 100 60 102 65 100 L65 110 L75 110 L75 100 C90 95 105 75 105 55 C105 35 90 10 60 10Z" fill="url(#lg)"/>
+        <path d="M20 45 C5 40 0 50 5 60 C10 70 20 65 25 55 C28 48 25 45 20 45Z" fill="url(#lg)"/>
+        <path d="M100 45 C115 40 120 50 115 60 C110 70 100 65 95 55 C92 48 95 45 100 45Z" fill="url(#lg)"/>
+        <path d="M45 15 Q35 5 30 8" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round"/>
+        <path d="M75 15 Q85 5 90 8" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="45" cy="35" r="6" fill="#050810"/><circle cx="75" cy="35" r="6" fill="#050810"/>
+        <circle cx="46" cy="34" r="2.5" fill="#00e5cc"/><circle cx="76" cy="34" r="2.5" fill="#00e5cc"/>
+      </svg>
+      openclaw<span>/memory-stack</span>
+    </div>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#compare">vs Native</a>
+      <a href="#faq">FAQ</a>
       <a href="/manage">Manage License</a>
     </div>
   </nav>
 
   <div class="hero">
-    <div class="badge">v2 — OpenClaw Plugin</div>
-    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+    <div class="badge">v2 — Official OpenClaw Plugin</div>
+    <h1>Remember more.<br/><span class="glow">Spend less.</span></h1>
     <p class="subtitle">
-      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
-      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
-      No API keys. No subscriptions. Just install and go.
+      Your <strong>OpenClaw</strong> agent forgets old decisions and wastes tokens re-reading the same context.
+      Memory Stack fixes both — smarter memory that uses up to 90% fewer tokens per search.
+      Your agent remembers everything. Your API bill stays low.
     </p>
     <button class="hero-cta" id="buy-btn">
       Get Memory Stack
@@ -496,46 +558,46 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="section" id="features">
     <div class="section-label">// why memory stack</div>
-    <h2>What OpenClaw's built-in memory can't do.</h2>
-    <p class="section-desc">Three features that make long conversations actually work.</p>
+    <h2>Better memory. Lower bills.</h2>
+    <p class="section-desc">Every wasted token is money out of your pocket. Memory Stack cuts the waste.</p>
     <div class="features">
       <div class="feature-card">
         <div class="feature-icon">&#x1F517;</div>
         <h3>Knowledge Graph</h3>
-        <p>Native memory does flat text search. Memory Stack builds a local knowledge graph from your conversations — tracking projects, people, APIs, and how they connect. Ask "what depends on service X?" and get real answers.</p>
+        <p>Native memory does flat text search — so your agent re-reads everything to find connections. Memory Stack builds a knowledge graph locally. Ask "what depends on service X?" and get the answer instantly, without burning tokens on irrelevant context.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9E0;</div>
         <h3>Self-Evolving Memory</h3>
-        <p>Memories pile up and get noisy. Memory Stack finds clusters of similar entries and suggests consolidation — turning 5 scattered notes about the same topic into one clear summary. Your memory gets sharper over time, not messier.</p>
+        <p>Messy memory = wasted tokens. When 5 scattered notes say the same thing, your AI reads all 5 and you pay for all 5. Memory Stack merges them into one clear entry. Cleaner memory, lower cost, better answers.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F6E1;</div>
         <h3>Compaction Rescue</h3>
-        <p>Long conversations get compressed — and key decisions get lost. Memory Stack saves important facts (decisions, deadlines, requirements) before compression happens, and brings them back automatically. No matter how long the conversation.</p>
+        <p>When your agent forgets a decision, you explain it again. That costs tokens. Memory Stack saves key facts before compression and brings them back automatically — so you never pay to re-explain the same thing twice.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F50D;</div>
         <h3>6-Engine Search</h3>
-        <p>Six search engines run on every query, results merged by rank fusion. A local 1.7B AI rewrites your question before searching, and a 0.6B model reranks the results. All offline, zero API cost.</p>
+        <p>Native memory searches one way and hopes for the best. Memory Stack runs 6 engines and picks the best results across all of them. Finds the right memory on the first try — instead of your agent guessing and wasting tokens on wrong context.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
         <h3>Memory Health</h3>
-        <p>Built-in quality checks find duplicates, stale entries, and noise. Scores your memory 0-100 and tells you exactly what to clean up. Never deletes anything automatically — you stay in control.</p>
+        <p>Duplicates and junk in your memory cost real money every time your AI reads them. Memory Health scores your memory 0-100, shows exactly what's wasting tokens, and helps you clean it up. Think of it as a bill audit for your AI.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x26A1;</div>
-        <h3>Zero Config</h3>
-        <p>Install, restart OpenClaw, done. No embedding providers to configure, no API keys to manage, no project initialization needed. Memory improves the moment you install it.</p>
+        <h3>Zero Config, Zero API Keys</h3>
+        <p>No paid embedding providers. No API keys. Three local AI models handle everything on your machine. The $49 you pay is the last dollar you spend — no recurring costs, no per-query charges, no surprises on your bill.</p>
       </div>
     </div>
   </div>
 
   <div class="section" id="how">
     <div class="section-label">// how it works</div>
-    <h2>Install once. Memory improves forever.</h2>
-    <p class="section-desc">Memory Stack plugs into OpenClaw as a native memory provider. No manual setup after install.</p>
+    <h2>Install once. Save on every conversation.</h2>
+    <p class="section-desc">Memory Stack plugs into OpenClaw as a native memory provider. Starts saving tokens immediately.</p>
     <div class="routing-grid">
       <div class="route-item">
         <div>
@@ -585,8 +647,8 @@ import Layout from "../layouts/Layout.astro";
         <div class="compare-stat-label">local AI models<br/><span>vs native's 0</span></div>
       </div>
       <div class="compare-stat">
-        <div class="compare-stat-number">0</div>
-        <div class="compare-stat-label">API keys needed<br/><span>runs 100% offline</span></div>
+        <div class="compare-stat-number">90%</div>
+        <div class="compare-stat-label">fewer tokens per search<br/><span>lower API bill</span></div>
       </div>
     </div>
 
@@ -622,21 +684,21 @@ import Layout from "../layouts/Layout.astro";
             <td class="yes">Yes. Evolution chains link past decisions to current ones.</td>
           </tr>
 
-          <tr class="compare-group"><td colspan="3">Uses fewer tokens</td></tr>
+          <tr class="compare-group"><td colspan="3">Saves you money</td></tr>
           <tr>
-            <td>How much context does it load per search?</td>
-            <td class="no">Full text chunks every time.</td>
-            <td class="yes">Summaries first, full text only when needed. Three detail levels.</td>
+            <td>How much does each memory search cost?</td>
+            <td class="no">Loads full text every time. More tokens, higher API bill.</td>
+            <td class="yes">Loads a summary first. Only fetches full text when needed. Uses up to 90% fewer tokens.</td>
           </tr>
           <tr>
-            <td>Does it avoid repeating similar results?</td>
-            <td class="no">Can return near-duplicate chunks.</td>
-            <td class="yes">MMR diversification removes redundancy before injecting into context.</td>
+            <td>Does it waste money on duplicate results?</td>
+            <td class="no">Can feed the same info to your AI twice. You pay for both.</td>
+            <td class="yes">Removes duplicates before sending anything to the AI. You only pay once.</td>
           </tr>
           <tr>
-            <td>Does memory get bloated over time?</td>
-            <td class="no">Yes. No cleanup mechanism.</td>
-            <td class="yes">No. Duplicate detection and auto-consolidation keep it clean.</td>
+            <td>Does the cost grow over time?</td>
+            <td class="no">Memory piles up. More junk = more tokens = higher cost.</td>
+            <td class="yes">Auto-cleanup merges similar memories. Stays lean, cost stays flat.</td>
           </tr>
 
           <tr class="compare-group"><td colspan="3">Finds things faster</td></tr>
@@ -673,7 +735,7 @@ import Layout from "../layouts/Layout.astro";
   <div class="cta-section">
     <div class="cta-box">
       <div class="price">$49</div>
-      <div class="price-note">One-time purchase. No subscription. No SaaS. Just files.</div>
+      <div class="price-note">One-time. No subscription. Pays for itself in the first week of saved API costs.</div>
       <div class="cta-btn-wrap">
         <button class="hero-cta" id="buy-btn-2">
           Get Memory Stack
@@ -683,10 +745,45 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
+  <div class="section" id="faq">
+    <div class="section-label">// frequently asked</div>
+    <h2>Questions OpenClaw users ask.</h2>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>What is OpenClaw Memory Stack?</summary>
+        <p>Memory Stack is a plugin for <strong>OpenClaw</strong> that replaces the built-in memory system with a smarter one. It runs 6 search engines on every query, builds a knowledge graph from your conversations, and rescues important decisions before they get lost to context compression. It runs 100% locally — no API keys, no cloud services.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How does it improve OpenClaw's memory?</summary>
+        <p>OpenClaw's native memory uses 2 search engines (keyword + vector). Memory Stack uses 6, merged with rank fusion. It adds a 1.7B AI model that rewrites your questions before searching, and a 0.6B model that reranks results. It also saves key facts before context compression happens — so hour-long conversations don't lose early decisions.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Does it work with OpenClaw's Telegram integration?</summary>
+        <p>Yes. Memory Stack plugs into OpenClaw as a native memory provider. It works with Telegram, CLI, and any other OpenClaw channel. No extra configuration needed — install, restart, done.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Does it need an internet connection?</summary>
+        <p>No. All 3 AI models (query expansion, reranking, embeddings) run locally on your machine. No data ever leaves your computer. No API keys to manage. Works completely offline after installation.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How does it save money on API costs?</summary>
+        <p>Every token your AI reads costs money. Memory Stack cuts that three ways: (1) It loads a short summary first and only fetches the full text when needed — up to 90% fewer tokens per search. (2) It removes duplicate results so you don't pay for the same information twice. (3) It automatically merges similar memories over time, so your memory stays lean instead of growing into an expensive mess.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What is compaction rescue?</summary>
+        <p>When OpenClaw conversations get long, the system compresses old messages to fit the context window. Important decisions can get lost in this process. Memory Stack's rescue engine extracts key facts (decisions, deadlines, architecture choices) before compression happens, and automatically brings them back when relevant.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is it a subscription?</summary>
+        <p>No. One-time purchase of $49. You own the code. No recurring fees, no SaaS, no data collection. Just files that live on your machine.</p>
+      </details>
+    </div>
+  </div>
+
   <div class="disclaimers-section">
     <ul class="disclaimers">
       <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
-      <li><strong>No embedding setup.</strong> BM25 search works instantly. Optional QMD vector search runs locally with Bun — no external API needed.</li>
+      <li><strong>No embedding setup.</strong> 3 local AI models (1.7B + 0.6B + 300M) handle search, ranking, and embeddings — no API key needed.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
       <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
     </ul>
