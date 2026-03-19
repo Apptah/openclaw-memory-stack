@@ -4,8 +4,9 @@ import { handleWebhook } from "./webhook";
 import { handleActivate } from "./activate";
 import { handleVerify } from "./verify";
 import { handleResetDevice } from "./reset-device";
-import { handleDownloadToken, handleDownload } from "./download";
+import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./download";
 import { handleRevoke } from "./revoke";
+import { handleSessionStatus } from "./session-status";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -39,8 +40,12 @@ export default {
         response = await handleResetDevice(request, env);
       } else if (method === "POST" && path === "/api/download-token") {
         response = await handleDownloadToken(request, env);
+      } else if (method === "GET" && path === "/api/download/latest") {
+        response = await handleDownloadLatest(request, env);
       } else if (method === "GET" && path.startsWith("/api/download/")) {
         response = await handleDownload(request, env);
+      } else if (method === "GET" && path === "/api/session-status") {
+        response = await handleSessionStatus(request, env);
       } else if (method === "POST" && path === "/api/revoke") {
         response = await handleRevoke(request, env);
       } else {

@@ -82,6 +82,12 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   await env.KV.put(`license:${key}`, JSON.stringify(license));
   console.log("License created", { email, tier, key_prefix: key.slice(0, 12) + "..." });
 
+  // Store session → license mapping so /thanks page can display the key
+  const sessionId = session.id as string;
+  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl: "" }), {
+    expirationTtl: 86400,
+  });
+
   // Generate download token
   const downloadToken = nanoid(32);
   await env.KV.put(`dl:${downloadToken}`, JSON.stringify({ version }), {
@@ -90,9 +96,14 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   const workerUrl = new URL(request.url).origin;
   const downloadUrl = `${workerUrl}/api/download/${downloadToken}`;
 
+  // Update session KV with download URL
+  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl }), {
+    expirationTtl: 86400,
+  });
+
   // Send email via Resend (retry once on failure)
   const emailBody = JSON.stringify({
-    from: "OpenClaw Memory Stack <onboarding@resend.dev>",
+    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
     to: [email],
     subject: "Your OpenClaw Memory Stack License",
     html: `

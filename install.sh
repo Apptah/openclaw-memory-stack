@@ -337,6 +337,86 @@ _gen_backends() {
 _gen_backends > "$STATE_DIR/backends.json"
 ok "backends.json"
 
+# ── Step 6b/6 — Register as OpenClaw memory plugin ──────────────────
+header "Step 6b/6 — Connecting to OpenClaw"
+
+# Copy plugin to OpenClaw extensions directory (same structure as npm-installed plugins)
+OPENCLAW_JSON="$HOME/.openclaw/openclaw.json"
+EXT_DIR="$HOME/.openclaw/extensions/openclaw-memory-stack"
+
+if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
+  # 1. Install plugin files to extensions dir
+  mkdir -p "$EXT_DIR"
+  cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
+  if [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]]; then
+    cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
+  elif [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]]; then
+    cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
+  fi
+  ok "Plugin files → $EXT_DIR"
+
+  # 2. Register in openclaw.json (matching native openclaw plugins install format)
+  python3 -c "
+import json, datetime
+
+config_path = '$OPENCLAW_JSON'
+ext_dir = '$EXT_DIR'
+
+with open(config_path) as f:
+    config = json.load(f)
+
+plugins = config.setdefault('plugins', {})
+
+# allow list
+allow = plugins.setdefault('allow', [])
+if 'openclaw-memory-stack' not in allow:
+    allow.append('openclaw-memory-stack')
+
+# slots — register as memory provider
+slots = plugins.setdefault('slots', {})
+slots['memory'] = 'openclaw-memory-stack'
+
+# entries — plugin config
+entries = plugins.setdefault('entries', {})
+entries['openclaw-memory-stack'] = {
+    'enabled': True,
+    'config': {
+        'routerMode': 'auto',
+        'searchMode': 'hybrid',
+        'autoRecall': True,
+        'autoCapture': True,
+        'maxRecallResults': 5,
+        'maxRecallTokens': 1500
+    }
+}
+
+# installs — required by OpenClaw plugin validator
+installs = plugins.setdefault('installs', {})
+now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+installs['openclaw-memory-stack'] = {
+    'source': 'local',
+    'spec': ext_dir,
+    'installPath': ext_dir,
+    'version': '0.1.0',
+    'resolvedName': 'openclaw-memory-stack',
+    'resolvedVersion': '0.1.0',
+    'resolvedSpec': 'openclaw-memory-stack@0.1.0',
+    'installedAt': now
+}
+
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
+" 2>/dev/null && ok "Registered as OpenClaw memory plugin" || warn "Could not update openclaw.json (configure manually)"
+else
+  if [[ ! -f "$OPENCLAW_JSON" ]]; then
+    warn "openclaw.json not found — is OpenClaw installed?"
+  else
+    warn "python3 not found — please register manually"
+  fi
+  echo "  Run: openclaw plugins install $EXT_DIR" >&2
+fi
+
 # ── Summary ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}=========================================${NC}"
@@ -345,13 +425,13 @@ echo -e "${BOLD}=========================================${NC}"
 echo ""
 echo -e "  Install path: ${BOLD}${INSTALL_ROOT}${NC}"
 echo -e "  License:      ${GREEN}activated${NC}"
+echo -e "  OpenClaw:     ${GREEN}memory plugin registered${NC}"
 echo ""
 echo "  Backends:"
 for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
   [[ -f "$skill_dir/wrapper.sh" ]] || continue
   bname=$(basename "$skill_dir" | sed 's/memory-//')
   [[ "$bname" == "router" ]] && continue
-  # Read status from backends.json we just wrote
   bstatus=$(python3 -c "import json; d=json.load(open('$STATE_DIR/backends.json')); print(d['backends'].get('$bname',{}).get('status','unknown'))" 2>/dev/null || echo "unknown")
   case "$bstatus" in
     ready)    echo -e "    $bname: ${GREEN}$bstatus${NC}" ;;
@@ -361,7 +441,7 @@ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
 done
 
 echo ""
-echo -e "  ${BOLD}Next step:${NC}"
-echo "    cd /path/to/your/project"
-echo "    openclaw-memory init"
+echo -e "  ${GREEN}Memory Stack is now active.${NC}"
+echo -e "  OpenClaw will use it automatically — no extra setup needed."
+echo -e "  Restart OpenClaw to apply: ${BOLD}openclaw restart${NC}"
 echo ""

@@ -48,10 +48,43 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
 
   const { version } = JSON.parse(raw) as { version: string };
 
-  // Delete token (one-time use)
-  await env.KV.delete(`dl:${token}`);
+  // Let TTL handle expiration — no deletion, so retries work within the TTL window
 
   // Get artifact from R2
+  const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
+  const object = await env.RELEASES.get(objectKey);
+
+  if (!object) {
+    return errorResponse("Release artifact not found", 404);
+  }
+
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": "application/gzip",
+      "Content-Disposition": `attachment; filename="openclaw-memory-stack-v${version}.tar.gz"`,
+    },
+  });
+}
+
+export async function handleDownloadLatest(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const key = url.searchParams.get("key");
+
+  if (!key) {
+    return errorResponse("Missing license key", 400);
+  }
+
+  const raw = await env.KV.get(`license:${key}`);
+  if (!raw) {
+    return errorResponse("Invalid license key", 403);
+  }
+
+  const license: LicenseData = JSON.parse(raw);
+  if (!license.active) {
+    return errorResponse("License has been revoked", 403);
+  }
+
+  const version = license.version;
   const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
   const object = await env.RELEASES.get(objectKey);
 

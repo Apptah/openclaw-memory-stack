@@ -18,7 +18,7 @@ export async function handleCheckout(request: Request, env: Env): Promise<Respon
       "payment_method_types[0]": "card",
       "metadata[tier]": "starter",
       "metadata[version]": "0.1.0",
-      "success_url": body.success_url ?? "https://openclaw-site-53r.pages.dev/thanks",
+      "success_url": body.success_url ?? "https://openclaw-site-53r.pages.dev/thanks?session_id={CHECKOUT_SESSION_ID}",
       "cancel_url": body.cancel_url ?? "https://openclaw-site-53r.pages.dev",
     }),
   });

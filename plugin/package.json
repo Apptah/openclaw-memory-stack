@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-memory-stack",
+  "version": "0.1.0",
+  "main": "index.mjs",
+  "openclaw": {
+    "extensions": [
+      "./index.mjs"
+    ]
+  }
+}

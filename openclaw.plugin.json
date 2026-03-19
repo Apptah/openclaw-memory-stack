@@ -1,0 +1,47 @@
+{
+  "id": "openclaw-memory-stack",
+  "name": "OpenClaw Memory Stack",
+  "version": "0.1.0",
+  "description": "Rule-based memory router with BM25 + vector search (QMD) and git-based recall (Total Recall). Saves tokens by providing precise memory retrieval.",
+  "kind": "memory",
+  "slot": "memory",
+  "main": "plugin/index.mjs",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "routerMode": {
+        "type": "string",
+        "enum": ["auto", "qmd-only", "totalrecall-only"],
+        "default": "auto",
+        "description": "Which backends to use. 'auto' lets the router decide."
+      },
+      "searchMode": {
+        "type": "string",
+        "enum": ["bm25", "vector", "hybrid"],
+        "default": "hybrid",
+        "description": "QMD search mode."
+      },
+      "autoRecall": {
+        "type": "boolean",
+        "default": true,
+        "description": "Inject relevant memories before each agent turn."
+      },
+      "autoCapture": {
+        "type": "boolean",
+        "default": true,
+        "description": "Store conversation context after each turn."
+      },
+      "maxRecallResults": {
+        "type": "number",
+        "default": 5,
+        "description": "Maximum memories to inject per turn."
+      },
+      "maxRecallTokens": {
+        "type": "number",
+        "default": 1500,
+        "description": "Token budget for injected memories."
+      }
+    },
+    "additionalProperties": false
+  }
+}

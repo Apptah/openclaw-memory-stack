@@ -21,6 +21,8 @@ cp -r "$PROJECT_ROOT/lib" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/install.sh" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/LICENSE" "$BUILD_DIR/"
+cp "$PROJECT_ROOT/openclaw.plugin.json" "$BUILD_DIR/"
+cp -r "$PROJECT_ROOT/plugin" "$BUILD_DIR/"
 
 # Copy all backend skills dynamically
 mkdir -p "$BUILD_DIR/skills"

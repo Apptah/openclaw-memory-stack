@@ -23,6 +23,7 @@ We did the research so you don't have to.
 | **Memory Router** | Rule-based query routing with sequential fallback across all installed backends |
 | **Total Recall** | Git-based memory — stores memories as markdown on an orphan branch. Zero dependencies beyond git |
 | **QMD** | BM25 + vector search engine — keyword search, semantic search, and hybrid mode for code and docs |
+| **Plugin integration** | Installs as OpenClaw's memory provider automatically — just restart and go |
 | Quickstart guide | Get running in under 5 minutes |
 
 One purchase, no subscription. You get the v1 snapshot as-is.
@@ -35,15 +36,20 @@ One purchase, no subscription. You get the v1 snapshot as-is.
 # 1. Install with your license key
 ./install.sh --key=oc-starter-xxxxxxxxxxxx
 
-# 2. Initialize in your project
+# 2. Restart OpenClaw
+openclaw gateway restart
+
+# 3. Done — memory is now active
+#    Just have a conversation. Memory Stack works automatically
+#    as OpenClaw's memory backend.
+```
+
+**Want per-project code search?** That's optional and takes one extra step:
+
+```bash
 cd /path/to/your/project
-openclaw-memory init
-
-# 3. Start querying (BM25 ready immediately)
-openclaw-memory "find function parseAuthToken"
-
-# 4. Optional: enable vector search
-openclaw-memory embed
+openclaw-memory init          # sets up BM25 search for this project
+openclaw-memory embed         # optional: enables vector search too
 ```
 
 See [docs/quickstart.md](docs/quickstart.md) for the full setup guide.

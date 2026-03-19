@@ -84,7 +84,17 @@ if [ "${1:-}" = "init" ]; then
 
   # Must be a git repo
   if ! git -C "$TARGET_PATH" rev-parse --is-inside-work-tree &>/dev/null; then
-    echo "Error: '$TARGET_PATH' is not a git repository." >&2
+    echo "Error: '$TARGET_PATH' is not a project with git version control." >&2
+    echo "" >&2
+    echo "Memory Stack needs to run inside a git project." >&2
+    echo "To fix this, go to your project folder and run:" >&2
+    echo "  cd /path/to/your/project" >&2
+    echo "  openclaw-memory init" >&2
+    echo "" >&2
+    echo "If your project doesn't use git yet, set it up first:" >&2
+    echo "  cd /path/to/your/project" >&2
+    echo "  git init" >&2
+    echo "  openclaw-memory init" >&2
     exit 1
   fi
 
