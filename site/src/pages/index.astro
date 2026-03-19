@@ -347,17 +347,18 @@ import Layout from "../layouts/Layout.astro";
     <div class="nav-logo">openclaw<span>/memory-stack</span></div>
     <div class="nav-links">
       <a href="#features">Features</a>
-      <a href="#routing">Routing</a>
+      <a href="#how">How It Works</a>
       <a href="/manage">Manage License</a>
     </div>
   </nav>
 
   <div class="hero">
-    <div class="badge">v0.1.0 Starter</div>
-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
+    <div class="badge">v2 — OpenClaw Plugin</div>
+    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
     <p class="subtitle">
-      Guided memory routing for AI coding agents. Three backends, one router,
-      zero context loss. Every query hits the right memory store — automatically.
+      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
+      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
+      No API keys. No subscriptions. Just install and go.
     </p>
     <button class="hero-cta" id="buy-btn">
       Get Memory Stack
@@ -375,80 +376,79 @@ import Layout from "../layouts/Layout.astro";
         <div class="terminal-title">openclaw-memory</div>
       </div>
       <div class="terminal-body">
-        <div><span class="comment"># Install + activate</span></div>
+        <div><span class="comment"># Install — one command, done</span></div>
         <div><span class="prompt">$</span> <span class="cmd">./install.sh --key=oc-starter-xxxxxxxxxxxx</span></div>
-        <div><span class="success">  [OK]  License verified (tier: starter)</span></div>
-        <div><span class="success">  [OK]  Files installed</span></div>
+        <div><span class="success">  [OK]  License verified</span></div>
+        <div><span class="success">  [OK]  Registered as OpenClaw memory plugin</span></div>
         <div>&nbsp;</div>
-        <div><span class="comment"># Initialize in your project</span></div>
-        <div><span class="prompt">$</span> <span class="cmd">openclaw-memory init</span></div>
-        <div><span class="output">  Orphan branch created: openclaw/memory</span></div>
-        <div><span class="output">  QMD collection indexed: 142 files</span></div>
+        <div><span class="comment"># Restart OpenClaw — memory is now active</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">openclaw gateway restart</span></div>
+        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+rescue)</span></div>
         <div>&nbsp;</div>
-        <div><span class="comment"># Query — routed automatically</span></div>
-        <div><span class="prompt">$</span> <span class="cmd">openclaw-memory "find function parseAuthToken"</span></div>
-        <div><span class="output">  Router: exact_symbol → QMD (BM25)</span></div>
-        <div><span class="success">  Found: src/auth/token.ts:42</span></div>
+        <div><span class="comment"># Just talk — memory works in the background</span></div>
+        <div><span class="output">  You: What did we decide about the API design?</span></div>
+        <div><span class="success">  [memory_search] Found 3 results (engines: fts5, qmd, rescue)</span></div>
+        <div><span class="output">  Agent: We decided to use REST with /api/v2/...</span></div>
       </div>
     </div>
   </div>
 
   <div class="section" id="features">
-    <div class="section-label">// components</div>
-    <h2>Three backends. One router.</h2>
-    <p class="section-desc">Each memory backend is optimized for a different kind of recall. The router picks the right one for every query.</p>
+    <div class="section-label">// why memory stack</div>
+    <h2>What OpenClaw's built-in memory can't do.</h2>
+    <p class="section-desc">Three features that make long conversations actually work.</p>
     <div class="features">
       <div class="feature-card">
-        <div class="feature-icon">&#x21CC;</div>
-        <h3>Memory Router</h3>
-        <p>Rule-based query classification with sequential fallback. Pattern-matches your query to the right backend — no LLM call needed.</p>
+        <div class="feature-icon">&#x1F512;</div>
+        <h3>100% Local Search</h3>
+        <p>BM25 + vector search using local models. Other memory plugins need an OpenAI API key for every search — that's extra cost and latency on every turn. Memory Stack runs entirely on your machine. Zero API calls. Zero cost. Zero privacy risk.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F9E0;</div>
-        <h3>Total Recall</h3>
-        <p>Git-native memory. Stores decisions, context, and learned patterns as markdown on an orphan branch. Versioned. Portable. Searchable.</p>
+        <div class="feature-icon">&#x1F9F9;</div>
+        <h3>Memory Quality</h3>
+        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you exactly what to clean up.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x26A1;</div>
-        <h3>QMD</h3>
-        <p>BM25 + vector search over your codebase. Instant symbol lookup, semantic concept search, and hybrid queries. Powered by Bun.</p>
+        <div class="feature-icon">&#x1F6E1;</div>
+        <h3>Compaction Rescue</h3>
+        <p>Long conversations get compressed by OpenClaw — and key decisions get lost in the process. Memory Stack automatically saves important facts (decisions, deadlines, requirements) before they're compressed away, and brings them back when you need them.</p>
       </div>
     </div>
   </div>
 
-  <div class="section" id="routing">
-    <div class="section-label">// routing logic</div>
-    <h2>Queries find the right store.</h2>
-    <p class="section-desc">The router classifies every query and picks the optimal backend with automatic fallback.</p>
+  <div class="section" id="how">
+    <div class="section-label">// how it works</div>
+    <h2>Install once. Memory improves forever.</h2>
+    <p class="section-desc">Memory Stack plugs into OpenClaw as a native memory provider. No manual setup after install.</p>
     <div class="routing-grid">
       <div class="route-item">
         <div>
-          <div class="route-label">Symbol lookup</div>
-          <div class="route-arrow">QMD (BM25) &rarr; <span class="route-target">Total Recall</span></div>
+          <div class="route-label">You talk to OpenClaw</div>
+          <div class="route-arrow">&rarr; <span class="route-target">auto-recall kicks in</span></div>
         </div>
       </div>
       <div class="route-item">
         <div>
-          <div class="route-label">Concept search</div>
-          <div class="route-arrow">QMD (vector) &rarr; <span class="route-target">Total Recall</span></div>
+          <div class="route-label">Relevant memories found</div>
+          <div class="route-arrow">&rarr; <span class="route-target">injected before response</span></div>
         </div>
       </div>
       <div class="route-item">
         <div>
-          <div class="route-label">Recent context</div>
-          <div class="route-arrow">Total Recall &rarr; <span class="route-target">QMD</span></div>
+          <div class="route-label">Agent responds</div>
+          <div class="route-arrow">&rarr; <span class="route-target">key facts saved to rescue</span></div>
         </div>
       </div>
       <div class="route-item">
         <div>
-          <div class="route-label">File patterns</div>
-          <div class="route-arrow">QMD (BM25) &rarr; <span class="route-target">Total Recall</span></div>
+          <div class="route-label">Conversation gets long</div>
+          <div class="route-arrow">&rarr; <span class="route-target">compaction happens</span></div>
         </div>
       </div>
       <div class="route-item">
         <div>
-          <div class="route-label">Ambiguous</div>
-          <div class="route-arrow">QMD (hybrid) &rarr; <span class="route-target">Total Recall</span></div>
+          <div class="route-label">You ask about old decisions</div>
+          <div class="route-arrow">&rarr; <span class="route-target">rescue store has them</span></div>
         </div>
       </div>
     </div>
@@ -469,10 +469,10 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="disclaimers-section">
     <ul class="disclaimers">
-      <li><strong>Rule-based routing, not AI.</strong> Pattern matching — no LLM calls, no API keys, no latency.</li>
-      <li><strong>QMD requires Bun.</strong> Total Recall works everywhere git does.</li>
+      <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
+      <li><strong>Runs locally.</strong> No API keys, no cloud calls, no extra cost. Needs Bun for QMD vector search.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
-      <li><strong>No subscription.</strong> You own the files. No updates included.</li>
+      <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
     </ul>
   </div>
 
