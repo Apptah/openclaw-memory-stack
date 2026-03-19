@@ -400,13 +400,13 @@ import Layout from "../layouts/Layout.astro";
     <div class="features">
       <div class="feature-card">
         <div class="feature-icon">&#x1F512;</div>
-        <h3>100% Local Search</h3>
-        <p>BM25 + vector search using local models. Other memory plugins need an OpenAI API key for every search — that's extra cost and latency on every turn. Memory Stack runs entirely on your machine. Zero API calls. Zero cost. Zero privacy risk.</p>
+        <h3>No Embedding Setup Needed</h3>
+        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
         <h3>Memory Quality</h3>
-        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you exactly what to clean up.</p>
+        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you what to clean up — it never deletes anything automatically.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F6E1;</div>
@@ -470,7 +470,7 @@ import Layout from "../layouts/Layout.astro";
   <div class="disclaimers-section">
     <ul class="disclaimers">
       <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
-      <li><strong>Runs locally.</strong> No API keys, no cloud calls, no extra cost. Needs Bun for QMD vector search.</li>
+      <li><strong>No embedding setup.</strong> BM25 search works instantly. Optional QMD vector search runs locally with Bun — no external API needed.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
       <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
     </ul>
