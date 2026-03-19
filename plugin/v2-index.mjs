@@ -110,16 +110,12 @@ function searchNativeFTS5(query, maxResults) {
 function searchQMD(query, maxResults, mode) {
   if (!QMD_BIN) return [];
   const searchMode = mode || "hybrid";
-  // HyDE: for vector/hybrid modes, try generating a hypothetical doc
-  let effectiveQuery = query;
-  if (HYDE_ENABLED && (searchMode === "hybrid" || searchMode === "vector")) {
-    const hydeDoc = hydeExpand(query);
-    if (hydeDoc) effectiveQuery = hydeDoc;
-  }
-  const safeQuery = effectiveQuery.replace(/"/g, '\\"');
-  const cmd = searchMode === "hybrid"
-    ? `"${QMD_BIN}" query "${safeQuery}" --limit ${maxResults} --json 2>/dev/null`
-    : `"${QMD_BIN}" search "${safeQuery}" --limit ${maxResults} --json 2>/dev/null`;
+  const safeQuery = query.replace(/"/g, '\\"');
+  // "query" mode uses QMD's built-in query expansion (1.7B GGUF) + reranker (0.6B GGUF)
+  // This is equivalent to HyDE + RRF reranking, no Ollama needed
+  const modeMap = { hybrid: "query", vector: "vsearch", bm25: "search", search: "search" };
+  const qmdMode = modeMap[searchMode] || "query";
+  const cmd = `"${QMD_BIN}" ${qmdMode} "${safeQuery}" --limit ${maxResults} --json 2>/dev/null`;
   try {
     const result = execSync(cmd, { encoding: "utf-8", timeout: 8000 });
     const data = JSON.parse(result || "{}");
