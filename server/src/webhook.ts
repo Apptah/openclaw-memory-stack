@@ -101,7 +101,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
         <p><a href="${downloadUrl}">Download your copy</a> (link expires in 24 hours)</p>
         <h3>Quick Start</h3>
         <ol>
-          <li>Download and extract the archive</li>
+          <li>Download and unzip the file</li>
           <li>Run: <code>./install.sh --key=${key}</code></li>
           <li>In your project: <code>openclaw-memory init</code></li>
           <li>Query: <code>openclaw-memory "find function parseAuth"</code></li>
