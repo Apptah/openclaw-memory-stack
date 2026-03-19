@@ -156,16 +156,96 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
     if (deduped.length >= maxResults) break;
   }
 
+  // Post-processing: temporal decay → re-sort → MMR
+  applyTemporalDecay(deduped, combinedSearch._halfLifeDays);
+  deduped.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+  const reranked = applyMMR(deduped, combinedSearch._mmrLambda, maxResults);
+
   // Token budget
   const charBudget = maxTokens * 4;
   const selected = [];
   let used = 0;
-  for (const r of deduped) {
+  for (const r of reranked) {
     if (used + (r.content || "").length > charBudget) break;
     selected.push(r);
     used += (r.content || "").length;
   }
   return selected;
+}
+
+// ─── Post-processing: MMR reranking + temporal decay ─────────────
+
+function applyMMR(results, lambda = 0.7, maxResults = results.length) {
+  if (results.length <= 1) return results.slice(0, maxResults);
+
+  // Build word sets for Jaccard similarity
+  const wordSets = results.map(r =>
+    new Set((r.content || "").toLowerCase().split(/\W+/).filter(w => w.length > 2))
+  );
+
+  function jaccard(setA, setB) {
+    if (setA.size === 0 && setB.size === 0) return 1;
+    let intersection = 0;
+    for (const w of setA) { if (setB.has(w)) intersection++; }
+    const union = setA.size + setB.size - intersection;
+    return union === 0 ? 0 : intersection / union;
+  }
+
+  // Greedy selection: start with highest-relevance result
+  const selected = [0];
+  const remaining = new Set(results.map((_, i) => i));
+  remaining.delete(0);
+
+  while (selected.length < maxResults && remaining.size > 0) {
+    let bestIdx = -1;
+    let bestScore = -Infinity;
+
+    for (const i of remaining) {
+      const relevance = results[i].relevance || 0;
+      // Max similarity to any already-selected result
+      let maxSim = 0;
+      for (const j of selected) {
+        const sim = jaccard(wordSets[i], wordSets[j]);
+        if (sim > maxSim) maxSim = sim;
+      }
+      const score = lambda * relevance - (1 - lambda) * maxSim;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    }
+
+    if (bestIdx === -1) break;
+    selected.push(bestIdx);
+    remaining.delete(bestIdx);
+  }
+
+  return selected.map(i => results[i]);
+}
+
+function applyTemporalDecay(results, halfLifeDays = 30) {
+  const now = Date.now();
+  const datePattern = /(\d{4})-(\d{2})-(\d{2})/;
+
+  for (const r of results) {
+    // Evergreen sources are exempt
+    if (r.source === "MEMORY.md" || (r.source || "").startsWith("rescue:")) continue;
+
+    const match = (r.source || "").match(datePattern);
+    if (!match) continue;
+
+    const docDate = new Date(match[0]).getTime();
+    if (isNaN(docDate)) continue;
+
+    const ageDays = (now - docDate) / 86400000;
+    if (ageDays <= 0) continue;
+
+    // Exponential decay: score * 2^(-age/halfLife), floored at 20%
+    const decayFactor = Math.max(0.2, Math.pow(2, -ageDays / halfLifeDays));
+    r.relevance = (r.relevance || 0) * decayFactor;
+  }
+
+  return results;
 }
 
 // ─── Direction 2: Memory quality ─────────────────────────────────
@@ -299,6 +379,12 @@ export default {
     const maxResults = cfg.maxRecallResults || 5;
     const maxTokens = cfg.maxRecallTokens || 1500;
     const searchMode = cfg.searchMode || "hybrid";
+    const mmrLambda = cfg.mmrLambda ?? 0.7;
+    const halfLifeDays = cfg.halfLifeDays ?? 30;
+
+    // Expose config to combinedSearch via function properties
+    combinedSearch._mmrLambda = mmrLambda;
+    combinedSearch._halfLifeDays = halfLifeDays;
 
     const hasQMD = !!QMD_BIN;
     const hasDB = existsSync(MEMORY_DB);
