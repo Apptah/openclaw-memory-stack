@@ -461,6 +461,16 @@ function saveGraph(graph) {
 function extractEntities(text) {
   const entities = new Map();
   const edges = [];
+
+  // Also extract standalone capitalized multi-word names (e.g. "Team Alpha", "XYZ Corp", "Project Beta")
+  const standaloneNames = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
+  for (const name of standaloneNames) {
+    if (name.length < 3 || name.length > 60) continue;
+    const key = name.toLowerCase();
+    if (!entities.has(key)) entities.set(key, { name, type: "entity", mentions: 0 });
+    entities.get(key).mentions++;
+  }
+
   const lines = text.split("\n").filter(l => l.trim());
 
   // Entity patterns: category keyword followed by a name
@@ -715,7 +725,18 @@ export default {
 
     if (autoRecall) {
       api.on("before_agent_start", async (event) => {
-        const query = event.lastUserMessage || event.summary || "";
+        // Extract last user message from event
+        let query = event.lastUserMessage || event.summary || "";
+        if (!query && Array.isArray(event.messages)) {
+          // Find last user message
+          for (let i = event.messages.length - 1; i >= 0; i--) {
+            const msg = event.messages[i];
+            if (msg.role === "user") {
+              query = typeof msg.content === "string" ? msg.content : (msg.content?.[0]?.text || "");
+              break;
+            }
+          }
+        }
         if (!query || query.length < 5) return {};
 
         const results = combinedSearch(query, maxResults, maxTokens, searchMode);
@@ -731,8 +752,21 @@ export default {
     // ─── Compaction rescue: save key facts after each turn ─────
 
     api.on("agent_end", async (event) => {
-      const content = event.turnSummary || event.agentResponse || "";
-      if (content.length < 100) return;
+      // Extract text from event.messages (array of message objects)
+      let content = "";
+      if (Array.isArray(event.messages)) {
+        for (const msg of event.messages) {
+          if (msg.role === "assistant" && typeof msg.content === "string") {
+            content += msg.content + "\n";
+          } else if (msg.role === "assistant" && Array.isArray(msg.content)) {
+            for (const part of msg.content) {
+              if (part.type === "text" && part.text) content += part.text + "\n";
+            }
+          }
+        }
+      }
+      if (!content) content = event.turnSummary || event.agentResponse || "";
+      if (content.length < 20) return;
 
       // Extract key facts from this turn
       const facts = extractKeyFacts(content);
