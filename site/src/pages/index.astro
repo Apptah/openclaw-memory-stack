@@ -259,6 +259,55 @@ import Layout from "../layouts/Layout.astro";
       color: var(--muted);
     }
 
+    /* ── Compare table ── */
+    .compare-table-wrap {
+      overflow-x: auto;
+      margin: 0 -0.5rem;
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .compare-table th {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid var(--border-bright);
+    }
+    .compare-table th:not(:first-child) {
+      text-align: center;
+    }
+    .compare-table td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--fg);
+    }
+    .compare-table td:not(:first-child) {
+      text-align: center;
+    }
+    .compare-table td:first-child {
+      font-weight: 500;
+      color: var(--fg-bright);
+      white-space: nowrap;
+    }
+    .compare-table tr:hover {
+      background: rgba(0, 229, 255, 0.03);
+    }
+    .compare-table td.yes {
+      color: #28c840;
+    }
+    .compare-table td.no {
+      color: var(--muted);
+    }
+    .compare-table td.partial {
+      color: #ffbd2e;
+    }
+
     /* ── CTA ── */
     .cta-section {
       max-width: 900px;
@@ -349,7 +398,7 @@ import Layout from "../layouts/Layout.astro";
     <div class="nav-logo">openclaw<span>/memory-stack</span></div>
     <div class="nav-links">
       <a href="#features">Features</a>
-      <a href="#how">How It Works</a>
+      <a href="#compare">vs Native</a>
       <a href="/manage">Manage License</a>
     </div>
   </nav>
@@ -468,6 +517,80 @@ import Layout from "../layouts/Layout.astro";
           <div class="route-arrow">&rarr; <span class="route-target">rescue store has them</span></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="section" id="compare">
+    <div class="section-label">// vs native memory</div>
+    <h2>What you get that built-in memory doesn't have.</h2>
+    <p class="section-desc">OpenClaw's native memory is good. Memory Stack makes it better.</p>
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Native Memory</th>
+            <th>Memory Stack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Text search (BM25)</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+          </tr>
+          <tr>
+            <td>Vector search</td>
+            <td class="yes">Yes (needs API key or local setup)</td>
+            <td class="yes">Yes (QMD, zero config)</td>
+          </tr>
+          <tr>
+            <td>Hybrid search + MMR</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+          </tr>
+          <tr>
+            <td>Temporal decay</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+          </tr>
+          <tr>
+            <td>Knowledge graph</td>
+            <td class="no">No</td>
+            <td class="yes">Yes — tracks entities and relationships</td>
+          </tr>
+          <tr>
+            <td>Self-evolving memory</td>
+            <td class="no">No</td>
+            <td class="yes">Yes — finds duplicates, suggests consolidation</td>
+          </tr>
+          <tr>
+            <td>Compaction rescue</td>
+            <td class="no">LLM-based flush only (costs tokens)</td>
+            <td class="yes">Rule-based extraction (zero token cost)</td>
+          </tr>
+          <tr>
+            <td>Memory health check</td>
+            <td class="no">No</td>
+            <td class="yes">Yes — scores quality 0-100</td>
+          </tr>
+          <tr>
+            <td>Multi-engine search</td>
+            <td class="no">Single backend</td>
+            <td class="yes">5 engines with fallback routing</td>
+          </tr>
+          <tr>
+            <td>Session search</td>
+            <td class="partial">Experimental</td>
+            <td class="yes">Yes</td>
+          </tr>
+          <tr>
+            <td>Embedding setup needed</td>
+            <td class="no">Yes — requires provider config</td>
+            <td class="yes">No — works out of the box</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
