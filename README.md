@@ -1,0 +1,92 @@
+# OpenClaw Memory Stack
+
+Guided memory routing for OpenClaw — so your agent remembers what matters.
+
+---
+
+## The Problem
+
+OpenClaw's default memory works fine for small projects. But when conversations grow long, codebases get large, and decisions pile up, you hit the memory wall. Important context gets lost, decisions get re-made, and your agent starts from scratch every session.
+
+## The Solution
+
+Memory Stack bundles 2 researched memory backends with a rule-based router. Each query gets routed to the right backend — code search goes to BM25, recent context goes to git-based recall. No magic, just guided routing with clear rules.
+
+We did the research so you don't have to.
+
+---
+
+## What's Included — $49 one-time
+
+| Component | What it does |
+|-----------|-------------|
+| **Memory Router** | Rule-based query routing with sequential fallback across all installed backends |
+| **Total Recall** | Git-based memory — stores memories as markdown on an orphan branch. Zero dependencies beyond git |
+| **QMD** | BM25 + vector search engine — keyword search, semantic search, and hybrid mode for code and docs |
+| Quickstart guide | Get running in under 5 minutes |
+
+One purchase, no subscription. You get the v1 snapshot as-is.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install with your license key
+./install.sh --key=oc-starter-xxxxxxxxxxxx
+
+# 2. Initialize in your project
+cd /path/to/your/project
+openclaw-memory init
+
+# 3. Start querying (BM25 ready immediately)
+openclaw-memory "find function parseAuthToken"
+
+# 4. Optional: enable vector search
+openclaw-memory embed
+```
+
+See [docs/quickstart.md](docs/quickstart.md) for the full setup guide.
+
+---
+
+## How Routing Works
+
+The router matches your query against a rule table — keyword patterns, not AI classification. First match wins, and if the result is poor, it falls back to the next backend in the chain.
+
+| Query type | Primary backend | Fallback |
+|-----------|----------------|----------|
+| Exact symbol: `find function parseAuth` | QMD (BM25 search) | Total Recall |
+| Concept: `how does error handling work` | QMD (vector search) | Total Recall |
+| Recent context: `what did we just discuss` | Total Recall | QMD |
+| File/path: `in src/models/*.ts` | QMD (BM25 search) | Total Recall |
+| Ambiguous: single words, vague references | QMD (hybrid) | Total Recall |
+
+---
+
+## Platform Support
+
+| Platform | Status |
+|----------|--------|
+| macOS | Fully tested. |
+| Linux | Documented. Not fully validated at launch. |
+
+---
+
+## Honest Disclaimers
+
+- **Rule-based routing, not AI-powered selection.** The router uses keyword pattern matching to pick backends. It does not understand your query semantically.
+- **QMD requires Bun runtime.** Total Recall works everywhere git does. QMD needs [Bun](https://bun.sh) installed — it's free and open source, but it's an extra dependency.
+- **macOS first.** Linux installation docs are included but not fully validated. If you hit issues on Linux, report them and we'll fix them.
+
+---
+
+## License
+
+Commercial license — see [LICENSE](LICENSE).
+
+---
+
+## Support
+
+Community — GitHub Issues

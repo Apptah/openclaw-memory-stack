@@ -1,0 +1,18 @@
+{
+  "backend": "qmd",
+  "class": "retrieval_engine",
+  "tier": 1,
+  "requirements": {
+    "runtime": ["bun"],
+    "accounts": [],
+    "network": false,
+    "cost": "Free — runs locally"
+  },
+  "failure_modes": {
+    "BACKEND_UNAVAILABLE": "qmd CLI not installed or not on PATH",
+    "BACKEND_ERROR": "qmd process crashed or returned invalid output",
+    "EMPTY_RESULT": "No matching documents in indexed collections"
+  },
+  "install_command": "bun install -g qmd",
+  "docs_url": "https://github.com/nicobailey/qmd"
+}

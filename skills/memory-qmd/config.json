@@ -1,0 +1,48 @@
+{
+  "backend": "qmd",
+  "tier": "starter",
+  "index_path": "~/.cache/qmd/index.sqlite",
+  "search": {
+    "default_mode": "query",
+    "modes": {
+      "search": {
+        "description": "BM25 keyword search — use for exact names, symbols, error strings",
+        "min_score": 0.1,
+        "score_range": "0.0-0.4 typical, 0.1-0.3 is a good result"
+      },
+      "vsearch": {
+        "description": "Vector semantic search — use for concepts, behavior, 'how does X work'",
+        "min_score": 0.3,
+        "score_range": "0.0-1.0, already normalized"
+      },
+      "query": {
+        "description": "Hybrid search (BM25 + vector) — use when unsure or for broad exploration",
+        "min_score": 0.3,
+        "score_range": "0.0-1.0, combined scoring"
+      }
+    }
+  },
+  "relevance": {
+    "method": "bm25_normalized",
+    "formula": "min(raw * 3, 1.0)",
+    "note": "BM25 raw scores 0.1-0.3 are good results due to camelCase tokenization. Do not raise minScore above 0.3 for search mode.",
+    "examples": {
+      "raw_0.10": 0.30,
+      "raw_0.20": 0.60,
+      "raw_0.33": 1.00
+    }
+  },
+  "router": {
+    "fallback_threshold": 0.4,
+    "timeout_ms": 5000
+  },
+  "commands": {
+    "store": "qmd collection add <name> --pattern '<glob>' --path <dir> && qmd embed <name>",
+    "retrieve": "qmd get qmd://<collection>/path/to/file",
+    "search_bm25": "qmd search '<query>' -c <collection> --minScore 0.1",
+    "search_vector": "qmd vsearch '<query>' -c <collection> --minScore 0.3",
+    "search_hybrid": "qmd query '<query>' -c <collection> --minScore 0.3",
+    "update": "qmd update <collection>",
+    "status": "qmd status"
+  }
+}

@@ -6,7 +6,7 @@
   "backends_path": "~/.openclaw/state/backends.json",
   "classes": {
     "retrieval_engine": { "backends": ["qmd", "openviking"] },
-    "memory_store":     { "backends": ["totalrecall", "vertex"] },
+    "memory_store":     { "backends": ["totalrecall", "vertex"], "optional": ["vertex"] },
     "knowledge_graph":  { "backends": ["nowledge"] },
     "context_engine":   { "backends": ["lossless"] }
   },

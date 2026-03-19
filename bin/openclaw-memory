@@ -40,7 +40,7 @@ Direct backend access:
   openclaw-memory --backend <name> search "query"
   openclaw-memory --backend <name> store slug "content"
 
-Backends: $(ls -d "$INSTALL_ROOT/skills/memory-"*/wrapper.sh 2>/dev/null | sed 's|.*/memory-||;s|/wrapper.sh||' | grep -v router | tr '\n' ', ' | sed 's/,$//')
+Backends: $(ls -d "$INSTALL_ROOT/skills/memory-"*/wrapper.sh 2>/dev/null | sed 's|.*/memory-||;s|/wrapper.sh||' | grep -v router | paste -sd ',' - | sed 's/,/, /g')
 
 Run this command from within your project directory.
 HELPEOF

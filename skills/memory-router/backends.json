@@ -1,0 +1,20 @@
+{
+  "version": "2.0",
+  "tier": "starter",
+  "installed_at": "2026-03-17T17:27:22Z",
+  "updated_at": "2026-03-17T17:27:49Z",
+  "backends": {
+    "totalrecall": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T17:27:48Z",
+      "message": null
+    },
+    "qmd": {
+      "status": "ready",
+      "setup_exit_code": 0,
+      "installed_at": "2026-03-17T17:27:49Z",
+      "message": null
+    }
+  }
+}
