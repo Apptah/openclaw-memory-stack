@@ -12,6 +12,13 @@
   },
   "rules": [
     {
+      "id": "hybrid_search",
+      "description": "Combined BM25 + vector search with RRF fusion",
+      "signals": ["hybrid", "comprehensive search", "find.*everything", "thorough search", "search.*all"],
+      "primary_class": "retrieval_engine",
+      "hint": "hybrid"
+    },
+    {
       "id": "exact_symbol",
       "description": "Exact symbol, function, class, or method name lookup",
       "signals": ["find.*(function|class|method)", "find all usages of", "search for \\w+"],
@@ -82,6 +89,30 @@
       "primary_class": "retrieval_engine",
       "fallback_class": "memory_store",
       "hint": "exact"
+    },
+    {
+      "id": "evolution_query",
+      "description": "How decisions evolved over time",
+      "signals": ["evolv", "changed.*from", "used to be", "originally.*now", "timeline of", "history of.*decision"],
+      "primary_class": "knowledge_graph",
+      "fallback_class": "retrieval_engine",
+      "hint": "evolution"
+    },
+    {
+      "id": "expertise_query",
+      "description": "What areas of expertise exist in memory",
+      "signals": ["expertise", "what do I know about", "how much.*experience", "knowledge area", "specialt"],
+      "primary_class": "knowledge_graph",
+      "fallback_class": "retrieval_engine",
+      "hint": "expertise"
+    },
+    {
+      "id": "context_expand",
+      "description": "Drill down into compacted conversation history",
+      "signals": ["expand.*context", "drill.*down", "what was the original", "show me the details of", "lcm_expand", "full context of"],
+      "primary_class": "context_engine",
+      "fallback_class": "memory_store",
+      "hint": "expand"
     },
     {
       "id": "ambiguous_default",

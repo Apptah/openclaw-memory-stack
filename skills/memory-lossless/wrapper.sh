@@ -114,6 +114,89 @@ adapter() {
   local tmp_results="/tmp/openclaw-lcm-$$.json"
   trap "rm -f '$tmp_results'" RETURN
 
+  # hint=expand: drill down into compacted nodes, returning full uncompacted content
+  if [ "$hint" = "expand" ]; then
+    local count normalized
+    read -r count normalized < <(python3 -c "
+import sqlite3, json, sys
+
+db_path = '$LCM_DB'
+query = sys.stdin.read().strip()
+
+try:
+    conn = sqlite3.connect(db_path)
+    # Find the compacted node matching the query
+    cursor = conn.execute(
+        'SELECT rowid, content, created_at FROM nodes WHERE content LIKE ? ORDER BY created_at DESC LIMIT 5',
+        (f'%{query}%',)
+    )
+    parent_rows = list(cursor)
+
+    results = []
+    max_score = 0.0
+
+    for rowid, parent_content, parent_ts in parent_rows:
+        # Expand: find child nodes linked to this parent via edges table
+        try:
+            children = conn.execute(
+                'SELECT n.content, n.created_at FROM edges e JOIN nodes n ON e.target_id = n.rowid WHERE e.source_id = ? ORDER BY n.created_at ASC',
+                (rowid,)
+            ).fetchall()
+        except:
+            children = []
+
+        if children:
+            # Return expanded child nodes
+            for i, (child_content, child_ts) in enumerate(children[:20]):
+                score = round(max(0.3, 1.0 - i * 0.04), 3)
+                results.append({
+                    'content': str(child_content)[:500],
+                    'relevance': score,
+                    'source': 'lossless',
+                    'timestamp': child_ts or '',
+                    'expanded_from': str(parent_content)[:100]
+                })
+                if score > max_score:
+                    max_score = score
+        else:
+            # No children — return the node itself with full content
+            score = round(max(0.5, 1.0 - len(results) * 0.05), 3)
+            results.append({
+                'content': str(parent_content),
+                'relevance': score,
+                'source': 'lossless',
+                'timestamp': parent_ts or '',
+                'expanded_from': None
+            })
+            if score > max_score:
+                max_score = score
+
+    conn.close()
+    with open('$tmp_results', 'w') as f:
+        json.dump(results, f)
+    print(len(results), round(max_score, 3))
+except Exception as e:
+    print(0, 0.0, file=sys.stderr)
+    print(0, 0.0)
+" <<< "$query" 2>/dev/null) || true
+
+    end_ms=$(now_ms)
+    duration_ms=$(( end_ms - start_ms ))
+
+    [ -z "$count" ] && count=0
+    [ -z "$normalized" ] && normalized="0.0"
+
+    if [ "$count" -eq 0 ]; then
+      contract_empty "$query" "$BACKEND" "$duration_ms"
+    else
+      local results
+      results=$(cat "$tmp_results" 2>/dev/null || echo "[]")
+      contract_success "$query" "$BACKEND" "$results" "$count" "$duration_ms" "$normalized"
+    fi
+    return 0
+  fi
+
+  # Standard search: LIKE query across all nodes
   local count normalized
   read -r count normalized < <(python3 -c "
 import sqlite3, json, sys

@@ -7,6 +7,11 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 source "$INSTALL_ROOT/lib/contracts.sh"
 
 BACKEND="qmd"
+QMD_CONFIG="$WRAPPER_DIR/config.json"
+
+# Load HyDE support
+source "$INSTALL_ROOT/lib/hyde.sh"
+[ -f "$QMD_CONFIG" ] && hyde_load_config "$QMD_CONFIG"
 
 # ============================================================
 # Layer A: Native API
@@ -30,11 +35,12 @@ cmd_status()          { qmd status "$@"; }
 # Layer B: Router Adapter
 # ============================================================
 adapter() {
-  local query="" hint=""
+  local query="" hint="" use_hyde=false
   while [ $# -gt 0 ]; do
     case "$1" in
-      --hint) hint="$2"; shift 2 ;;
-      *)      query="$1"; shift ;;
+      --hint)  hint="$2"; shift 2 ;;
+      --hyde)  use_hyde=true; shift ;;
+      *)       query="$1"; shift ;;
     esac
   done
 
@@ -70,9 +76,21 @@ adapter() {
     *)            mode="query" ;;
   esac
 
+  # HyDE expansion: for vsearch, generate hypothetical document first
+  local search_query="$query"
+  if [ "$mode" = "vsearch" ]; then
+    if $use_hyde || hyde_is_enabled; then
+      local hyde_text
+      hyde_text=$(hyde_expand "$query")
+      if [ -n "$hyde_text" ] && [ "$hyde_text" != "$query" ]; then
+        search_query="$hyde_text"
+      fi
+    fi
+  fi
+
   # Execute search
   local raw_output=""
-  raw_output=$(qmd "$mode" "$query" --json 2>/dev/null) || true
+  raw_output=$(qmd "$mode" "$search_query" --json 2>/dev/null) || true
 
   local end_ms duration_ms
   end_ms=$(now_ms)

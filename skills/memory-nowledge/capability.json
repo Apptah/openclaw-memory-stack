@@ -1,7 +1,7 @@
 {
   "capability_version": 1,
   "backend": "nowledge",
-  "supported_modes": ["semantic", "relationship", "timeline"],
+  "supported_modes": ["semantic", "relationship", "timeline", "multi_hop"],
   "requires_credentials": false,
   "requires_external_service": true,
   "cold_start_ms": 300,

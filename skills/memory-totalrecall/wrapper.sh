@@ -7,6 +7,16 @@ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 source "$INSTALL_ROOT/lib/contracts.sh"
 
+# Source A-MEM self-organize library if available
+if [ -f "$INSTALL_ROOT/lib/self-organize.sh" ]; then
+  source "$INSTALL_ROOT/lib/self-organize.sh"
+fi
+
+# Source deduplication library
+source "$INSTALL_ROOT/lib/dedup.sh"
+TR_CONFIG="$WRAPPER_DIR/config.json"
+[ -f "$TR_CONFIG" ] && dedup_load_config "$TR_CONFIG"
+
 BACKEND="totalrecall"
 
 # ============================================================
@@ -35,30 +45,86 @@ MEMORY_ROOT="$(discover_memory_root)" || true
 # Layer A: Native API
 # ============================================================
 cmd_store() {
-  # Usage: wrapper.sh store <tier> <slug> <content...>
-  local tier="$1" slug="$2" content="${*:3}"
+  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
+  local tier="$1" slug="$2"; shift 2
+
+  # Parse optional flags
+  local event_time="" tags=""
+  local content_parts=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --event-time) event_time="$2"; shift 2 ;;
+      --tags)       tags="$2"; shift 2 ;;
+      *)            content_parts+=("$1"); shift ;;
+    esac
+  done
+  local content="${content_parts[*]}"
+
+  # Auto-generate record_time (when it was recorded)
+  local record_time
+  record_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # If no event_time provided, default to record_time
+  [ -z "$event_time" ] && event_time="$record_time"
+
+  # Build frontmatter block
+  local frontmatter=""
+  frontmatter="---
+key: ${slug}
+event_time: ${event_time}
+record_time: ${record_time}"
+  [ -n "$tags" ] && frontmatter="${frontmatter}
+tags: ${tags}"
+  frontmatter="${frontmatter}
+---"
+
+  # Dedup check: skip or merge if duplicate content exists
+  if dedup_is_enabled && [ "$tier" != "counter" ]; then
+    local dedup_action
+    dedup_action=$(dedup_pre_store "$content" "$tier" "$slug")
+    case "$dedup_action" in
+      skip)
+        echo "dedup: skipped duplicate for $slug" >&2
+        return 0
+        ;;
+      merge:*)
+        local merge_path="${dedup_action#merge:}"
+        if [ -f "$merge_path" ]; then
+          local merged_content
+          merged_content=$(merge_memories "$merge_path" "$content")
+          if [ -n "$merged_content" ]; then
+            content="$merged_content"
+            echo "dedup: merged into $merge_path" >&2
+          fi
+        fi
+        ;;
+      store|*)
+        ;; # proceed normally
+    esac
+  fi
 
   case "$tier" in
     counter)
+      # Counter tier: append without frontmatter (single file, line-based)
       printf '%s\n' "$content" >> "$MEMORY_ROOT/CLAUDE.local.md"
       echo "$MEMORY_ROOT/CLAUDE.local.md"
       ;;
     pantry)
       mkdir -p "$MEMORY_ROOT/memory/registers"
       local fp="$MEMORY_ROOT/memory/registers/${slug}.md"
-      printf '%s\n' "$content" > "$fp"
+      printf '%s\n%s\n' "$frontmatter" "$content" > "$fp"
       echo "$fp"
       ;;
     daily)
       mkdir -p "$MEMORY_ROOT/memory/daily"
       local fp="$MEMORY_ROOT/memory/daily/$(date -u +%Y-%m-%d)_${slug}.md"
-      printf '%s\n' "$content" > "$fp"
+      printf '%s\n%s\n' "$frontmatter" "$content" > "$fp"
       echo "$fp"
       ;;
     archive)
       mkdir -p "$MEMORY_ROOT/memory/archive"
       local fp="$MEMORY_ROOT/memory/archive/${slug}.md"
-      printf '%s\n' "$content" > "$fp"
+      printf '%s\n%s\n' "$frontmatter" "$content" > "$fp"
       echo "$fp"
       ;;
     *)
@@ -66,6 +132,12 @@ cmd_store() {
       return 1
       ;;
   esac
+
+  # A-MEM hook: auto-organize new memory if enabled
+  if [ "${AMEM_ENABLED:-false}" = "true" ] && type organize_new_memory &>/dev/null; then
+    # Run in background to avoid blocking the store operation
+    (organize_new_memory "$content" > "$HOME/.openclaw/state/amem-last-organize.json" 2>/dev/null) &
+  fi
 }
 
 cmd_search() {
@@ -177,11 +249,13 @@ cmd_status() {
 # Layer B: Router Adapter
 # ============================================================
 adapter() {
-  local query="" hint=""
+  local query="" hint="" event_after="" event_before=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      --hint) hint="$2"; shift 2 ;;
-      *)      query="$1"; shift ;;
+      --hint)         hint="$2"; shift 2 ;;
+      --event-after)  event_after="$2"; shift 2 ;;
+      --event-before) event_before="$2"; shift 2 ;;
+      *)              query="$1"; shift ;;
     esac
   done
 
@@ -210,6 +284,7 @@ adapter() {
   start_ms=$(now_ms)
 
   # Search across all 4 tiers, score by tier and recency
+  # Supports bi-temporal filtering via --event-after / --event-before
   local results="[]" count=0 best_score="0.0"
 
   if has_command python3; then
@@ -220,8 +295,63 @@ from pathlib import Path
 
 query = '''$query'''
 root = '''$MEMORY_ROOT'''
+event_after_str = '''$event_after'''
+event_before_str = '''$event_before'''
 now = datetime.now(timezone.utc)
 results = []
+
+def parse_date(s):
+    \"\"\"Parse a date/datetime string into a timezone-aware datetime.\"\"\"
+    if not s:
+        return None
+    for fmt in ('%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%d'):
+        try:
+            dt = datetime.strptime(s, fmt)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except ValueError:
+            continue
+    return None
+
+event_after = parse_date(event_after_str)
+event_before = parse_date(event_before_str)
+
+def extract_frontmatter(content):
+    \"\"\"Extract frontmatter fields from markdown content.\"\"\"
+    fm = {}
+    if not content.startswith('---'):
+        return fm
+    parts = content.split('---', 2)
+    if len(parts) < 3:
+        return fm
+    for line in parts[1].strip().split('\n'):
+        if ':' in line:
+            key, val = line.split(':', 1)
+            fm[key.strip()] = val.strip()
+    return fm
+
+def get_temporal_date(path, content):
+    \"\"\"Get the best temporal date: event_time from frontmatter, fallback to file mtime.\"\"\"
+    fm = extract_frontmatter(content)
+    # Prefer event_time, then record_time, then file mtime
+    for field in ('event_time', 'record_time'):
+        dt = parse_date(fm.get(field, ''))
+        if dt:
+            return dt
+    try:
+        mt = os.path.getmtime(path)
+        return datetime.fromtimestamp(mt, tz=timezone.utc)
+    except:
+        return now
+
+def passes_temporal_filter(temporal_dt):
+    \"\"\"Check if a date passes the event_after/event_before filters.\"\"\"
+    if event_after and temporal_dt < event_after:
+        return False
+    if event_before and temporal_dt > event_before:
+        return False
+    return True
 
 def file_mod_days(path):
     try:
@@ -243,14 +373,24 @@ def search_file(path, tier_score):
     matching_lines = [l.strip() for l in lines if query.lower() in l.lower()]
     if not matching_lines:
         return
+
+    # Bi-temporal filtering
+    temporal_dt = get_temporal_date(path, content)
+    if not passes_temporal_filter(temporal_dt):
+        return
+
     days = file_mod_days(path)
     score = round(tier_score + recency_bonus(days), 4)
     snippet = matching_lines[0][:200]
+
+    fm = extract_frontmatter(content)
     results.append({
         'content': f'{os.path.relpath(path, root)}: {snippet}',
         'relevance': score,
         'source': 'totalrecall',
-        'timestamp': datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc).isoformat()
+        'timestamp': temporal_dt.isoformat(),
+        'event_time': fm.get('event_time', ''),
+        'record_time': fm.get('record_time', temporal_dt.isoformat())
     })
 
 # Counter tier (score 0.9)

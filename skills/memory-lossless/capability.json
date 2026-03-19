@@ -1,7 +1,7 @@
 {
   "capability_version": 1,
   "backend": "lossless",
-  "supported_modes": ["decision", "timeline", "semantic"],
+  "supported_modes": ["decision", "timeline", "semantic", "expand"],
   "requires_credentials": false,
   "requires_external_service": false,
   "cold_start_ms": 200,

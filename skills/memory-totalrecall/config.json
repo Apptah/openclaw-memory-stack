@@ -15,12 +15,34 @@
     "commit_grep": true,
     "content_grep": true,
     "case_sensitive": true,
-    "max_results": 20
+    "max_results": 20,
+    "temporal_filtering": {
+      "supported": true,
+      "params": ["--event-after", "--event-before"],
+      "note": "Filters on event_time from frontmatter; falls back to record_time or file mtime"
+    }
   },
   "store": {
     "commit_prefix": "memory:",
     "filename_format": "{timestamp}_{slug}.md",
-    "timestamp_format": "YYYY-MM-DDTHH-MM-SS"
+    "timestamp_format": "YYYY-MM-DDTHH-MM-SS",
+    "frontmatter": {
+      "fields": ["key", "event_time", "record_time", "tags"],
+      "event_time": "When the event actually happened (ISO 8601, passed by caller or defaults to record_time)",
+      "record_time": "When the memory was recorded (ISO 8601, auto-generated)"
+    }
+  },
+  "dedup": {
+    "enabled": true,
+    "threshold": 0.9,
+    "merge_model": "qwen2.5:7b",
+    "merge_endpoint": "http://localhost:11434"
+  },
+  "distill": {
+    "model": "qwen2.5:7b",
+    "endpoint": "http://localhost:11434",
+    "min_score": 4,
+    "max_facts": 20
   },
   "tier": "starter"
 }
