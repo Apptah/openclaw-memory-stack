@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_ROOT="$HOME/.openclaw/memory-stack"
 STATE_DIR="$HOME/.openclaw/state"
 BIN_DIR="$HOME/.openclaw/bin"
-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://memory-stack.openclaw.dev/api/activate}"
+ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-license.busihoward.workers.dev/api/activate}"
 
 # ── Color helpers (disabled when not a terminal) ────────────────────
 if [[ -t 1 ]]; then
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --key <key>    Your license key (received via email after purchase)"
       echo "  --help         Show this help"
       echo ""
-      echo "Purchase: https://memory-stack.openclaw.dev"
+      echo "Purchase: https://openclaw-site-53r.pages.dev"
       exit 0
       ;;
     *)
@@ -64,7 +64,7 @@ if [[ -z "$LICENSE_KEY" ]]; then
   echo "Error: license key required." >&2
   echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx" >&2
   echo "" >&2
-  echo "Purchase: https://memory-stack.openclaw.dev" >&2
+  echo "Purchase: https://openclaw-site-53r.pages.dev" >&2
   exit 1
 fi
 
@@ -135,11 +135,11 @@ if [[ "$VALID" != "true" ]] && [[ "$VALID" != "True" ]]; then
     invalid_key)
       fail "Invalid license key."
       echo "  Check your key and try again." >&2
-      echo "  Purchase: https://memory-stack.openclaw.dev" >&2
+      echo "  Purchase: https://openclaw-site-53r.pages.dev" >&2
       ;;
     activation_limit_reached)
       fail "Device activation limit reached."
-      echo "  Manage your devices: https://memory-stack.openclaw.dev/manage" >&2
+      echo "  Manage your devices: https://openclaw-site-53r.pages.dev/manage" >&2
       ;;
     revoked)
       fail "This license has been revoked."

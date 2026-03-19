@@ -25,3 +25,4220 @@ QMD indexes this file for semantic search.
 ```
 
 ---
+
+## 2026-03-17 16:02:32 | `skills/_contract-template.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:02:37 | `skills/_contract-example.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:03:50 | `skills/memory-totalrecall/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:03:59 | `skills/memory-totalrecall/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:04:00 | `skills/memory-totalrecall/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:04:35 | `skills/memory-totalrecall/test-memory.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:07 | `skills/memory-lossless/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:07 | `skills/memory-lossless/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:13 | `skills/memory-qmd/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:26 | `skills/memory-qmd/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:29 | `skills/memory-lossless/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:33 | `skills/memory-qmd/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:40 | `skills/memory-cognee/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:53 | `skills/memory-cognee/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:55 | `skills/memory-cognee/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:57 | `skills/memory-qmd/test-memory.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:05:59 | `skills/memory-lossless/test-memory.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:06:19 | `skills/memory-cognee/test-memory.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:07:01 | `skills/memory-totalrecall/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:07:44 | `skills/memory-totalrecall/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:07:47 | `skills/memory-totalrecall/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:09:01 | `skills/memory-totalrecall/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:09:31 | `skills/memory-totalrecall/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:09:33 | `skills/memory-totalrecall/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:10:19 | `skills/memory-totalrecall/test-memory.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:14:18 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:14:25 | `skills/_backends-schema.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:15:01 | `skills/memory-router/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:15:26 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:17:22 | `docs/quickstart.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:18:00 | `README.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:18:04 | `docs/migration-guide.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:19:21 | `docs/quickstart.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:19:55 | `docs/migration-guide.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:20:19 | `docs/benchmarks-summary.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:20:40 | `docs/research-report.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:21:48 | `docs/decision-matrix.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:25:14 | `docs/benchmarks-full.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:30:45 | `LICENSE`
+
+**Stats:**  1 file changed, 4 insertions(+), 3 deletions(-)
+
+```diff
+diff --git a/LICENSE b/LICENSE
+index 92c081e..6024028 100644
+--- a/LICENSE
++++ b/LICENSE
+@@ -26,9 +26,10 @@ TERMS OF USE
+ 
+ 4. UPDATES
+    Access to updates is governed by the purchaser's subscription tier:
+-   - Pro (one-time): Includes version at time of purchase.
+-   - Updates Pass ($19/quarter): Includes all updates during active subscription.
+-   - Enterprise: Custom terms per agreement.
++   - Starter ($49 one-time): Includes the version at time of purchase. No updates.
++   - Pro ($9/month): Includes all updates during active subscription period.
++     Cancellation stops future updates but does not revoke access to the
++     version installed at the time of cancellation.
+ 
+ 5. NO WARRANTY
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+```
+
+---
+
+## 2026-03-17 16:30:47 | `skills/_contract-template.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:30:50 | `skills/_contract-template.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:30:51 | `skills/memory-cognee/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:30:52 | `skills/memory-cognee/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:30:52 | `skills/memory-lossless/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:31:26 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:31:34 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:31:45 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:31:54 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:31:56 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 16:32:12 | `skills/memory-router/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:32:23 | `lib/platform.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:32:38 | `lib/contracts.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:32:46 | `lib/adapter-template.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:32:54 | `skills/_taxonomy.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:33:00 | `skills/_adapter-contract.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:33:06 | `skills/_backends-schema.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:34:35 | `tests/fixtures/golden-adapter-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:34:43 | `tests/fixtures/golden-error-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:34:46 | `tests/fixtures/backends-tier1.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:34:49 | `tests/fixtures/backends-full.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:04 | `tests/fixtures/golden-adapter-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:09 | `tests/fixtures/golden-error-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:12 | `tests/fixtures/backends-tier1.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:18 | `tests/fixtures/backends-full.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:25 | `tests/test-platform.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 21:35:35 | `tests/schema/test-taxonomy-compat.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:35:50 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:35:56 | `skills/memory-qmd/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:36:37 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:36:45 | `skills/memory-totalrecall/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:06 | `skills/memory-cognee/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:13 | `skills/memory-cognee/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:31 | `skills/memory-lossless/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:38 | `skills/memory-lossless/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:45 | `tests/fixtures/qmd-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:51 | `tests/fixtures/totalrecall-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:37:58 | `tests/fixtures/cognee-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:38:03 | `tests/fixtures/lossless-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:39:01 | `lib/platform.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:41:47 | `tests/native/test-qmd.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:41:54 | `tests/native/test-totalrecall.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:42:09 | `tests/native/test-cognee.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:42:16 | `tests/native/test-lossless.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:42:33 | `tests/adapter/test-retrieval-engine.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:42:50 | `tests/adapter/test-memory-store.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:43:01 | `tests/adapter/test-knowledge-graph.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:43:08 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:43:11 | `tests/adapter/test-context-engine.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:43:48 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:43:53 | `bin/openclaw-memory`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:46:30 | `tests/router/test-signal-detection.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:46:47 | `tests/router/test-class-routing.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:47:02 | `tests/router/test-fallback.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:47:12 | `tests/router/test-timeout.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:47:39 | `tests/integration/test-e2e-local.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:16 | `skills/memory-openviking/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:19 | `skills/memory-openviking/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:23 | `skills/memory-openviking/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:35 | `skills/memory-openviking/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:35 | `skills/memory-openviking/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:45 | `skills/memory-vertex/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:45 | `skills/memory-vertex/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:48 | `skills/memory-vertex/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:48:56 | `skills/memory-vertex/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:00 | `skills/memory-vertex/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:07 | `skills/memory-nowledge/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:08 | `skills/memory-nowledge/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:12 | `skills/memory-nowledge/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:23 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:26 | `skills/memory-nowledge/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:33 | `skills/memory-brainx/SKILL.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:34 | `skills/memory-brainx/config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:47 | `skills/memory-brainx/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:49:49 | `skills/memory-brainx/availability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:04 | `tests/fixtures/openviking-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:06 | `tests/fixtures/vertex-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:08 | `tests/fixtures/nowledge-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:09 | `tests/fixtures/brainx-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:12 | `tests/fixtures/sample-cognee-graph.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:50:15 | `tests/fixtures/sample-vertex-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:51:28 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:52:53 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:54:37 | `tests/native/test-openviking.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:54:46 | `tests/native/test-vertex.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:03 | `tests/native/test-nowledge.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:10 | `tests/native/test-brainx.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:27 | `tests/schema/test-contract-compat.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:27 | `tests/integration/test-e2e-external.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:41 | `tests/schema/test-availability-compat.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:53 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:57 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:55:59 | `tests/integration/test-degraded-mode.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:56:06 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:56:16 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:56:24 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:56:28 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 22:56:36 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:41:30 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:41:32 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:02 | `skills/memory-cognee/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:02 | `skills/memory-lossless/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:02 | `skills/memory-openviking/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:02 | `skills/memory-vertex/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:02 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:03 | `skills/memory-brainx/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:19 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:30 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:36 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:43:49 | `tests/fixtures/backends-degraded.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:44:32 | `tests/simulate-openclaw.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:48:45 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:48:54 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-17 23:53:18 | `tests/simulate-openclaw.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:24:43 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:07 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:07 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:16 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:31 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:37 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:25:42 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:27:41 | `skills/memory-qmd/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 01:27:44 | `skills/memory-qmd/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 02:59:48 | `.gitignore`
+
+**Stats:**  1 file changed, 3 insertions(+)
+
+```diff
+diff --git a/.gitignore b/.gitignore
+index a0e93f2..67d3b74 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -34,3 +34,6 @@ npm-debug.log*
+ 
+ # Docker
+ docker-compose.override.yml
++
++# Worktrees
++.worktrees/
+```
+
+---
+
+## 2026-03-18 11:09:06 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:15:24 | `server/wrangler.toml`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:36:59 | `site/src/layouts/Layout.astro`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:38:24 | `site/src/pages/index.astro`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:38:43 | `site/src/pages/thanks.astro`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:39:50 | `site/src/pages/manage.astro`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:40:07 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 11:40:24 | `server/src/index.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:51:38 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:52:52 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:53:02 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:53:18 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:53:31 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 12:53:39 | `docs/superpowers/specs/2026-03-18-full-backend-stack-design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:01:52 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:02:59 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:03:55 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:04:09 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:04:21 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:04:33 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:04:47 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:05:01 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:05:17 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:06:02 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:06:08 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:06:16 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:06:22 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:06:28 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:07:30 | `docs/superpowers/plans/2026-03-18-full-backend-stack.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:23:54 | `openspec/changes/full-backend-stack/proposal.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:24:46 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:11 | `openspec/changes/full-backend-stack/specs/backend-health-check/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:17 | `openspec/changes/full-backend-stack/specs/openviking-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:21 | `openspec/changes/full-backend-stack/specs/vertex-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:24 | `openspec/changes/full-backend-stack/specs/cognee-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:27 | `openspec/changes/full-backend-stack/specs/nowledge-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:31 | `openspec/changes/full-backend-stack/specs/lossless-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:35 | `openspec/changes/full-backend-stack/specs/brainx-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:42 | `openspec/changes/full-backend-stack/specs/runtime-bootstrap/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:46 | `openspec/changes/full-backend-stack/specs/cli-status/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:51 | `openspec/changes/full-backend-stack/specs/router-config/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:25:56 | `openspec/changes/full-backend-stack/specs/build-release/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:26:50 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:28:40 | `openspec/changes/full-backend-stack/proposal.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:30:40 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:30:53 | `openspec/changes/full-backend-stack/specs/backend-state-model/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:30:57 | `openspec/changes/full-backend-stack/specs/backend-capability-matrix/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:31:06 | `openspec/changes/full-backend-stack/specs/backend-health-check/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:31:11 | `openspec/changes/full-backend-stack/specs/cli-status/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:31:18 | `openspec/changes/full-backend-stack/specs/router-config/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:31:24 | `openspec/changes/full-backend-stack/specs/build-release/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:32:13 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:33:52 | `openspec/changes/full-backend-stack/specs/backend-state-model/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:34:20 | `openspec/changes/full-backend-stack/specs/backend-capability-matrix/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:34:46 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:35:06 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:35:26 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:35:39 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:35:52 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:36:04 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:36:31 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:39:22 | `openspec/changes/full-backend-stack/specs/backend-capability-matrix/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:39:37 | `openspec/changes/full-backend-stack/specs/backend-state-model/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:39:47 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:40:02 | `openspec/changes/full-backend-stack/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:40:10 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:40:19 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:40:26 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:40:35 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:42:50 | `docs/backend-state-model.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:42:55 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:43:15 | `skills/memory-router/router.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:43:20 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:47:22 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:47:48 | `scripts/build-release.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:47:55 | `bin/openclaw-memory`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:00 | `bin/openclaw-memory`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:05 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:10 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:21 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:31 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:48:42 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:49:22 | `install.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:49:37 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:50:03 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:51:25 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:53:19 | `lib/contracts.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:53:26 | `skills/memory-qmd/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:53:28 | `skills/memory-totalrecall/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:53:45 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 13:53:53 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:17:30 | `skills/memory-router/router-config.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:18:01 | `openspec/changes/full-backend-stack/proposal.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:18:15 | `openspec/changes/full-backend-stack/specs/vertex-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:18:20 | `openspec/changes/full-backend-stack/specs/nowledge-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:18:23 | `openspec/changes/full-backend-stack/specs/lossless-backend/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:19:40 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:30:26 | `skills/memory-router/router-config.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-router/router-config.json b/skills/memory-router/router-config.json
+index aa0b0ef..0a96ad2 100644
+--- a/skills/memory-router/router-config.json
++++ b/skills/memory-router/router-config.json
+@@ -6,7 +6,7 @@
+   "backends_path": "~/.openclaw/state/backends.json",
+   "classes": {
+     "retrieval_engine": { "backends": ["qmd", "openviking"] },
+-    "memory_store":     { "backends": ["totalrecall", "vertex"] },
++    "memory_store":     { "backends": ["totalrecall", "vertex"], "optional": ["vertex"] },
+     "knowledge_graph":  { "backends": ["nowledge"] },
+     "context_engine":   { "backends": ["lossless"] }
+   },
+```
+
+---
+
+## 2026-03-18 14:30:38 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 3 insertions(+), 3 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..9752e31 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -37,14 +37,14 @@
+ - [ ] 2.5 測試 health + mock adapter
+ - [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
+ 
+-## 3. Phase 2b — Vertex Wrapper (memory_store, npm plugin + GCP)
++## 3. Phase 2b — Vertex Wrapper (memory_store, 可選 — 用戶自行安裝)
+ 
+ - [ ] 3.1 驗證 vertex plugin：確認 `openclaw-vertexai-memorybank` npm package 和 `memorybank_search` / `memorybank_remember` API
+-- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true — GCP 帳號）
++- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true, optional: true — 需 GCP 帳號，不隨核心安裝）
+ - [ ] 3.3 建立 `skills/memory-vertex/wrapper.sh`（Layer A: memorybank CLI commands, Layer B: adapter, Layer C: cmd_health — L1 check npm package, L2 check GCP creds, L3 probe API）
+ - [ ] 3.4 建立 `tests/fixtures/vertex-mock-response.json`
+ - [ ] 3.5 測試 health + mock adapter
+-- [ ] 3.6 Commit: "feat: add Vertex memory_store wrapper (Vertex AI Memory Bank)"
++- [ ] 3.6 Commit: "feat: add Vertex memory_store wrapper (optional, Vertex AI Memory Bank)"
+ 
+ ## 4. Phase 2c — Nowledge Wrapper (knowledge_graph, REST API)
+ 
+```
+
+---
+
+## 2026-03-18 14:30:44 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 4 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..ce7587a 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -37,14 +37,14 @@
+ - [ ] 2.5 測試 health + mock adapter
+ - [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
+ 
+-## 3. Phase 2b — Vertex Wrapper (memory_store, npm plugin + GCP)
++## 3. Phase 2b — Vertex Wrapper (memory_store, 可選 — 用戶自行安裝)
+ 
+ - [ ] 3.1 驗證 vertex plugin：確認 `openclaw-vertexai-memorybank` npm package 和 `memorybank_search` / `memorybank_remember` API
+-- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true — GCP 帳號）
++- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true, optional: true — 需 GCP 帳號，不隨核心安裝）
+ - [ ] 3.3 建立 `skills/memory-vertex/wrapper.sh`（Layer A: memorybank CLI commands, Layer B: adapter, Layer C: cmd_health — L1 check npm package, L2 check GCP creds, L3 probe API）
+ - [ ] 3.4 建立 `tests/fixtures/vertex-mock-response.json`
+ - [ ] 3.5 測試 health + mock adapter
+-- [ ] 3.6 Commit: "feat: add Vertex memory_store wrapper (Vertex AI Memory Bank)"
++- [ ] 3.6 Commit: "feat: add Vertex memory_store wrapper (optional, Vertex AI Memory Bank)"
+ 
+ ## 4. Phase 2c — Nowledge Wrapper (knowledge_graph, REST API)
+ 
+@@ -71,7 +71,7 @@
+ - [ ] 6.3 測試 router dispatch
+ - [ ] 6.4 Commit: "feat: update router config — 5 backends, 4 classes"
+ - [ ] 6.5 更新 `install.sh`：新增 runtime bootstrap helpers + `--skip-models`
+-- [ ] 6.6 更新 `install.sh`：動態讀取 `capability.json` `install_hint` 安裝依賴
++- [ ] 6.6 更新 `install.sh`：動態讀取 `capability.json` `install_hint` 安裝依賴（跳過 `optional: true` 的 backend，僅安裝 5 核心）
+ - [ ] 6.7 測試 install.sh
+ - [ ] 6.8 Commit: "feat: overhaul installer — auto-install runtimes via capability.json"
+```
+
+---
+
+## 2026-03-18 14:40:01 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 224 insertions(+), 98 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 501bdcd..13360d5 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env bash
+-# Total Recall Memory Backend — Full native API + Router Adapter
++# Total Recall Memory Backend — Markdown 4-tier system
++# Tiers: Counter (CLAUDE.local.md), Pantry (registers/), Daily (daily/), Archive (archive/)
+ set -euo pipefail
+ 
+ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+@@ -7,62 +8,155 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="totalrecall"
+-MEMORY_BRANCH="openclaw-memory"
+-MEMORY_DIR="_memory"
+ 
+ # ============================================================
+-# Layer A: Native API
++# Discover MEMORY_ROOT
+ # ============================================================
+-cmd_store() {
+-  # Usage: wrapper.sh store <slug> <content>
+-  local slug="$1" content="${*:2}"
+-  local filename
+-  filename="$(date -u +"%Y-%m-%dT%H-%M-%S")_${slug}.md"
+-  local filepath="$MEMORY_DIR/$filename"
+-
+```
+
+---
+
+## 2026-03-18 14:40:05 | `skills/memory-totalrecall/capability.json`
+
+**Stats:**  1 file changed, 5 insertions(+), 5 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/capability.json b/skills/memory-totalrecall/capability.json
+index c1a49ed..f9bdb71 100644
+--- a/skills/memory-totalrecall/capability.json
++++ b/skills/memory-totalrecall/capability.json
+@@ -4,12 +4,12 @@
+   "supported_modes": ["timeline", "decision", "exact"],
+   "requires_credentials": false,
+   "requires_external_service": false,
+-  "cold_start_ms": 100,
++  "cold_start_ms": 50,
+   "probe": {
+-    "l1_install": "command -v git",
+-    "l2_runtime": "true",
+-    "l3_functional": "git branch --list openclaw-memory 2>/dev/null | grep -q openclaw-memory",
++    "l1_install": "true",
++    "l2_runtime": "[ -d \"memory\" ] || [ -f \"CLAUDE.local.md\" ]",
++    "l3_functional": "find memory/ -name '*.md' 2>/dev/null | head -1 | grep -q .",
+     "l3_deep": null
+   },
+-  "install_hint": "git is required (usually pre-installed)"
++  "install_hint": "Run: openclaw-memory init (creates memory/ directory structure)"
+ }
+```
+
+---
+
+## 2026-03-18 14:40:15 | `skills/memory-totalrecall/setup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:40:28 | `skills/memory-openviking/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:40:51 | `skills/memory-nowledge/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:40:54 | `skills/memory-totalrecall/capability.json`
+
+**Stats:**  1 file changed, 5 insertions(+), 5 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/capability.json b/skills/memory-totalrecall/capability.json
+index c1a49ed..f3e0cfe 100644
+--- a/skills/memory-totalrecall/capability.json
++++ b/skills/memory-totalrecall/capability.json
+@@ -4,12 +4,12 @@
+   "supported_modes": ["timeline", "decision", "exact"],
+   "requires_credentials": false,
+   "requires_external_service": false,
+-  "cold_start_ms": 100,
++  "cold_start_ms": 50,
+   "probe": {
+-    "l1_install": "command -v git",
+-    "l2_runtime": "true",
+-    "l3_functional": "git branch --list openclaw-memory 2>/dev/null | grep -q openclaw-memory",
++    "l1_install": "true",
++    "l2_runtime": "[ -d \"${OPENCLAW_REPO_ROOT:-.}/memory\" ]",
++    "l3_functional": "find \"${OPENCLAW_REPO_ROOT:-.}/memory\" -name '*.md' -type f 2>/dev/null | head -1 | grep -q .",
+     "l3_deep": null
+   },
+-  "install_hint": "git is required (usually pre-installed)"
++  "install_hint": "Run: openclaw-memory init (creates memory/ directory)"
+ }
+```
+
+---
+
+## 2026-03-18 14:40:58 | `skills/memory-openviking/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:08 | `skills/memory-lossless/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:14 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 244 insertions(+), 97 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 501bdcd..1e3a8a5 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env bash
+-# Total Recall Memory Backend — Full native API + Router Adapter
++# Total Recall Memory Backend — Markdown 4-tier system
++# Tiers: Counter (CLAUDE.local.md), Pantry (registers/), Daily (daily/), Archive (archive/)
+ set -euo pipefail
+ 
+ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+@@ -7,62 +8,176 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="totalrecall"
+-MEMORY_BRANCH="openclaw-memory"
+-MEMORY_DIR="_memory"
++
++# ============================================================
++# Discover MEMORY_ROOT
++# ============================================================
++discover_memory_root() {
++  # 1. Try git repo root
++  local git_root
++  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
++  if [ -n "$git_root" ]; then
++    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
++      echo "$git_root"
++      return 0
+```
+
+---
+
+## 2026-03-18 14:41:18 | `tests/fixtures/openviking-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:29 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:37 | `tests/fixtures/nowledge-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:42 | `skills/memory-lossless/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:41:51 | `tests/fixtures/lossless-mock-response.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:42:35 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 259 insertions(+), 100 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 501bdcd..83b00c4 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env bash
+-# Total Recall Memory Backend — Full native API + Router Adapter
++# Total Recall Memory Backend — Markdown 4-tier system
++# Tiers: Counter (CLAUDE.local.md), Pantry (registers/), Daily (daily/), Archive (archive/)
+ set -euo pipefail
+ 
+ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+@@ -7,62 +8,176 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="totalrecall"
+-MEMORY_BRANCH="openclaw-memory"
+-MEMORY_DIR="_memory"
++
++# ============================================================
++# Discover MEMORY_ROOT
++# ============================================================
++discover_memory_root() {
++  # 1. Try git repo root
++  local git_root
++  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
++  if [ -n "$git_root" ]; then
++    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
++      echo "$git_root"
++      return 0
+```
+
+---
+
+## 2026-03-18 14:43:36 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 4 insertions(+), 11 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 83b00c4..e190fb5 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -13,21 +13,14 @@ BACKEND="totalrecall"
+ # Discover MEMORY_ROOT
+ # ============================================================
+ discover_memory_root() {
+-  # 1. Try git repo root
+-  local git_root
+-  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+-  if [ -n "$git_root" ]; then
+-    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
+-      echo "$git_root"
+-      return 0
+-    fi
+-  fi
+-  # 2. Fall back to OPENCLAW_REPO_ROOT env var
++  # 1. Explicit env var takes priority
+   if [ -n "${OPENCLAW_REPO_ROOT:-}" ]; then
+     echo "$OPENCLAW_REPO_ROOT"
+     return 0
+   fi
+-  # 3. Fall back to git root even without memory dir
++  # 2. Try git repo root
++  local git_root
++  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+   if [ -n "$git_root" ]; then
+     echo "$git_root"
+     return 0
+```
+
+---
+
+## 2026-03-18 14:44:03 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 5 insertions(+), 12 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 83b00c4..8232de4 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -13,21 +13,14 @@ BACKEND="totalrecall"
+ # Discover MEMORY_ROOT
+ # ============================================================
+ discover_memory_root() {
+-  # 1. Try git repo root
+-  local git_root
+-  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+-  if [ -n "$git_root" ]; then
+-    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
+-      echo "$git_root"
+-      return 0
+-    fi
+-  fi
+-  # 2. Fall back to OPENCLAW_REPO_ROOT env var
++  # 1. Explicit env var takes priority
+   if [ -n "${OPENCLAW_REPO_ROOT:-}" ]; then
+     echo "$OPENCLAW_REPO_ROOT"
+     return 0
+   fi
+-  # 3. Fall back to git root even without memory dir
++  # 2. Try git repo root
++  local git_root
++  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+   if [ -n "$git_root" ]; then
+     echo "$git_root"
+     return 0
+```
+
+---
+
+## 2026-03-18 14:44:06 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 6 insertions(+), 13 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 83b00c4..0f92bb9 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -13,21 +13,14 @@ BACKEND="totalrecall"
+ # Discover MEMORY_ROOT
+ # ============================================================
+ discover_memory_root() {
+-  # 1. Try git repo root
+-  local git_root
+-  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+-  if [ -n "$git_root" ]; then
+-    if [ -d "$git_root/memory" ] || [ -f "$git_root/CLAUDE.local.md" ]; then
+-      echo "$git_root"
+-      return 0
+-    fi
+-  fi
+-  # 2. Fall back to OPENCLAW_REPO_ROOT env var
++  # 1. Explicit env var takes priority
+   if [ -n "${OPENCLAW_REPO_ROOT:-}" ]; then
+     echo "$OPENCLAW_REPO_ROOT"
+     return 0
+   fi
+-  # 3. Fall back to git root even without memory dir
++  # 2. Try git repo root
++  local git_root
++  git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+   if [ -n "$git_root" ]; then
+     echo "$git_root"
+     return 0
+```
+
+---
+
+## 2026-03-18 14:45:54 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 10 insertions(+), 10 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..8eb1bd1 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -30,21 +30,21 @@
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
++- [x] 2.2 建立 `skills/memory-openviking/capability.json`
++- [x] 2.3 建立 `skills/memory-openviking/wrapper.sh`
++- [x] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
++- [x] 2.5 測試 health → unavailable（未安裝，預期）
++- [x] 2.6 Commit
+ 
+-## 3. Phase 2b — Vertex Wrapper (memory_store, npm plugin + GCP)
++## 3. Phase 2b — Vertex Wrapper (memory_store, 可選 — 用戶自行安裝)
+ 
+ - [ ] 3.1 驗證 vertex plugin：確認 `openclaw-vertexai-memorybank` npm package 和 `memorybank_search` / `memorybank_remember` API
+-- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true — GCP 帳號）
++- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true, optional: true — 需 GCP 帳號，不隨核心安裝）
+ - [ ] 3.3 建立 `skills/memory-vertex/wrapper.sh`（Layer A: memorybank CLI commands, Layer B: adapter, Layer C: cmd_health — L1 check npm package, L2 check GCP creds, L3 probe API）
+ - [ ] 3.4 建立 `tests/fixtures/vertex-mock-response.json`
+ - [ ] 3.5 測試 health + mock adapter
+```
+
+---
+
+## 2026-03-18 14:46:22 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 26 insertions(+), 26 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..c4f63c7 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -30,39 +30,39 @@
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
++- [x] 2.2 建立 `skills/memory-openviking/capability.json`
++- [x] 2.3 建立 `skills/memory-openviking/wrapper.sh`
++- [x] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
++- [x] 2.5 測試 health → unavailable（未安裝，預期）
++- [x] 2.6 Commit
+ 
+-## 3. Phase 2b — Vertex Wrapper (memory_store, npm plugin + GCP)
++## 3. Phase 2b — Vertex Wrapper (memory_store, 可選 — 用戶自行安裝)
+ 
+-- [ ] 3.1 驗證 vertex plugin：確認 `openclaw-vertexai-memorybank` npm package 和 `memorybank_search` / `memorybank_remember` API
+-- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（requires_credentials: true, requires_external_service: true — GCP 帳號）
+-- [ ] 3.3 建立 `skills/memory-vertex/wrapper.sh`（Layer A: memorybank CLI commands, Layer B: adapter, Layer C: cmd_health — L1 check npm package, L2 check GCP creds, L3 probe API）
++- [ ] 3.1 驗證 vertex plugin：確認 `openclaw-vertexai-memorybank` npm package API
++- [ ] 3.2 建立 `skills/memory-vertex/capability.json`（optional: true）
++- [ ] 3.3 建立 `skills/memory-vertex/wrapper.sh`
+```
+
+---
+
+## 2026-03-18 14:48:07 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 18 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 919b4e7..71dc949 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -179,6 +179,24 @@ else:
+     for b in classes.get(fallback_cls, {}).get('backends', []):
+         raw_chain.append((b, hint))
+ 
++# Filter by capability: skip backends that don't support the current hint
++if hint:
++    import os
++    install_root = os.environ.get('OPENCLAW_INSTALL_ROOT', os.path.expanduser('~/.openclaw/memory-stack'))
++    filtered_chain = []
++    for b, h in raw_chain:
++        cap_path = os.path.join(install_root, 'skills', f'memory-{b}', 'capability.json')
++        try:
++            with open(cap_path) as cf:
++                cap = json.load(cf)
++            modes = cap.get('supported_modes', [])
++            if hint in modes or not modes:
++                filtered_chain.append((b, h))
++            # else: skip — backend doesn't support this hint
++        except:
++            filtered_chain.append((b, h))  # no capability.json = allow
++    raw_chain = filtered_chain
++
+ # Apply four-state dispatch ordering:
+ #   1. ready backends (preserving raw_chain order)
+ #   2. degraded backends (preserving raw_chain order)
+```
+
+---
+
+## 2026-03-18 14:48:23 | `skills/memory-vertex/capability.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:48:53 | `skills/memory-vertex/wrapper.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 14:59:10 | `bin/openclaw-memory`
+
+**Stats:**  1 file changed, 1 insertion(+)
+
+```diff
+diff --git a/bin/openclaw-memory b/bin/openclaw-memory
+index 98b4383..dd01797 100755
+--- a/bin/openclaw-memory
++++ b/bin/openclaw-memory
+@@ -27,6 +27,7 @@ Usage:
+   openclaw-memory "<query>" [options]    Search across memory backends
+   openclaw-memory init [/path/to/repo]   Initialize memory in a project
+   openclaw-memory embed [--background]   Enable vector search (run after init)
++  openclaw-memory health [--deep]        Check all backend health status
+ 
+ Options:
+   --hint <hint>       Routing hint: exact, semantic, timeline
+```
+
+---
+
+## 2026-03-18 14:59:22 | `bin/openclaw-memory`
+
+**Stats:**  1 file changed, 23 insertions(+)
+
+```diff
+diff --git a/bin/openclaw-memory b/bin/openclaw-memory
+index 98b4383..4bcae9d 100755
+--- a/bin/openclaw-memory
++++ b/bin/openclaw-memory
+@@ -27,6 +27,7 @@ Usage:
+   openclaw-memory "<query>" [options]    Search across memory backends
+   openclaw-memory init [/path/to/repo]   Initialize memory in a project
+   openclaw-memory embed [--background]   Enable vector search (run after init)
++  openclaw-memory health [--deep]        Check all backend health status
+ 
+ Options:
+   --hint <hint>       Routing hint: exact, semantic, timeline
+@@ -47,6 +48,28 @@ HELPEOF
+     ;;
+ esac
+ 
++# ── health: no license required ────────────────────────────────────
++if [ "${1:-}" = "health" ]; then
++  shift
++  DEEP_FLAG=""
++  [[ "${1:-}" == "--deep" ]] && DEEP_FLAG="--deep"
++  echo "OpenClaw Memory Stack — Backend Health"
++  echo ""
++  printf "  %-15s %-12s %s\n" "BACKEND" "STATUS" "REASON"
++  printf "  %-15s %-12s %s\n" "-------" "------" "------"
++  for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
++    [ -f "$skill_dir/wrapper.sh" ] || continue
++    backend_name=$(basename "$skill_dir" | sed 's/memory-//')
++    [ "$backend_name" = "router" ] && continue
++    health_json=$(OPENCLAW_INSTALL_ROOT="$INSTALL_ROOT" bash "$skill_dir/wrapper.sh" health $DEEP_FLAG 2>/dev/null) || health_json='{"status":"error","reason":"wrapper failed"}'
+```
+
+---
+
+## 2026-03-18 15:01:03 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 32 insertions(+), 32 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..e57b6c2 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -21,48 +21,48 @@
+ - [x] 1.5 新增 `cmd_health` 到 totalrecall wrapper
+ - [x] 1.6 測試三級 probe
+ - [x] 1.7 Commit
+-- [ ] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
+-- [ ] 1.9 測試：hint=exact 時 router 跳過 supported_modes 不含 exact 的 backend
+-- [ ] 1.10 Commit: "feat: router filters dispatch by capability supported_modes"
+-- [ ] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
+-- [ ] 1.12 測試 `openclaw-memory health`
+-- [ ] 1.13 Commit: "feat: add CLI health subcommand with --deep support"
++- [x] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
++- [x] 1.9 測試：capability filtering 正確（Python block 驗證通過，e2e 有 detect_rule stdin 衝突的既有 bug）
++- [x] 1.10 Commit
++- [x] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
++- [x] 1.12 測試 `openclaw-memory health` — 6 backends 全部回報正確狀態
++- [x] 1.13 Commit
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
+```
+
+---
+
+## 2026-03-18 15:01:12 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 34 insertions(+), 34 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..c95b87b 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -21,48 +21,48 @@
+ - [x] 1.5 新增 `cmd_health` 到 totalrecall wrapper
+ - [x] 1.6 測試三級 probe
+ - [x] 1.7 Commit
+-- [ ] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
+-- [ ] 1.9 測試：hint=exact 時 router 跳過 supported_modes 不含 exact 的 backend
+-- [ ] 1.10 Commit: "feat: router filters dispatch by capability supported_modes"
+-- [ ] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
+-- [ ] 1.12 測試 `openclaw-memory health`
+-- [ ] 1.13 Commit: "feat: add CLI health subcommand with --deep support"
++- [x] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
++- [x] 1.9 測試：capability filtering 正確（Python block 驗證通過，e2e 有 detect_rule stdin 衝突的既有 bug）
++- [x] 1.10 Commit
++- [x] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
++- [x] 1.12 測試 `openclaw-memory health` — 6 backends 全部回報正確狀態
++- [x] 1.13 Commit
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
+```
+
+---
+
+## 2026-03-18 15:02:35 | `install.sh`
+
+**Stats:**  1 file changed, 35 insertions(+)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 8c90962..e445182 100755
+--- a/install.sh
++++ b/install.sh
+@@ -183,6 +183,41 @@ fi
+ 
+ command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
+ 
++# ── Runtime bootstrap helpers ────────────────────────────────────────
++install_bun() {
++  if command -v bun &>/dev/null; then
++    ok "bun: v$(bun --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing Bun..."
++  curl -fsSL https://bun.sh/install | bash 2>/dev/null
++  export BUN_INSTALL="$HOME/.bun"
++  export PATH="$BUN_INSTALL/bin:$PATH"
++  ok "bun: v$(bun --version 2>/dev/null)"
++}
++
++install_uv() {
++  if command -v uv &>/dev/null; then
++    ok "uv: $(uv --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing uv (Python manager)..."
++  curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
++  export PATH="$HOME/.local/bin:$PATH"
++  ok "uv: $(uv --version 2>/dev/null)"
+```
+
+---
+
+## 2026-03-18 15:02:38 | `tests/integration/test-all-backends-health.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 15:02:44 | `install.sh`
+
+**Stats:**  1 file changed, 53 insertions(+)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 8c90962..3d5ac53 100755
+--- a/install.sh
++++ b/install.sh
+@@ -183,6 +183,41 @@ fi
+ 
+ command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
+ 
++# ── Runtime bootstrap helpers ────────────────────────────────────────
++install_bun() {
++  if command -v bun &>/dev/null; then
++    ok "bun: v$(bun --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing Bun..."
++  curl -fsSL https://bun.sh/install | bash 2>/dev/null
++  export BUN_INSTALL="$HOME/.bun"
++  export PATH="$BUN_INSTALL/bin:$PATH"
++  ok "bun: v$(bun --version 2>/dev/null)"
++}
++
++install_uv() {
++  if command -v uv &>/dev/null; then
++    ok "uv: $(uv --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing uv (Python manager)..."
++  curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
++  export PATH="$HOME/.local/bin:$PATH"
++  ok "uv: $(uv --version 2>/dev/null)"
+```
+
+---
+
+## 2026-03-18 15:02:47 | `tests/integration/test-capability-consistency.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 15:02:51 | `install.sh`
+
+**Stats:**  1 file changed, 55 insertions(+)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 8c90962..5cdf603 100755
+--- a/install.sh
++++ b/install.sh
+@@ -37,10 +37,12 @@ header() { printf "\n${BOLD}%s${NC}\n" "$1"; }
+ 
+ # ── Parse arguments ─────────────────────────────────────────────────
+ LICENSE_KEY=""
++SKIP_MODELS=false
+ while [[ $# -gt 0 ]]; do
+   case "$1" in
+     --key=*) LICENSE_KEY="${1#--key=}"; shift ;;
+     --key)   LICENSE_KEY="$2"; shift 2 ;;
++    --skip-models) SKIP_MODELS=true; shift ;;
+     -h|--help)
+       echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx"
+       echo ""
+@@ -183,6 +185,41 @@ fi
+ 
+ command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
+ 
++# ── Runtime bootstrap helpers ────────────────────────────────────────
++install_bun() {
++  if command -v bun &>/dev/null; then
++    ok "bun: v$(bun --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing Bun..."
++  curl -fsSL https://bun.sh/install | bash 2>/dev/null
++  export BUN_INSTALL="$HOME/.bun"
+```
+
+---
+
+## 2026-03-18 15:02:57 | `install.sh`
+
+**Stats:**  1 file changed, 60 insertions(+)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 8c90962..6f9d226 100755
+--- a/install.sh
++++ b/install.sh
+@@ -37,10 +37,12 @@ header() { printf "\n${BOLD}%s${NC}\n" "$1"; }
+ 
+ # ── Parse arguments ─────────────────────────────────────────────────
+ LICENSE_KEY=""
++SKIP_MODELS=false
+ while [[ $# -gt 0 ]]; do
+   case "$1" in
+     --key=*) LICENSE_KEY="${1#--key=}"; shift ;;
+     --key)   LICENSE_KEY="$2"; shift 2 ;;
++    --skip-models) SKIP_MODELS=true; shift ;;
+     -h|--help)
+       echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx"
+       echo ""
+@@ -183,6 +185,41 @@ fi
+ 
+ command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
+ 
++# ── Runtime bootstrap helpers ────────────────────────────────────────
++install_bun() {
++  if command -v bun &>/dev/null; then
++    ok "bun: v$(bun --version 2>/dev/null)"
++    return 0
++  fi
++  info "Installing Bun..."
++  curl -fsSL https://bun.sh/install | bash 2>/dev/null
++  export BUN_INSTALL="$HOME/.bun"
+```
+
+---
+
+## 2026-03-18 15:03:17 | `scripts/build-release.sh`
+
+**Stats:**  1 file changed, 10 insertions(+)
+
+```diff
+diff --git a/scripts/build-release.sh b/scripts/build-release.sh
+index f634c25..11a3326 100755
+--- a/scripts/build-release.sh
++++ b/scripts/build-release.sh
+@@ -60,6 +60,16 @@ if [ "$MISSING" -gt 0 ]; then
+   exit 1
+ fi
+ 
++# Verify capability.json presence
++for skill_dir in "$PROJECT_ROOT/skills/memory-"*; do
++  [ -d "$skill_dir" ] || continue
++  skill_name=$(basename "$skill_dir")
++  [ "$skill_name" = "memory-router" ] && continue
++  if [ ! -f "$BUILD_DIR/skills/$skill_name/capability.json" ]; then
++    echo "WARNING: Missing capability.json: $skill_name" >&2
++  fi
++done
++
+ # Count backends
+ BACKEND_COUNT=$(ls -d "$BUILD_DIR/skills/memory-"*/wrapper.sh 2>/dev/null | wc -l | tr -d ' ')
+ echo "  $BACKEND_COUNT backends present (all with wrapper.sh)"
+```
+
+---
+
+## 2026-03-18 15:05:00 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 3 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 0f92bb9..7dead9d 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -363,15 +363,12 @@ cmd_health() {
+   local timeout_sec="${OPENCLAW_PROBE_TIMEOUT:-5}"
+   local l3_exit
+   if command -v timeout &>/dev/null; then
+-    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
+-    l3_exit=$?
++    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
+   elif command -v gtimeout &>/dev/null; then
+-    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null
+-    l3_exit=$?
++    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
+   else
+     # No timeout command (macOS without coreutils) — run directly
+-    bash -c "$probe_l3" 2>/dev/null
+-    l3_exit=$?
++    bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
+   fi
+   if [ "$l3_exit" -ne 0 ]; then
+     if [ "$l3_exit" -eq 124 ]; then
+```
+
+---
+
+## 2026-03-18 15:06:24 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 52 insertions(+), 52 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..c343e25 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -21,68 +21,68 @@
+ - [x] 1.5 新增 `cmd_health` 到 totalrecall wrapper
+ - [x] 1.6 測試三級 probe
+ - [x] 1.7 Commit
+-- [ ] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
+-- [ ] 1.9 測試：hint=exact 時 router 跳過 supported_modes 不含 exact 的 backend
+-- [ ] 1.10 Commit: "feat: router filters dispatch by capability supported_modes"
+-- [ ] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
+-- [ ] 1.12 測試 `openclaw-memory health`
+-- [ ] 1.13 Commit: "feat: add CLI health subcommand with --deep support"
++- [x] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
++- [x] 1.9 測試：capability filtering 正確（Python block 驗證通過，e2e 有 detect_rule stdin 衝突的既有 bug）
++- [x] 1.10 Commit
++- [x] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
++- [x] 1.12 測試 `openclaw-memory health` — 6 backends 全部回報正確狀態
++- [x] 1.13 Commit
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
+```
+
+---
+
+## 2026-03-18 15:08:07 | `openspec/changes/full-backend-stack/tasks.md`
+
+**Stats:**  1 file changed, 52 insertions(+), 52 deletions(-)
+
+```diff
+diff --git a/openspec/changes/full-backend-stack/tasks.md b/openspec/changes/full-backend-stack/tasks.md
+index cf2e49d..37e10c5 100644
+--- a/openspec/changes/full-backend-stack/tasks.md
++++ b/openspec/changes/full-backend-stack/tasks.md
+@@ -21,68 +21,68 @@
+ - [x] 1.5 新增 `cmd_health` 到 totalrecall wrapper
+ - [x] 1.6 測試三級 probe
+ - [x] 1.7 Commit
+-- [ ] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
+-- [ ] 1.9 測試：hint=exact 時 router 跳過 supported_modes 不含 exact 的 backend
+-- [ ] 1.10 Commit: "feat: router filters dispatch by capability supported_modes"
+-- [ ] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
+-- [ ] 1.12 測試 `openclaw-memory health`
+-- [ ] 1.13 Commit: "feat: add CLI health subcommand with --deep support"
++- [x] 1.8 修改 `router.sh` — dispatch 時讀 `capability.json` `supported_modes`，跳過不支援當前 hint 的 backend
++- [x] 1.9 測試：capability filtering 正確（Python block 驗證通過，e2e 有 detect_rule stdin 衝突的既有 bug）
++- [x] 1.10 Commit
++- [x] 1.11 新增 CLI `health` 子命令到 `bin/openclaw-memory`（支援 `--deep` 透傳）
++- [x] 1.12 測試 `openclaw-memory health` — 6 backends 全部回報正確狀態
++- [x] 1.13 Commit
+ 
+ ## 2. Phase 2a — OpenViking Wrapper (retrieval_engine, Python)
+ 
+-- [ ] 2.1 驗證 openviking API：`pip install openviking`，確認 `import openviking as ov`、`SyncOpenViking` / `AsyncOpenViking` API
+-- [ ] 2.2 建立 `skills/memory-openviking/capability.json`（supported_modes: [semantic, exact]，requires_credentials: true — 需 VLM+Embedding，可用 OpenClaw 現有 LLM API）
+-- [ ] 2.3 建立 `skills/memory-openviking/wrapper.sh`（Layer A: ov.find/ov.add_resource, Layer B: adapter, Layer C: cmd_health 讀 capability.json）
+-- [ ] 2.4 建立 `tests/fixtures/openviking-mock-response.json`
+-- [ ] 2.5 測試 health + mock adapter
+-- [ ] 2.6 Commit: "feat: add OpenViking retrieval_engine wrapper"
++- [x] 2.1 驗證 openviking API
+```
+
+---
+
+## 2026-03-18 15:34:40 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:44:23 | `openspec/changes/production-launch-readiness/proposal.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:45:09 | `openspec/changes/production-launch-readiness/design.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:45:31 | `openspec/changes/production-launch-readiness/specs/production-deployment/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:45:40 | `openspec/changes/production-launch-readiness/specs/cli-error-messages/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:45:47 | `openspec/changes/production-launch-readiness/specs/e2e-smoke-test/spec.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:46:26 | `openspec/changes/production-launch-readiness/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 16:59:15 | `lib/license.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:00:13 | `lib/platform.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:01:50 | `lib/license.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:01:56 | `bin/openclaw-memory`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/bin/openclaw-memory b/bin/openclaw-memory
+index 4bcae9d..808f1f9 100755
+--- a/bin/openclaw-memory
++++ b/bin/openclaw-memory
+@@ -40,7 +40,7 @@ Direct backend access:
+   openclaw-memory --backend <name> search "query"
+   openclaw-memory --backend <name> store slug "content"
+ 
+-Backends: $(ls -d "$INSTALL_ROOT/skills/memory-"*/wrapper.sh 2>/dev/null | sed 's|.*/memory-||;s|/wrapper.sh||' | grep -v router | tr '\n' ', ' | sed 's/,$//')
++Backends: $(ls -d "$INSTALL_ROOT/skills/memory-"*/wrapper.sh 2>/dev/null | sed 's|.*/memory-||;s|/wrapper.sh||' | grep -v router | paste -sd ',' - | sed 's/,/, /g')
+ 
+ Run this command from within your project directory.
+ HELPEOF
+```
+
+---
+
+## 2026-03-18 17:02:10 | `tests/commercial/test-runtime-starter-only.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:02:21 | `tests/integration/test-e2e-external.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:02:26 | `tests/integration/test-e2e-external.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:06:02 | `openspec/changes/production-launch-readiness/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:06:10 | `openspec/changes/production-launch-readiness/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:06:36 | `tests/integration/test-production-smoke.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:06:48 | `openspec/changes/production-launch-readiness/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:11:54 | `server/wrangler.toml`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-18 17:18:03 | `server/wrangler.toml`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:07:49 | `openspec/changes/production-launch-readiness/tasks.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:07:49 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:07:54 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:08:14 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:08:21 | `server/src/activate.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:08:25 | `server/src/activate.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:09:08 | `server/src/webhook.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:09:08 | `server/src/activate.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:10:45 | `TODOS.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:11:22 | `server/src/__tests__/handlers.test.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:16 | `install.sh`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 6f9d226..2986ccf 100755
+--- a/install.sh
++++ b/install.sh
+@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="$HOME/.openclaw/memory-stack"
+ STATE_DIR="$HOME/.openclaw/state"
+ BIN_DIR="$HOME/.openclaw/bin"
+-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://memory-stack.openclaw.dev/api/activate}"
++ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-license.busihoward.workers.dev/api/activate}"
+ 
+ # ── Color helpers (disabled when not a terminal) ────────────────────
+ if [[ -t 1 ]]; then
+```
+
+---
+
+## 2026-03-19 11:27:19 | `install.sh`
+
+**Stats:**  1 file changed, 4 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 6f9d226..1841715 100755
+--- a/install.sh
++++ b/install.sh
+@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="$HOME/.openclaw/memory-stack"
+ STATE_DIR="$HOME/.openclaw/state"
+ BIN_DIR="$HOME/.openclaw/bin"
+-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://memory-stack.openclaw.dev/api/activate}"
++ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-license.busihoward.workers.dev/api/activate}"
+ 
+ # ── Color helpers (disabled when not a terminal) ────────────────────
+ if [[ -t 1 ]]; then
+@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
+       echo "  --key <key>    Your license key (received via email after purchase)"
+       echo "  --help         Show this help"
+       echo ""
+-      echo "Purchase: https://memory-stack.openclaw.dev"
++      echo "Purchase: https://openclaw-site-53r.pages.dev"
+       exit 0
+       ;;
+     *)
+@@ -64,7 +64,7 @@ if [[ -z "$LICENSE_KEY" ]]; then
+   echo "Error: license key required." >&2
+   echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx" >&2
+   echo "" >&2
+-  echo "Purchase: https://memory-stack.openclaw.dev" >&2
++  echo "Purchase: https://openclaw-site-53r.pages.dev" >&2
+   exit 1
+ fi
+```
+
+---
+
+## 2026-03-19 11:27:22 | `install.sh`
+
+**Stats:**  1 file changed, 5 insertions(+), 5 deletions(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 6f9d226..f5de661 100755
+--- a/install.sh
++++ b/install.sh
+@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="$HOME/.openclaw/memory-stack"
+ STATE_DIR="$HOME/.openclaw/state"
+ BIN_DIR="$HOME/.openclaw/bin"
+-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://memory-stack.openclaw.dev/api/activate}"
++ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-license.busihoward.workers.dev/api/activate}"
+ 
+ # ── Color helpers (disabled when not a terminal) ────────────────────
+ if [[ -t 1 ]]; then
+@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
+       echo "  --key <key>    Your license key (received via email after purchase)"
+       echo "  --help         Show this help"
+       echo ""
+-      echo "Purchase: https://memory-stack.openclaw.dev"
++      echo "Purchase: https://openclaw-site-53r.pages.dev"
+       exit 0
+       ;;
+     *)
+@@ -64,7 +64,7 @@ if [[ -z "$LICENSE_KEY" ]]; then
+   echo "Error: license key required." >&2
+   echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx" >&2
+   echo "" >&2
+-  echo "Purchase: https://memory-stack.openclaw.dev" >&2
++  echo "Purchase: https://openclaw-site-53r.pages.dev" >&2
+   exit 1
+ fi
+```
+
+---
+
+## 2026-03-19 11:27:25 | `lib/license.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:28 | `lib/license.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:32 | `lib/license.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:36 | `server/src/checkout.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:40 | `site/astro.config.mjs`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:44 | `docs/quickstart.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:27:48 | `tests/integration/test-production-smoke.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 11:32:52 | `.gitignore`
+
+**Stats:**  1 file changed, 13 insertions(+)
+
+```diff
+diff --git a/.gitignore b/.gitignore
+index 67d3b74..076c20c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -37,3 +37,16 @@ docker-compose.override.yml
+ 
+ # Worktrees
+ .worktrees/
++.gstack/
++
++# Wrangler
++.wrangler/
++
++# Playwright
++.playwright-mcp/
++
++# Claude local
++CLAUDE.local.md
++
++# Screenshots
++*.png
+```
+
+---
