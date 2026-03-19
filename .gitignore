@@ -37,3 +37,16 @@ docker-compose.override.yml
 
 # Worktrees
 .worktrees/
+.gstack/
+
+# Wrangler
+.wrangler/
+
+# Playwright
+.playwright-mcp/
+
+# Claude local
+CLAUDE.local.md
+
+# Screenshots
+*.png
