@@ -1,0 +1,17 @@
+name = "openclaw-license"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+VERIFY_RATE_LIMIT = "10"
+MAX_DEVICES = "3"
+MONTHLY_RESET_LIMIT = "2"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "f16c813bb53a44d495d7c1dc9e2278fe"
+
+[[r2_buckets]]
+binding = "RELEASES"
+bucket_name = "openclaw-releases"
