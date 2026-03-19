@@ -45,6 +45,9 @@ docker-compose.override.yml
 # Playwright
 .playwright-mcp/
 
+# Astro
+.astro/
+
 # Claude local
 CLAUDE.local.md
 
