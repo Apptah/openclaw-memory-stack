@@ -143,10 +143,11 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
   const md = searchMemoryMd(query, maxResults);
   const rescue = searchRescueStore(query, maxResults);
 
+  const sessions = searchSessions(query, maxResults);
   const graphResults = queryGraph(query, maxResults);
 
   // Merge, sort by relevance, dedupe
-  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
+  const all = [...rescue, ...graphResults, ...sessions, ...qmd, ...fts5, ...md]
     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
   const seen = new Set();
@@ -366,6 +367,78 @@ function cleanupOldRescueFiles(maxAgeDays) {
       }
     }
   } catch { /* no files */ }
+}
+
+// ─── Direction 2b: Self-evolving memory (consolidation) ──────────
+
+function consolidateMemories() {
+  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
+  if (!existsSync(memoryMdPath)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
+
+  const content = readFileSync(memoryMdPath, "utf-8");
+  const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
+  const totalMemories = lines.length;
+
+  // Build word bags (words > 3 chars)
+  const wordBags = lines.map(l =>
+    new Set(l.toLowerCase().split(/\W+/).filter(w => w.length > 3))
+  );
+
+  // Find clusters via Jaccard similarity > 0.4
+  const parent = lines.map((_, i) => i);
+  function find(i) { return parent[i] === i ? i : (parent[i] = find(parent[i])); }
+  function union(a, b) { parent[find(a)] = find(b); }
+
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      if (wordBags[i].size === 0 && wordBags[j].size === 0) continue;
+      let intersection = 0;
+      for (const w of wordBags[i]) { if (wordBags[j].has(w)) intersection++; }
+      const unionSize = wordBags[i].size + wordBags[j].size - intersection;
+      const jaccard = unionSize === 0 ? 0 : intersection / unionSize;
+      if (jaccard > 0.4) union(i, j);
+    }
+  }
+
+  // Group clusters
+  const groups = new Map();
+  for (let i = 0; i < lines.length; i++) {
+    const root = find(i);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root).push(lines[i].trim());
+  }
+
+  const clusters = [];
+  for (const [, members] of groups) {
+    if (members.length >= 2) {
+      clusters.push(members);
+    }
+  }
+
+  const consolidatable = {
+    count: clusters.length,
+    entries: clusters.slice(0, 3).map(c => c.slice(0, 3)),
+    suggestion: clusters.length > 0
+      ? `Found ${clusters.length} cluster(s) of similar memories that could be merged. Review and consolidate to reduce noise.`
+      : "No similar memory clusters found — memory is well-organized.",
+  };
+
+  return { totalMemories, clusters, consolidatable };
+}
+
+// ─── Direction 5: Session indexing ───────────────────────────────
+
+function searchSessions(query, maxResults) {
+  if (!existsSync(MEMORY_DB)) return [];
+  const safeQuery = query.replace(/'/g, "''").replace(/"/g, '""');
+  try {
+    const sql = `SELECT c.text, c.path, bm25(chunks_fts) as rank FROM chunks_fts JOIN chunks c ON chunks_fts.rowid = c.rowid WHERE chunks_fts MATCH '${safeQuery}' AND c.source = 'sessions' ORDER BY rank LIMIT ${maxResults};`;
+    const result = execSync(`sqlite3 -json "${MEMORY_DB}" "${sql}"`, { encoding: "utf-8", timeout: 5000 });
+    return JSON.parse(result || "[]").map(r => ({
+      content: r.text || "", source: "session:" + (r.path || ""),
+      relevance: Math.min(1, Math.abs(r.rank || 0) / 10), engine: "session",
+    }));
+  } catch { return []; }
 }
 
 // ─── Direction 4: Knowledge graph ────────────────────────────────
@@ -602,6 +675,22 @@ export default {
               } else {
                 report += "\nNo entities tracked yet. Entities are extracted automatically from conversations.";
               }
+              return { content: [{ type: "text", text: report }] };
+            }
+
+            // Special command: "consolidate" runs self-evolving memory analysis
+            if (/^consolidate\b/i.test(params.query)) {
+              const result = consolidateMemories();
+              let report = `Memory Consolidation Report\nTotal memories: ${result.totalMemories}\nClusters found: ${result.consolidatable.count}\n\n`;
+              if (result.consolidatable.count > 0) {
+                report += `Similar memory clusters (showing first 3):\n`;
+                result.consolidatable.entries.forEach((cluster, i) => {
+                  report += `\nCluster ${i + 1}:\n`;
+                  cluster.forEach(entry => { report += `  - "${entry.slice(0, 80)}"\n`; });
+                });
+                report += "\n";
+              }
+              report += result.consolidatable.suggestion;
               return { content: [{ type: "text", text: report }] };
             }
 
