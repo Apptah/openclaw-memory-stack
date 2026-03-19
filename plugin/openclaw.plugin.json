@@ -28,6 +28,21 @@
         "type": "integer",
         "minimum": 100,
         "maximum": 5000
+      },
+      "mmrLambda": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "halfLifeDays": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "graphEnabled": {
+        "type": "boolean"
+      },
+      "sessionSearch": {
+        "type": "boolean"
       }
     }
   },

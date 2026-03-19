@@ -227,7 +227,7 @@ import Layout from "../layouts/Layout.astro";
     /* ── Routing flow ── */
     .routing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 0.75rem;
     }
     .route-item {
@@ -239,6 +239,8 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 8px;
       padding: 1rem 1.25rem;
       font-size: 0.85rem;
+      overflow: hidden;
+      word-break: break-word;
     }
     .route-label {
       color: var(--fg-bright);
@@ -399,19 +401,34 @@ import Layout from "../layouts/Layout.astro";
     <p class="section-desc">Three features that make long conversations actually work.</p>
     <div class="features">
       <div class="feature-card">
-        <div class="feature-icon">&#x1F512;</div>
-        <h3>No Embedding Setup Needed</h3>
-        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
+        <div class="feature-icon">&#x1F517;</div>
+        <h3>Knowledge Graph</h3>
+        <p>Native memory does flat text search. Memory Stack builds a local knowledge graph from your conversations — tracking projects, people, APIs, and how they connect. Ask "what depends on service X?" and get real answers.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F9F9;</div>
-        <h3>Memory Quality</h3>
-        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you what to clean up — it never deletes anything automatically.</p>
+        <div class="feature-icon">&#x1F9E0;</div>
+        <h3>Self-Evolving Memory</h3>
+        <p>Memories pile up and get noisy. Memory Stack finds clusters of similar entries and suggests consolidation — turning 5 scattered notes about the same topic into one clear summary. Your memory gets sharper over time, not messier.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F6E1;</div>
         <h3>Compaction Rescue</h3>
-        <p>Long conversations get compressed by OpenClaw — and key decisions get lost in the process. Memory Stack automatically saves important facts (decisions, deadlines, requirements) before they're compressed away, and brings them back when you need them.</p>
+        <p>Long conversations get compressed — and key decisions get lost. Memory Stack saves important facts (decisions, deadlines, requirements) before compression happens, and brings them back automatically. No matter how long the conversation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F50D;</div>
+        <h3>Smarter Search</h3>
+        <p>MMR diversity ranking prevents redundant results. Temporal decay prioritizes recent memories. Session indexing searches across past conversations. All running locally — no API keys, no extra cost.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F9F9;</div>
+        <h3>Memory Health</h3>
+        <p>Built-in quality checks find duplicates, stale entries, and noise. Scores your memory 0-100 and tells you exactly what to clean up. Never deletes anything automatically — you stay in control.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x26A1;</div>
+        <h3>Zero Config</h3>
+        <p>Install, restart OpenClaw, done. No embedding providers to configure, no API keys to manage, no project initialization needed. Memory improves the moment you install it.</p>
       </div>
     </div>
   </div>
