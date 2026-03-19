@@ -395,7 +395,7 @@ entries['openclaw-memory-stack'] = {
 installs = plugins.setdefault('installs', {})
 now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
 installs['openclaw-memory-stack'] = {
-    'source': 'local',
+    'source': 'path',
     'spec': ext_dir,
     'installPath': ext_dir,
     'version': '0.1.0',

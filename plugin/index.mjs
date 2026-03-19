@@ -1,51 +1,94 @@
 /**
  * OpenClaw Memory Stack — Plugin Entry Point
  *
- * Registers as OpenClaw's memory provider via plugins.slots.memory.
- * Routes queries through the rule-based router to QMD (BM25/vector)
- * and Total Recall (git-based) backends.
- *
- * Zero LLM overhead — routing is pure regex matching.
+ * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+ * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+ * - Reads workspace MEMORY.md files
+ * - Provides enhanced memory_search via FTS5 + BM25 ranking
+ * - auto-recall injects top results before each agent turn (saves tokens)
+ * - No separate backends needed — works with what OpenClaw already stores
  */
 
-import { execSync, execFile } from "node:child_process";
-import { existsSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 
-const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
-const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
-const CLI = resolve(INSTALL_ROOT, "bin/openclaw-memory");
+const HOME = homedir();
+const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+const WORKSPACE = resolve(HOME, ".openclaw/workspace");
 
-function runRouter(query, hint) {
-  const args = ["--adapter", query];
-  if (hint) args.push("--hint", hint);
+/**
+ * Search OpenClaw's native memory SQLite using FTS5 BM25.
+ * Returns ranked results directly — no shell exec, no external backends.
+ */
+function searchNativeMemory(query, maxResults) {
+  if (!existsSync(MEMORY_DB)) return [];
+
+  // Escape quotes for SQL
+  const safeQuery = query.replace(/"/g, '""').replace(/'/g, "''");
+
   try {
-    const result = execSync(`bash "${ROUTER_SH}" ${args.map(a => `"${a}"`).join(" ")}`, {
-      encoding: "utf-8",
-      timeout: 10000,
-      env: { ...process.env, OPENCLAW_INSTALL_ROOT: INSTALL_ROOT },
-    });
-    return JSON.parse(result.trim());
-  } catch (err) {
-    return { status: "error", results: [], result_count: 0, error_message: err.message };
+    // FTS5 BM25 search on the chunks table
+    const sql = `SELECT c.text, c.path, bm25(chunks_fts) as rank FROM chunks_fts JOIN chunks c ON chunks_fts.rowid = c.rowid WHERE chunks_fts MATCH '${safeQuery}' ORDER BY rank LIMIT ${maxResults};`;
+
+    const result = execSync(
+      `sqlite3 -json "${MEMORY_DB}" "${sql}"`,
+      { encoding: "utf-8", timeout: 5000 },
+    );
+
+    const rows = JSON.parse(result || "[]");
+    return rows.map(r => ({
+      content: r.text || "",
+      source: r.path || "memory",
+      relevance: Math.min(1, Math.abs(r.rank || 0) / 10),
+    }));
+  } catch {
+    // FTS5 MATCH can fail on certain query syntax; fall back to LIKE search
+    try {
+      const likeSql = `SELECT text, path FROM chunks WHERE text LIKE '%${safeQuery}%' LIMIT ${maxResults};`;
+      const result = execSync(
+        `sqlite3 -json "${MEMORY_DB}" "${likeSql}"`,
+        { encoding: "utf-8", timeout: 5000 },
+      );
+      const rows = JSON.parse(result || "[]");
+      return rows.map(r => ({
+        content: r.text || "",
+        source: r.path || "memory",
+        relevance: 0.5,
+      }));
+    } catch {
+      return [];
+    }
   }
 }
 
-function runCli(subcommand, ...args) {
-  try {
-    return execSync(`"${CLI}" ${subcommand} ${args.map(a => `"${a}"`).join(" ")}`, {
-      encoding: "utf-8",
-      timeout: 15000,
-      env: { ...process.env, OPENCLAW_INSTALL_ROOT: INSTALL_ROOT },
-    }).trim();
-  } catch (err) {
-    return null;
+/**
+ * Search MEMORY.md files in workspace for simple keyword match.
+ */
+function searchMemoryMd(query, maxResults) {
+  const results = [];
+  const lowerQuery = query.toLowerCase();
+
+  // Check workspace MEMORY.md
+  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
+  if (existsSync(memoryMdPath)) {
+    try {
+      const content = readFileSync(memoryMdPath, "utf-8");
+      const lines = content.split("\n").filter(l => l.trim());
+      for (const line of lines) {
+        if (line.toLowerCase().includes(lowerQuery) || lowerQuery.split(/\s+/).some(w => line.toLowerCase().includes(w))) {
+          results.push({ content: line.trim(), source: "MEMORY.md", relevance: 0.7 });
+          if (results.length >= maxResults) break;
+        }
+      }
+    } catch { /* ignore */ }
   }
+
+  return results;
 }
 
 function truncateToTokenBudget(results, maxTokens) {
-  // Rough estimate: 1 token ≈ 4 chars
   const charBudget = maxTokens * 4;
   const selected = [];
   let used = 0;
@@ -58,132 +101,85 @@ function truncateToTokenBudget(results, maxTokens) {
   return selected;
 }
 
+function combinedSearch(query, maxResults, maxTokens) {
+  // Search both native SQLite and MEMORY.md, merge and dedupe
+  const sqliteResults = searchNativeMemory(query, maxResults);
+  const mdResults = searchMemoryMd(query, maxResults);
+
+  // Merge, sort by relevance, dedupe by content prefix
+  const all = [...sqliteResults, ...mdResults]
+    .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+
+  const seen = new Set();
+  const deduped = [];
+  for (const r of all) {
+    const key = (r.content || "").slice(0, 80);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(r);
+    if (deduped.length >= maxResults) break;
+  }
+
+  return truncateToTokenBudget(deduped, maxTokens);
+}
+
 export default {
   id: "openclaw-memory-stack",
   name: "OpenClaw Memory Stack",
+  description: "Enhanced memory search over OpenClaw native memory using FTS5 BM25 ranking",
+  kind: "memory",
 
   register(api) {
-    const config = api.getConfig?.() || {};
-    const autoRecall = config.autoRecall !== false;
-    const autoCapture = config.autoCapture !== false;
-    const maxResults = config.maxRecallResults || 5;
-    const maxTokens = config.maxRecallTokens || 1500;
-    const searchMode = config.searchMode || "hybrid";
+    const cfg = api.pluginConfig || {};
+    const autoRecall = cfg.autoRecall !== false;
+    const maxResults = cfg.maxRecallResults || 5;
+    const maxTokens = cfg.maxRecallTokens || 1500;
 
-    // Check installation
-    if (!existsSync(CLI)) {
-      api.log?.("warn", "OpenClaw Memory Stack not installed at " + INSTALL_ROOT);
-      return;
-    }
+    api.logger.info("Memory Stack initializing (recall=" + autoRecall + ", db=" + (existsSync(MEMORY_DB) ? "found" : "missing") + ")");
 
-    // Register as memory provider (replaces default memory-core)
-    api.registerProvider("memory", {
-      name: "openclaw-memory-stack",
+    // Register memory_search tool — searches OpenClaw's native memory
+    api.registerTool({
+      name: "memory_search",
+      label: "Memory Search",
+      description: "Search past memories, decisions, and conversation history using BM25 ranking. Faster and more precise than file search.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "The search query" },
+        },
+        required: ["query"],
+      },
+      async execute(_toolCallId, params) {
+        const results = combinedSearch(params.query, maxResults, maxTokens);
 
-      /**
-       * Recall — retrieve relevant memories for a query.
-       * Called by OpenClaw before each agent turn when autoRecall is on.
-       */
-      async recall(query, options = {}) {
-        const hint = options.hint || "";
-        const envelope = runRouter(query, hint);
-
-        if (envelope.status === "error") {
-          api.log?.("error", "Memory recall failed: " + envelope.error_message);
-          return [];
+        if (results.length === 0) {
+          return { content: [{ type: "text", text: "No relevant memories found." }] };
         }
 
-        const results = (envelope.results || [])
-          .filter(r => (r.relevance || r.normalized_relevance || 0) > 0.1)
-          .slice(0, maxResults);
+        const text = results
+          .map((r, i) => `[${i + 1}] (${r.source}, score: ${(r.relevance || 0).toFixed(2)})\n${r.content}`)
+          .join("\n---\n");
 
-        return truncateToTokenBudget(results, maxTokens).map(r => ({
-          content: r.content,
-          source: r.source || envelope.routed_to || "memory-stack",
-          relevance: r.relevance || r.normalized_relevance || 0,
-          timestamp: r.timestamp || null,
-        }));
+        return { content: [{ type: "text", text }] };
       },
+    }, { names: ["memory_search"] });
 
-      /**
-       * Store — persist a memory after a conversation turn.
-       * Called by OpenClaw after each turn when autoCapture is on.
-       */
-      async store(content, metadata = {}) {
-        if (!autoCapture) return;
-        // Use Total Recall to store (git-based, zero dependencies)
-        const trWrapper = resolve(INSTALL_ROOT, "skills/memory-totalrecall/wrapper.sh");
-        if (!existsSync(trWrapper)) return;
-
-        try {
-          execSync(
-            `bash "${trWrapper}" store "${content.replace(/"/g, '\\"')}"`,
-            {
-              encoding: "utf-8",
-              timeout: 5000,
-              env: {
-                ...process.env,
-                OPENCLAW_INSTALL_ROOT: INSTALL_ROOT,
-                MEMORY_CATEGORY: metadata.category || "conversation",
-              },
-            }
-          );
-        } catch {
-          // Non-fatal — don't break the agent flow
-        }
-      },
-
-      /**
-       * Search — explicit memory search (when agent actively queries).
-       */
-      async search(query, options = {}) {
-        return this.recall(query, options);
-      },
-
-      /**
-       * Health check.
-       */
-      async health() {
-        const output = runCli("health");
-        if (!output) return { status: "degraded", message: "CLI not responding" };
-        return { status: "ready", message: output.split("\n")[0] };
-      },
-    });
-
-    // Register auto-recall hook
+    // Auto-recall: inject relevant memories before each agent turn
     if (autoRecall) {
-      api.on?.("beforeAgentTurn", async (ctx) => {
-        const query = ctx.lastUserMessage || ctx.summary || "";
-        if (!query || query.length < 5) return;
+      api.on("before_agent_start", async (event) => {
+        const query = event.lastUserMessage || event.summary || "";
+        if (!query || query.length < 5) return {};
 
-        const memories = await api.providers?.memory?.recall(query);
-        if (memories && memories.length > 0) {
-          ctx.injectContext?.({
-            role: "memory",
-            label: "Relevant memories",
-            content: memories.map(m => m.content).join("\n---\n"),
-            tokenEstimate: memories.reduce((sum, m) => sum + Math.ceil((m.content || "").length / 4), 0),
-          });
-        }
+        const results = combinedSearch(query, maxResults, maxTokens);
+        if (results.length === 0) return {};
+
+        const memoryText = results.map(r => r.content).join("\n---\n");
+        return {
+          prependContext: `<relevant-memories>\n${memoryText}\n</relevant-memories>`,
+        };
       });
     }
 
-    // Register auto-capture hook
-    if (autoCapture) {
-      api.on?.("afterAgentTurn", async (ctx) => {
-        const content = ctx.agentResponse || "";
-        if (content.length < 50) return; // Skip trivial responses
-
-        // Extract key facts (no LLM call — just store the turn summary)
-        const summary = ctx.turnSummary || content.slice(0, 500);
-        await api.providers?.memory?.store(summary, {
-          category: "conversation",
-          agentId: ctx.agentId,
-          timestamp: new Date().toISOString(),
-        });
-      });
-    }
-
-    api.log?.("info", `Memory Stack registered (recall=${autoRecall}, capture=${autoCapture}, mode=${searchMode})`);
+    api.logger.info("Memory Stack registered (search=native-fts5, recall=" + autoRecall + ")");
   },
 };
