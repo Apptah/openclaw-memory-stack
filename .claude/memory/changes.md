@@ -4242,3 +4242,5669 @@ index 67d3b74..076c20c 100644
 ```
 
 ---
+
+## 2026-03-19 11:33:37 | `.gitignore`
+
+**Stats:**  1 file changed, 3 insertions(+)
+
+```diff
+diff --git a/.gitignore b/.gitignore
+index 076c20c..682dafb 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -45,6 +45,9 @@ docker-compose.override.yml
+ # Playwright
+ .playwright-mcp/
+ 
++# Astro
++.astro/
++
+ # Claude local
+ CLAUDE.local.md
+ 
+```
+
+---
+
+## 2026-03-19 11:38:31 | `server/src/webhook.ts`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/webhook.ts b/server/src/webhook.ts
+index 92a4a18..37a49f5 100644
+--- a/server/src/webhook.ts
++++ b/server/src/webhook.ts
+@@ -101,7 +101,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+         <p><a href="${downloadUrl}">Download your copy</a> (link expires in 24 hours)</p>
+         <h3>Quick Start</h3>
+         <ol>
+-          <li>Download and extract the archive</li>
++          <li>Download and unzip the file</li>
+           <li>Run: <code>./install.sh --key=${key}</code></li>
+           <li>In your project: <code>openclaw-memory init</code></li>
+           <li>Query: <code>openclaw-memory "find function parseAuth"</code></li>
+```
+
+---
+
+## 2026-03-19 11:38:45 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index e705adb..9ccef1d 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -87,7 +87,7 @@ import Layout from "../layouts/Layout.astro";
+       <h2>// next steps</h2>
+       <div class="step">
+         <div class="step-num">1</div>
+-        <div class="step-text">Download and extract the archive from your email</div>
++        <div class="step-text">Download and unzip the file from your email</div>
+       </div>
+       <div class="step">
+         <div class="step-num">2</div>
+```
+
+---
+
+## 2026-03-19 12:01:59 | `server/src/webhook.ts`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/webhook.ts b/server/src/webhook.ts
+index 37a49f5..9da4638 100644
+--- a/server/src/webhook.ts
++++ b/server/src/webhook.ts
+@@ -92,7 +92,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+ 
+   // Send email via Resend (retry once on failure)
+   const emailBody = JSON.stringify({
+-    from: "OpenClaw Memory Stack <onboarding@resend.dev>",
++    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
+     to: [email],
+     subject: "Your OpenClaw Memory Stack License",
+     html: `
+```
+
+---
+
+## 2026-03-19 12:05:43 | `server/src/checkout.ts`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/checkout.ts b/server/src/checkout.ts
+index 085b6a2..e8800e7 100644
+--- a/server/src/checkout.ts
++++ b/server/src/checkout.ts
+@@ -18,7 +18,7 @@ export async function handleCheckout(request: Request, env: Env): Promise<Respon
+       "payment_method_types[0]": "card",
+       "metadata[tier]": "starter",
+       "metadata[version]": "0.1.0",
+-      "success_url": body.success_url ?? "https://openclaw-site-53r.pages.dev/thanks",
++      "success_url": body.success_url ?? "https://openclaw-site-53r.pages.dev/thanks?session_id={CHECKOUT_SESSION_ID}",
+       "cancel_url": body.cancel_url ?? "https://openclaw-site-53r.pages.dev",
+     }),
+   });
+```
+
+---
+
+## 2026-03-19 12:05:49 | `server/src/webhook.ts`
+
+**Stats:**  1 file changed, 7 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/webhook.ts b/server/src/webhook.ts
+index 37a49f5..41627ef 100644
+--- a/server/src/webhook.ts
++++ b/server/src/webhook.ts
+@@ -82,6 +82,12 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+   await env.KV.put(`license:${key}`, JSON.stringify(license));
+   console.log("License created", { email, tier, key_prefix: key.slice(0, 12) + "..." });
+ 
++  // Store session → license mapping so /thanks page can display the key
++  const sessionId = session.id as string;
++  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl: "" }), {
++    expirationTtl: 86400,
++  });
++
+   // Generate download token
+   const downloadToken = nanoid(32);
+   await env.KV.put(`dl:${downloadToken}`, JSON.stringify({ version }), {
+@@ -92,7 +98,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+ 
+   // Send email via Resend (retry once on failure)
+   const emailBody = JSON.stringify({
+-    from: "OpenClaw Memory Stack <onboarding@resend.dev>",
++    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
+     to: [email],
+     subject: "Your OpenClaw Memory Stack License",
+     html: `
+```
+
+---
+
+## 2026-03-19 12:05:54 | `server/src/webhook.ts`
+
+**Stats:**  1 file changed, 12 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/webhook.ts b/server/src/webhook.ts
+index 37a49f5..e91fcf4 100644
+--- a/server/src/webhook.ts
++++ b/server/src/webhook.ts
+@@ -82,6 +82,12 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+   await env.KV.put(`license:${key}`, JSON.stringify(license));
+   console.log("License created", { email, tier, key_prefix: key.slice(0, 12) + "..." });
+ 
++  // Store session → license mapping so /thanks page can display the key
++  const sessionId = session.id as string;
++  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl: "" }), {
++    expirationTtl: 86400,
++  });
++
+   // Generate download token
+   const downloadToken = nanoid(32);
+   await env.KV.put(`dl:${downloadToken}`, JSON.stringify({ version }), {
+@@ -90,9 +96,14 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+   const workerUrl = new URL(request.url).origin;
+   const downloadUrl = `${workerUrl}/api/download/${downloadToken}`;
+ 
++  // Update session KV with download URL
++  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl }), {
++    expirationTtl: 86400,
++  });
++
+   // Send email via Resend (retry once on failure)
+   const emailBody = JSON.stringify({
+-    from: "OpenClaw Memory Stack <onboarding@resend.dev>",
++    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
+```
+
+---
+
+## 2026-03-19 12:06:00 | `server/src/session-status.ts`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 12:06:04 | `server/src/index.ts`
+
+**Stats:**  1 file changed, 1 insertion(+)
+
+```diff
+diff --git a/server/src/index.ts b/server/src/index.ts
+index f7e4cd1..7d7f533 100644
+--- a/server/src/index.ts
++++ b/server/src/index.ts
+@@ -6,6 +6,7 @@ import { handleVerify } from "./verify";
+ import { handleResetDevice } from "./reset-device";
+ import { handleDownloadToken, handleDownload } from "./download";
+ import { handleRevoke } from "./revoke";
++import { handleSessionStatus } from "./session-status";
+ 
+ export default {
+   async fetch(request: Request, env: Env): Promise<Response> {
+```
+
+---
+
+## 2026-03-19 12:06:09 | `server/src/index.ts`
+
+**Stats:**  1 file changed, 3 insertions(+)
+
+```diff
+diff --git a/server/src/index.ts b/server/src/index.ts
+index f7e4cd1..26dbb1a 100644
+--- a/server/src/index.ts
++++ b/server/src/index.ts
+@@ -6,6 +6,7 @@ import { handleVerify } from "./verify";
+ import { handleResetDevice } from "./reset-device";
+ import { handleDownloadToken, handleDownload } from "./download";
+ import { handleRevoke } from "./revoke";
++import { handleSessionStatus } from "./session-status";
+ 
+ export default {
+   async fetch(request: Request, env: Env): Promise<Response> {
+@@ -41,6 +42,8 @@ export default {
+         response = await handleDownloadToken(request, env);
+       } else if (method === "GET" && path.startsWith("/api/download/")) {
+         response = await handleDownload(request, env);
++      } else if (method === "GET" && path === "/api/session-status") {
++        response = await handleSessionStatus(request, env);
+       } else if (method === "POST" && path === "/api/revoke") {
+         response = await handleRevoke(request, env);
+       } else {
+```
+
+---
+
+## 2026-03-19 12:06:30 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 70 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index 9ccef1d..6998e8f 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -80,18 +80,35 @@ import Layout from "../layouts/Layout.astro";
+   <div class="container">
+     <div class="status-icon">&#x2713;</div>
+     <h1>You're in.</h1>
+-    <p class="sub">Check your email for license key + download link.</p>
+-    <p class="sub" style="font-size: 0.85rem;">Download expires in 24h. Need a new one? <a href="/manage">Manage License</a></p>
++
++    <div id="loading" class="sub">Getting your license key...</div>
++
++    <div id="license-info" style="display:none;">
++      <div class="key-box">
++        <label>Your license key</label>
++        <div class="key-value">
++          <code id="license-key"></code>
++          <button id="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('license-key').textContent).then(()=>{this.textContent='Copied!'})">Copy</button>
++        </div>
++      </div>
++      <a id="download-link" class="download-btn" href="#">Download</a>
++    </div>
++
++    <div id="fallback" style="display:none;">
++      <p class="sub">We also sent the key to your email. Check your inbox (or spam).</p>
++    </div>
++
++    <p class="sub" style="font-size: 0.85rem; margin-top: 1rem;">Need help? <a href="/manage">Manage License</a></p>
+ 
+```
+
+---
+
+## 2026-03-19 12:06:40 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 125 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index 9ccef1d..73a54ae 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -71,6 +71,61 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--fg);
+       line-height: 1.5;
+     }
++    .key-box {
++      background: var(--surface);
++      border: 1px solid var(--accent);
++      border-radius: 10px;
++      padding: 1.5rem;
++      margin: 1.5rem 0 1rem;
++      text-align: left;
++    }
++    .key-box label {
++      font-family: var(--font-mono);
++      font-size: 0.75rem;
++      text-transform: uppercase;
++      letter-spacing: 0.1em;
++      color: var(--accent);
++      display: block;
++      margin-bottom: 0.5rem;
++    }
++    .key-value {
++      display: flex;
++      align-items: center;
++      gap: 0.75rem;
++    }
+```
+
+---
+
+## 2026-03-19 12:34:09 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 24486d5..1bfcb6a 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -497,7 +497,7 @@ import Layout from "../layouts/Layout.astro";
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({
+-            success_url: window.location.origin + "/thanks",
++            success_url: window.location.origin + "/thanks?session_id={CHECKOUT_SESSION_ID}",
+             cancel_url: window.location.origin + "/",
+           }),
+         });
+```
+
+---
+
+## 2026-03-19 12:57:46 | `bin/openclaw-memory`
+
+**Stats:**  1 file changed, 11 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/bin/openclaw-memory b/bin/openclaw-memory
+index 808f1f9..c4c1923 100755
+--- a/bin/openclaw-memory
++++ b/bin/openclaw-memory
+@@ -84,7 +84,17 @@ if [ "${1:-}" = "init" ]; then
+ 
+   # Must be a git repo
+   if ! git -C "$TARGET_PATH" rev-parse --is-inside-work-tree &>/dev/null; then
+-    echo "Error: '$TARGET_PATH' is not a git repository." >&2
++    echo "Error: '$TARGET_PATH' is not a project with git version control." >&2
++    echo "" >&2
++    echo "Memory Stack needs to run inside a git project." >&2
++    echo "To fix this, go to your project folder and run:" >&2
++    echo "  cd /path/to/your/project" >&2
++    echo "  openclaw-memory init" >&2
++    echo "" >&2
++    echo "If your project doesn't use git yet, set it up first:" >&2
++    echo "  cd /path/to/your/project" >&2
++    echo "  git init" >&2
++    echo "  openclaw-memory init" >&2
+     exit 1
+   fi
+ 
+```
+
+---
+
+## 2026-03-19 13:10:54 | `openclaw.plugin.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 13:11:28 | `plugin/index.mjs`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 13:12:04 | `install.sh`
+
+**Stats:**  1 file changed, 69 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index f5de661..f6cb3e6 100755
+--- a/install.sh
++++ b/install.sh
+@@ -337,6 +337,71 @@ _gen_backends() {
+ _gen_backends > "$STATE_DIR/backends.json"
+ ok "backends.json"
+ 
++# ── Step 6b/6 — Register as OpenClaw memory plugin ──────────────────
++header "Step 6b/6 — Connecting to OpenClaw"
++
++# Copy plugin files
++cp "$SCRIPT_DIR/openclaw.plugin.json" "$INSTALL_ROOT/" 2>/dev/null || true
++cp -r "$SCRIPT_DIR/plugin" "$INSTALL_ROOT/" 2>/dev/null || true
++
++OPENCLAW_JSON="$HOME/.openclaw/openclaw.json"
++if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
++  # Register plugin in openclaw.json
++  python3 -c "
++import json, sys
++
++config_path = '$OPENCLAW_JSON'
++with open(config_path) as f:
++    config = json.load(f)
++
++# Ensure plugins section exists
++if 'plugins' not in config:
++    config['plugins'] = {}
++plugins = config['plugins']
++
+```
+
+---
+
+## 2026-03-19 13:12:09 | `scripts/build-release.sh`
+
+**Stats:**  1 file changed, 2 insertions(+)
+
+```diff
+diff --git a/scripts/build-release.sh b/scripts/build-release.sh
+index 11a3326..9d54fca 100755
+--- a/scripts/build-release.sh
++++ b/scripts/build-release.sh
+@@ -21,6 +21,8 @@ cp -r "$PROJECT_ROOT/lib" "$BUILD_DIR/"
+ cp "$PROJECT_ROOT/install.sh" "$BUILD_DIR/"
+ cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/"
+ cp "$PROJECT_ROOT/LICENSE" "$BUILD_DIR/"
++cp "$PROJECT_ROOT/openclaw.plugin.json" "$BUILD_DIR/"
++cp -r "$PROJECT_ROOT/plugin" "$BUILD_DIR/"
+ 
+ # Copy all backend skills dynamically
+ mkdir -p "$BUILD_DIR/skills"
+```
+
+---
+
+## 2026-03-19 13:39:16 | `plugin/package.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 13:40:11 | `install.sh`
+
+**Stats:**  1 file changed, 84 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index f5de661..38f7c92 100755
+--- a/install.sh
++++ b/install.sh
+@@ -337,6 +337,86 @@ _gen_backends() {
+ _gen_backends > "$STATE_DIR/backends.json"
+ ok "backends.json"
+ 
++# ── Step 6b/6 — Register as OpenClaw memory plugin ──────────────────
++header "Step 6b/6 — Connecting to OpenClaw"
++
++# Copy plugin to OpenClaw extensions directory (same structure as npm-installed plugins)
++OPENCLAW_JSON="$HOME/.openclaw/openclaw.json"
++EXT_DIR="$HOME/.openclaw/extensions/openclaw-memory-stack"
++
++if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
++  # 1. Install plugin files to extensions dir
++  mkdir -p "$EXT_DIR"
++  cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
++  cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
++  if [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]]; then
++    cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
++  elif [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]]; then
++    cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
++  fi
++  ok "Plugin files → $EXT_DIR"
++
++  # 2. Register in openclaw.json (matching native openclaw plugins install format)
++  python3 -c "
++import json, datetime
+```
+
+---
+
+## 2026-03-19 13:49:25 | `server/src/download.ts`
+
+**Stats:**  1 file changed, 1 insertion(+), 2 deletions(-)
+
+```diff
+diff --git a/server/src/download.ts b/server/src/download.ts
+index e9f3694..1127aa1 100644
+--- a/server/src/download.ts
++++ b/server/src/download.ts
+@@ -48,8 +48,7 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
+ 
+   const { version } = JSON.parse(raw) as { version: string };
+ 
+-  // Delete token (one-time use)
+-  await env.KV.delete(`dl:${token}`);
++  // Let TTL handle expiration — no deletion, so retries work within the TTL window
+ 
+   // Get artifact from R2
+   const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
+```
+
+---
+
+## 2026-03-19 13:49:33 | `README.md`
+
+**Stats:**  1 file changed, 1 insertion(+)
+
+```diff
+diff --git a/README.md b/README.md
+index a98da6c..76ea0c1 100644
+--- a/README.md
++++ b/README.md
+@@ -23,6 +23,7 @@ We did the research so you don't have to.
+ | **Memory Router** | Rule-based query routing with sequential fallback across all installed backends |
+ | **Total Recall** | Git-based memory — stores memories as markdown on an orphan branch. Zero dependencies beyond git |
+ | **QMD** | BM25 + vector search engine — keyword search, semantic search, and hybrid mode for code and docs |
++| **Plugin integration** | Installs as OpenClaw's memory provider automatically — just restart and go |
+ | Quickstart guide | Get running in under 5 minutes |
+ 
+ One purchase, no subscription. You get the v1 snapshot as-is.
+```
+
+---
+
+## 2026-03-19 13:49:33 | `server/src/download.ts`
+
+**Stats:**  1 file changed, 35 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/server/src/download.ts b/server/src/download.ts
+index e9f3694..49d6306 100644
+--- a/server/src/download.ts
++++ b/server/src/download.ts
+@@ -48,8 +48,7 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
+ 
+   const { version } = JSON.parse(raw) as { version: string };
+ 
+-  // Delete token (one-time use)
+-  await env.KV.delete(`dl:${token}`);
++  // Let TTL handle expiration — no deletion, so retries work within the TTL window
+ 
+   // Get artifact from R2
+   const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
+@@ -66,3 +65,37 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
+     },
+   });
+ }
++
++export async function handleDownloadLatest(request: Request, env: Env): Promise<Response> {
++  const url = new URL(request.url);
++  const key = url.searchParams.get("key");
++
++  if (!key) {
++    return errorResponse("Missing license key", 400);
++  }
++
++  const raw = await env.KV.get(`license:${key}`);
++  if (!raw) {
++    return errorResponse("Invalid license key", 403);
+```
+
+---
+
+## 2026-03-19 13:49:38 | `server/src/index.ts`
+
+**Stats:**  1 file changed, 4 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/index.ts b/server/src/index.ts
+index f7e4cd1..2b8de32 100644
+--- a/server/src/index.ts
++++ b/server/src/index.ts
+@@ -4,8 +4,9 @@ import { handleWebhook } from "./webhook";
+ import { handleActivate } from "./activate";
+ import { handleVerify } from "./verify";
+ import { handleResetDevice } from "./reset-device";
+-import { handleDownloadToken, handleDownload } from "./download";
++import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./download";
+ import { handleRevoke } from "./revoke";
++import { handleSessionStatus } from "./session-status";
+ 
+ export default {
+   async fetch(request: Request, env: Env): Promise<Response> {
+@@ -41,6 +42,8 @@ export default {
+         response = await handleDownloadToken(request, env);
+       } else if (method === "GET" && path.startsWith("/api/download/")) {
+         response = await handleDownload(request, env);
++      } else if (method === "GET" && path === "/api/session-status") {
++        response = await handleSessionStatus(request, env);
+       } else if (method === "POST" && path === "/api/revoke") {
+         response = await handleRevoke(request, env);
+       } else {
+```
+
+---
+
+## 2026-03-19 13:49:38 | `README.md`
+
+**Stats:**  1 file changed, 13 insertions(+), 7 deletions(-)
+
+```diff
+diff --git a/README.md b/README.md
+index a98da6c..50a4ef1 100644
+--- a/README.md
++++ b/README.md
+@@ -23,6 +23,7 @@ We did the research so you don't have to.
+ | **Memory Router** | Rule-based query routing with sequential fallback across all installed backends |
+ | **Total Recall** | Git-based memory — stores memories as markdown on an orphan branch. Zero dependencies beyond git |
+ | **QMD** | BM25 + vector search engine — keyword search, semantic search, and hybrid mode for code and docs |
++| **Plugin integration** | Installs as OpenClaw's memory provider automatically — just restart and go |
+ | Quickstart guide | Get running in under 5 minutes |
+ 
+ One purchase, no subscription. You get the v1 snapshot as-is.
+@@ -35,15 +36,20 @@ One purchase, no subscription. You get the v1 snapshot as-is.
+ # 1. Install with your license key
+ ./install.sh --key=oc-starter-xxxxxxxxxxxx
+ 
+-# 2. Initialize in your project
+-cd /path/to/your/project
+-openclaw-memory init
++# 2. Restart OpenClaw
++openclaw gateway restart
++
++# 3. Done — memory is now active
++#    Just have a conversation. Memory Stack works automatically
++#    as OpenClaw's memory backend.
++```
+ 
+-# 3. Start querying (BM25 ready immediately)
+-openclaw-memory "find function parseAuthToken"
++**Want per-project code search?** That's optional and takes one extra step:
+```
+
+---
+
+## 2026-03-19 13:49:42 | `server/src/index.ts`
+
+**Stats:**  1 file changed, 6 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/index.ts b/server/src/index.ts
+index f7e4cd1..8bd2f0a 100644
+--- a/server/src/index.ts
++++ b/server/src/index.ts
+@@ -4,8 +4,9 @@ import { handleWebhook } from "./webhook";
+ import { handleActivate } from "./activate";
+ import { handleVerify } from "./verify";
+ import { handleResetDevice } from "./reset-device";
+-import { handleDownloadToken, handleDownload } from "./download";
++import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./download";
+ import { handleRevoke } from "./revoke";
++import { handleSessionStatus } from "./session-status";
+ 
+ export default {
+   async fetch(request: Request, env: Env): Promise<Response> {
+@@ -39,8 +40,12 @@ export default {
+         response = await handleResetDevice(request, env);
+       } else if (method === "POST" && path === "/api/download-token") {
+         response = await handleDownloadToken(request, env);
++      } else if (method === "GET" && path === "/api/download/latest") {
++        response = await handleDownloadLatest(request, env);
+       } else if (method === "GET" && path.startsWith("/api/download/")) {
+         response = await handleDownload(request, env);
++      } else if (method === "GET" && path === "/api/session-status") {
++        response = await handleSessionStatus(request, env);
+       } else if (method === "POST" && path === "/api/revoke") {
+         response = await handleRevoke(request, env);
+       } else {
+```
+
+---
+
+## 2026-03-19 13:49:50 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 125 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index 9ccef1d..0873a2c 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -71,6 +71,61 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--fg);
+       line-height: 1.5;
+     }
++    .key-box {
++      background: var(--surface);
++      border: 1px solid var(--accent);
++      border-radius: 10px;
++      padding: 1.5rem;
++      margin: 1.5rem 0 1rem;
++      text-align: left;
++    }
++    .key-box label {
++      font-family: var(--font-mono);
++      font-size: 0.75rem;
++      text-transform: uppercase;
++      letter-spacing: 0.1em;
++      color: var(--accent);
++      display: block;
++      margin-bottom: 0.5rem;
++    }
++    .key-value {
++      display: flex;
++      align-items: center;
++      gap: 0.75rem;
++    }
+```
+
+---
+
+## 2026-03-19 13:49:54 | `docs/quickstart.md`
+
+**Stats:**  1 file changed, 33 insertions(+), 17 deletions(-)
+
+```diff
+diff --git a/docs/quickstart.md b/docs/quickstart.md
+index 867bd54..8e2d920 100644
+--- a/docs/quickstart.md
++++ b/docs/quickstart.md
+@@ -1,10 +1,11 @@
+ # Quickstart — OpenClaw Memory Stack
+ 
+-Get your first memory query running in under 5 minutes.
++Get memory working in under 5 minutes.
+ 
+ ## Requirements
+ 
+ - **macOS** (primary platform) or **Linux** (documented, not fully validated)
++- **OpenClaw** installed and running
+ - **git** >= 2.20 (ships with macOS; verify with `git --version`)
+ - **Bun** (optional, for QMD backend; install from https://bun.sh)
+ - **python3** (used for JSON processing)
+@@ -15,7 +16,7 @@ After purchase, you'll receive an email with your license key and a download lin
+ 
+ ```bash
+ # Download and extract
+-tar xzf openclaw-memory-stack-v0.1.0.tar.gz
++unzip openclaw-memory-stack-v0.1.0.zip
+ cd openclaw-memory-stack-v0.1.0
+ ```
+ 
+@@ -29,7 +30,9 @@ This will:
+ 1. Verify your license key with the server
+ 2. Register this device (up to 3 devices per license)
+ 3. Install files to `~/.openclaw/memory-stack/`
+```
+
+---
+
+## 2026-03-19 13:50:01 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 124 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index 9ccef1d..ffd63b7 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -71,6 +71,61 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--fg);
+       line-height: 1.5;
+     }
++    .key-box {
++      background: var(--surface);
++      border: 1px solid var(--accent);
++      border-radius: 10px;
++      padding: 1.5rem;
++      margin: 1.5rem 0 1rem;
++      text-align: left;
++    }
++    .key-box label {
++      font-family: var(--font-mono);
++      font-size: 0.75rem;
++      text-transform: uppercase;
++      letter-spacing: 0.1em;
++      color: var(--accent);
++      display: block;
++      margin-bottom: 0.5rem;
++    }
++    .key-value {
++      display: flex;
++      align-items: center;
++      gap: 0.75rem;
++    }
+```
+
+---
+
+## 2026-03-19 13:54:05 | `install.sh`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index 38f7c92..cb14e0d 100755
+--- a/install.sh
++++ b/install.sh
+@@ -395,7 +395,7 @@ entries['openclaw-memory-stack'] = {
+ installs = plugins.setdefault('installs', {})
+ now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+ installs['openclaw-memory-stack'] = {
+-    'source': 'local',
++    'source': 'path',
+     'spec': ext_dir,
+     'installPath': ext_dir,
+     'version': '0.1.0',
+```
+
+---
+
+## 2026-03-19 14:17:32 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 124 insertions(+), 124 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index dad77a2..a63eae8 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -2,50 +2,56 @@
+  * OpenClaw Memory Stack — Plugin Entry Point
+  *
+  * Registers as OpenClaw's memory provider via plugins.slots.memory.
+- * Routes queries through the rule-based router to QMD (BM25/vector)
+- * and Total Recall (git-based) backends.
++ * Uses definePluginEntry pattern matching memory-core / memory-lancedb.
+  *
+- * Zero LLM overhead — routing is pure regex matching.
++ * Provides:
++ * - memory_search tool (routes through rule-based router → QMD + Total Recall)
++ * - memory_store tool (stores via Total Recall git-based backend)
++ * - before_agent_start hook (auto-recall)
++ * - agent_end hook (auto-capture)
+  */
+ 
+-import { execSync, execFile } from "node:child_process";
++import { execSync } from "node:child_process";
+ import { existsSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { homedir } from "node:os";
+ 
+ const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
+ const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
+-const CLI = resolve(INSTALL_ROOT, "bin/openclaw-memory");
++const TR_WRAPPER = resolve(INSTALL_ROOT, "skills/memory-totalrecall/wrapper.sh");
+```
+
+---
+
+## 2026-03-19 14:17:52 | `plugin/openclaw.plugin.json`
+
+**Stats:**  1 file changed, 25 insertions(+), 24 deletions(-)
+
+```diff
+diff --git a/plugin/openclaw.plugin.json b/plugin/openclaw.plugin.json
+index af5c435..4b5cc65 100644
+--- a/plugin/openclaw.plugin.json
++++ b/plugin/openclaw.plugin.json
+@@ -1,47 +1,48 @@
+ {
+   "id": "openclaw-memory-stack",
+-  "name": "OpenClaw Memory Stack",
+-  "version": "0.1.0",
+-  "description": "Rule-based memory router with BM25 + vector search (QMD) and git-based recall (Total Recall). Saves tokens by providing precise memory retrieval.",
+   "kind": "memory",
+-  "slot": "memory",
+-  "main": "plugin/index.mjs",
+   "configSchema": {
+     "type": "object",
++    "additionalProperties": false,
+     "properties": {
+       "routerMode": {
+         "type": "string",
+-        "enum": ["auto", "qmd-only", "totalrecall-only"],
+-        "default": "auto",
+-        "description": "Which backends to use. 'auto' lets the router decide."
++        "enum": ["auto", "qmd-only", "totalrecall-only"]
+       },
+       "searchMode": {
+         "type": "string",
+-        "enum": ["bm25", "vector", "hybrid"],
+-        "default": "hybrid",
+-        "description": "QMD search mode."
++        "enum": ["bm25", "vector", "hybrid"]
+```
+
+---
+
+## 2026-03-19 14:22:33 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 127 insertions(+), 124 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index dad77a2..f63b7f2 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -2,50 +2,56 @@
+  * OpenClaw Memory Stack — Plugin Entry Point
+  *
+  * Registers as OpenClaw's memory provider via plugins.slots.memory.
+- * Routes queries through the rule-based router to QMD (BM25/vector)
+- * and Total Recall (git-based) backends.
++ * Uses definePluginEntry pattern matching memory-core / memory-lancedb.
+  *
+- * Zero LLM overhead — routing is pure regex matching.
++ * Provides:
++ * - memory_search tool (routes through rule-based router → QMD + Total Recall)
++ * - memory_store tool (stores via Total Recall git-based backend)
++ * - before_agent_start hook (auto-recall)
++ * - agent_end hook (auto-capture)
+  */
+ 
+-import { execSync, execFile } from "node:child_process";
++import { execSync } from "node:child_process";
+ import { existsSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { homedir } from "node:os";
+ 
+ const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
+ const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
+-const CLI = resolve(INSTALL_ROOT, "bin/openclaw-memory");
++const TR_WRAPPER = resolve(INSTALL_ROOT, "skills/memory-totalrecall/wrapper.sh");
+```
+
+---
+
+## 2026-03-19 14:22:42 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 114 insertions(+), 123 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index dad77a2..80fe176 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -2,50 +2,56 @@
+  * OpenClaw Memory Stack — Plugin Entry Point
+  *
+  * Registers as OpenClaw's memory provider via plugins.slots.memory.
+- * Routes queries through the rule-based router to QMD (BM25/vector)
+- * and Total Recall (git-based) backends.
++ * Uses definePluginEntry pattern matching memory-core / memory-lancedb.
+  *
+- * Zero LLM overhead — routing is pure regex matching.
++ * Provides:
++ * - memory_search tool (routes through rule-based router → QMD + Total Recall)
++ * - memory_store tool (stores via Total Recall git-based backend)
++ * - before_agent_start hook (auto-recall)
++ * - agent_end hook (auto-capture)
+  */
+ 
+-import { execSync, execFile } from "node:child_process";
++import { execSync } from "node:child_process";
+ import { existsSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { homedir } from "node:os";
+ 
+ const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
+ const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
+-const CLI = resolve(INSTALL_ROOT, "bin/openclaw-memory");
++const TR_WRAPPER = resolve(INSTALL_ROOT, "skills/memory-totalrecall/wrapper.sh");
+```
+
+---
+
+## 2026-03-19 14:26:35 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 113 insertions(+), 122 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index dad77a2..37738c6 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -2,50 +2,56 @@
+  * OpenClaw Memory Stack — Plugin Entry Point
+  *
+  * Registers as OpenClaw's memory provider via plugins.slots.memory.
+- * Routes queries through the rule-based router to QMD (BM25/vector)
+- * and Total Recall (git-based) backends.
++ * Uses definePluginEntry pattern matching memory-core / memory-lancedb.
+  *
+- * Zero LLM overhead — routing is pure regex matching.
++ * Provides:
++ * - memory_search tool (routes through rule-based router → QMD + Total Recall)
++ * - memory_store tool (stores via Total Recall git-based backend)
++ * - before_agent_start hook (auto-recall)
++ * - agent_end hook (auto-capture)
+  */
+ 
+-import { execSync, execFile } from "node:child_process";
++import { execSync } from "node:child_process";
+ import { existsSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { homedir } from "node:os";
+ 
+ const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
+ const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
+-const CLI = resolve(INSTALL_ROOT, "bin/openclaw-memory");
++const TR_WRAPPER = resolve(INSTALL_ROOT, "skills/memory-totalrecall/wrapper.sh");
+```
+
+---
+
+## 2026-03-19 14:38:40 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 137 insertions(+), 141 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index dad77a2..74c407a 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,51 +1,94 @@
+ /**
+  * OpenClaw Memory Stack — Plugin Entry Point
+  *
+- * Registers as OpenClaw's memory provider via plugins.slots.memory.
+- * Routes queries through the rule-based router to QMD (BM25/vector)
+- * and Total Recall (git-based) backends.
+- *
+- * Zero LLM overhead — routing is pure regex matching.
++ * Strategy: Index and search OpenClaw's NATIVE memory files directly.
++ * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
++ * - Reads workspace MEMORY.md files
++ * - Provides enhanced memory_search via FTS5 + BM25 ranking
++ * - auto-recall injects top results before each agent turn (saves tokens)
++ * - No separate backends needed — works with what OpenClaw already stores
+  */
+ 
+-import { execSync, execFile } from "node:child_process";
+-import { existsSync } from "node:fs";
++import { execSync } from "node:child_process";
++import { existsSync, readFileSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { homedir } from "node:os";
+ 
+-const INSTALL_ROOT = resolve(homedir(), ".openclaw/memory-stack");
+-const ROUTER_SH = resolve(INSTALL_ROOT, "skills/memory-router/router.sh");
+```
+
+---
+
+## 2026-03-19 14:49:17 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 315 insertions(+), 94 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..9957159 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 14:55:53 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 317 insertions(+), 94 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..1ae83ff 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 14:57:21 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 317 insertions(+), 94 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..73c040f 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 14:57:26 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 317 insertions(+), 94 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..59ef1ea 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 14:58:12 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 336 insertions(+), 109 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..48a7d1d 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 15:00:31 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 360 insertions(+), 109 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..ff9d7f3 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 15:00:41 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 325 insertions(+), 109 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..c02225c 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 15:00:47 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 325 insertions(+), 109 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 74c407a..c4dc886 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -1,132 +1,296 @@
+ /**
+- * OpenClaw Memory Stack — Plugin Entry Point
++ * OpenClaw Memory Stack — v2 Plugin
+  *
+- * Strategy: Index and search OpenClaw's NATIVE memory files directly.
+- * - Reads ~/.openclaw/memory/main.sqlite (FTS5 + vectors)
+- * - Reads workspace MEMORY.md files
+- * - Provides enhanced memory_search via FTS5 + BM25 ranking
+- * - auto-recall injects top results before each agent turn (saves tokens)
+- * - No separate backends needed — works with what OpenClaw already stores
++ * Three competitive advantages over native memory:
++ *
++ * 1. LOCAL SEMANTIC SEARCH (no API keys, no cost)
++ *    QMD hybrid search (BM25 + local vector) alongside native SQLite FTS5.
++ *    memory-lancedb needs OpenAI API key → we run 100% offline.
++ *
++ * 2. MEMORY QUALITY MANAGEMENT
++ *    Detect duplicates, stale entries, and noise.
++ *    memory_health tool shows memory quality score.
++ *    Auto-consolidation merges similar memories.
++ *
++ * 3. COMPACTION RESCUE
++ *    Before each turn, extract key facts from conversation.
++ *    Store them persistently so compaction can't erase them.
++ *    After compaction, auto-recall injects them back.
+```
+
+---
+
+## 2026-03-19 15:04:12 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 5 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 1bfcb6a..7eefceb 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -353,11 +353,12 @@ import Layout from "../layouts/Layout.astro";
+   </nav>
+ 
+   <div class="hero">
+-    <div class="badge">v0.1.0 Starter</div>
+-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
++    <div class="badge">v2 — OpenClaw Plugin</div>
++    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+     <p class="subtitle">
+-      Guided memory routing for AI coding agents. Three backends, one router,
+-      zero context loss. Every query hits the right memory store — automatically.
++      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
++      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
++      No API keys. No subscriptions. Just install and go.
+     </p>
+     <button class="hero-cta" id="buy-btn">
+       Get Memory Stack
+```
+
+---
+
+## 2026-03-19 15:04:25 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 15 insertions(+), 15 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 1bfcb6a..48bdfe4 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -353,11 +353,12 @@ import Layout from "../layouts/Layout.astro";
+   </nav>
+ 
+   <div class="hero">
+-    <div class="badge">v0.1.0 Starter</div>
+-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
++    <div class="badge">v2 — OpenClaw Plugin</div>
++    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+     <p class="subtitle">
+-      Guided memory routing for AI coding agents. Three backends, one router,
+-      zero context loss. Every query hits the right memory store — automatically.
++      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
++      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
++      No API keys. No subscriptions. Just install and go.
+     </p>
+     <button class="hero-cta" id="buy-btn">
+       Get Memory Stack
+@@ -375,20 +376,19 @@ import Layout from "../layouts/Layout.astro";
+         <div class="terminal-title">openclaw-memory</div>
+       </div>
+       <div class="terminal-body">
+-        <div><span class="comment"># Install + activate</span></div>
++        <div><span class="comment"># Install — one command, done</span></div>
+         <div><span class="prompt">$</span> <span class="cmd">./install.sh --key=oc-starter-xxxxxxxxxxxx</span></div>
+-        <div><span class="success">  [OK]  License verified (tier: starter)</span></div>
+-        <div><span class="success">  [OK]  Files installed</span></div>
+```
+
+---
+
+## 2026-03-19 15:04:53 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 41 insertions(+), 41 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 1bfcb6a..4329670 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -353,11 +353,12 @@ import Layout from "../layouts/Layout.astro";
+   </nav>
+ 
+   <div class="hero">
+-    <div class="badge">v0.1.0 Starter</div>
+-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
++    <div class="badge">v2 — OpenClaw Plugin</div>
++    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+     <p class="subtitle">
+-      Guided memory routing for AI coding agents. Three backends, one router,
+-      zero context loss. Every query hits the right memory store — automatically.
++      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
++      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
++      No API keys. No subscriptions. Just install and go.
+     </p>
+     <button class="hero-cta" id="buy-btn">
+       Get Memory Stack
+@@ -375,80 +376,79 @@ import Layout from "../layouts/Layout.astro";
+         <div class="terminal-title">openclaw-memory</div>
+       </div>
+       <div class="terminal-body">
+-        <div><span class="comment"># Install + activate</span></div>
++        <div><span class="comment"># Install — one command, done</span></div>
+         <div><span class="prompt">$</span> <span class="cmd">./install.sh --key=oc-starter-xxxxxxxxxxxx</span></div>
+-        <div><span class="success">  [OK]  License verified (tier: starter)</span></div>
+-        <div><span class="success">  [OK]  Files installed</span></div>
+```
+
+---
+
+## 2026-03-19 15:05:04 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 42 insertions(+), 42 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 1bfcb6a..35b47e2 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -347,17 +347,18 @@ import Layout from "../layouts/Layout.astro";
+     <div class="nav-logo">openclaw<span>/memory-stack</span></div>
+     <div class="nav-links">
+       <a href="#features">Features</a>
+-      <a href="#routing">Routing</a>
++      <a href="#how">How It Works</a>
+       <a href="/manage">Manage License</a>
+     </div>
+   </nav>
+ 
+   <div class="hero">
+-    <div class="badge">v0.1.0 Starter</div>
+-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
++    <div class="badge">v2 — OpenClaw Plugin</div>
++    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+     <p class="subtitle">
+-      Guided memory routing for AI coding agents. Three backends, one router,
+-      zero context loss. Every query hits the right memory store — automatically.
++      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
++      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
++      No API keys. No subscriptions. Just install and go.
+     </p>
+     <button class="hero-cta" id="buy-btn">
+       Get Memory Stack
+@@ -375,80 +376,79 @@ import Layout from "../layouts/Layout.astro";
+         <div class="terminal-title">openclaw-memory</div>
+```
+
+---
+
+## 2026-03-19 15:05:16 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 45 insertions(+), 45 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 1bfcb6a..e3fd851 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -347,17 +347,18 @@ import Layout from "../layouts/Layout.astro";
+     <div class="nav-logo">openclaw<span>/memory-stack</span></div>
+     <div class="nav-links">
+       <a href="#features">Features</a>
+-      <a href="#routing">Routing</a>
++      <a href="#how">How It Works</a>
+       <a href="/manage">Manage License</a>
+     </div>
+   </nav>
+ 
+   <div class="hero">
+-    <div class="badge">v0.1.0 Starter</div>
+-    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
++    <div class="badge">v2 — OpenClaw Plugin</div>
++    <h1>Long conversations.<br/><span class="glow">Nothing lost.</span></h1>
+     <p class="subtitle">
+-      Guided memory routing for AI coding agents. Three backends, one router,
+-      zero context loss. Every query hits the right memory store — automatically.
++      Memory plugin for OpenClaw that runs 100% locally. Smarter search, memory quality checks,
++      and compaction rescue — so your agent remembers everything, no matter how long the conversation.
++      No API keys. No subscriptions. Just install and go.
+     </p>
+     <button class="hero-cta" id="buy-btn">
+       Get Memory Stack
+@@ -375,80 +376,79 @@ import Layout from "../layouts/Layout.astro";
+         <div class="terminal-title">openclaw-memory</div>
+```
+
+---
+
+## 2026-03-19 15:12:08 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 2 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index e3fd851..2236009 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -400,8 +400,8 @@ import Layout from "../layouts/Layout.astro";
+     <div class="features">
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F512;</div>
+-        <h3>100% Local Search</h3>
+-        <p>BM25 + vector search using local models. Other memory plugins need an OpenAI API key for every search — that's extra cost and latency on every turn. Memory Stack runs entirely on your machine. Zero API calls. Zero cost. Zero privacy risk.</p>
++        <h3>No Embedding Setup Needed</h3>
++        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F9F9;</div>
+```
+
+---
+
+## 2026-03-19 15:12:18 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 3 insertions(+), 3 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index e3fd851..ba16161 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -400,13 +400,13 @@ import Layout from "../layouts/Layout.astro";
+     <div class="features">
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F512;</div>
+-        <h3>100% Local Search</h3>
+-        <p>BM25 + vector search using local models. Other memory plugins need an OpenAI API key for every search — that's extra cost and latency on every turn. Memory Stack runs entirely on your machine. Zero API calls. Zero cost. Zero privacy risk.</p>
++        <h3>No Embedding Setup Needed</h3>
++        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F9F9;</div>
+         <h3>Memory Quality</h3>
+-        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you exactly what to clean up.</p>
++        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you what to clean up — it never deletes anything automatically.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F6E1;</div>
+```
+
+---
+
+## 2026-03-19 15:12:25 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 4 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index e3fd851..ecac641 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -400,13 +400,13 @@ import Layout from "../layouts/Layout.astro";
+     <div class="features">
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F512;</div>
+-        <h3>100% Local Search</h3>
+-        <p>BM25 + vector search using local models. Other memory plugins need an OpenAI API key for every search — that's extra cost and latency on every turn. Memory Stack runs entirely on your machine. Zero API calls. Zero cost. Zero privacy risk.</p>
++        <h3>No Embedding Setup Needed</h3>
++        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F9F9;</div>
+         <h3>Memory Quality</h3>
+-        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you exactly what to clean up.</p>
++        <p>Built-in health checks that find duplicate memories, stale entries with expired dates, and noise. Other plugins just pile up data forever. Memory Stack scores your memory quality and tells you what to clean up — it never deletes anything automatically.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">&#x1F6E1;</div>
+@@ -470,7 +470,7 @@ import Layout from "../layouts/Layout.astro";
+   <div class="disclaimers-section">
+     <ul class="disclaimers">
+       <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
+-      <li><strong>Runs locally.</strong> No API keys, no cloud calls, no extra cost. Needs Bun for QMD vector search.</li>
++      <li><strong>No embedding setup.</strong> BM25 search works instantly. Optional QMD vector search runs locally with Bun — no external API needed.</li>
+       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
+       <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
+     </ul>
+```
+
+---
+
+## 2026-03-19 15:14:21 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index ecac641..8fd4b2d 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -227,7 +227,7 @@ import Layout from "../layouts/Layout.astro";
+     /* ── Routing flow ── */
+     .routing-grid {
+       display: grid;
+-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
++      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+       gap: 0.75rem;
+     }
+     .route-item {
+```
+
+---
+
+## 2026-03-19 15:14:29 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 3 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index ecac641..db54098 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -227,7 +227,7 @@ import Layout from "../layouts/Layout.astro";
+     /* ── Routing flow ── */
+     .routing-grid {
+       display: grid;
+-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
++      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+       gap: 0.75rem;
+     }
+     .route-item {
+@@ -239,6 +239,8 @@ import Layout from "../layouts/Layout.astro";
+       border-radius: 8px;
+       padding: 1rem 1.25rem;
+       font-size: 0.85rem;
++      overflow: hidden;
++      word-break: break-word;
+     }
+     .route-label {
+       color: var(--fg-bright);
+```
+
+---
+
+## 2026-03-19 15:31:35 | `docs/superpowers/plans/2026-03-19-v3-complete-feature-parity.md`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 15:39:18 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 75 insertions(+)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index c4dc886..a1dd8c9 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -168,6 +168,81 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   return selected;
+ }
+ 
++// ─── Post-processing: MMR reranking + temporal decay ─────────────
++
++function applyMMR(results, lambda = 0.7, maxResults = results.length) {
++  if (results.length <= 1) return results.slice(0, maxResults);
++
++  // Build word sets for Jaccard similarity
++  const wordSets = results.map(r =>
++    new Set((r.content || "").toLowerCase().split(/\W+/).filter(w => w.length > 2))
++  );
++
++  function jaccard(setA, setB) {
++    if (setA.size === 0 && setB.size === 0) return 1;
++    let intersection = 0;
++    for (const w of setA) { if (setB.has(w)) intersection++; }
++    const union = setA.size + setB.size - intersection;
++    return union === 0 ? 0 : intersection / union;
++  }
++
++  // Greedy selection: start with highest-relevance result
++  const selected = [0];
++  const remaining = new Set(results.map((_, i) => i));
++  remaining.delete(0);
+```
+
+---
+
+## 2026-03-19 15:39:27 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 81 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index c4dc886..e811f5e 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -156,11 +156,16 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+     if (deduped.length >= maxResults) break;
+   }
+ 
++  // Post-processing: temporal decay → re-sort → MMR
++  applyTemporalDecay(deduped, combinedSearch._halfLifeDays);
++  deduped.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
++  const reranked = applyMMR(deduped, combinedSearch._mmrLambda, maxResults);
++
+   // Token budget
+   const charBudget = maxTokens * 4;
+   const selected = [];
+   let used = 0;
+-  for (const r of deduped) {
++  for (const r of reranked) {
+     if (used + (r.content || "").length > charBudget) break;
+     selected.push(r);
+     used += (r.content || "").length;
+@@ -168,6 +173,81 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   return selected;
+ }
+ 
++// ─── Post-processing: MMR reranking + temporal decay ─────────────
++
++function applyMMR(results, lambda = 0.7, maxResults = results.length) {
++  if (results.length <= 1) return results.slice(0, maxResults);
+```
+
+---
+
+## 2026-03-19 15:39:34 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 87 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index c4dc886..0e16b1a 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -156,11 +156,16 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+     if (deduped.length >= maxResults) break;
+   }
+ 
++  // Post-processing: temporal decay → re-sort → MMR
++  applyTemporalDecay(deduped, combinedSearch._halfLifeDays);
++  deduped.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
++  const reranked = applyMMR(deduped, combinedSearch._mmrLambda, maxResults);
++
+   // Token budget
+   const charBudget = maxTokens * 4;
+   const selected = [];
+   let used = 0;
+-  for (const r of deduped) {
++  for (const r of reranked) {
+     if (used + (r.content || "").length > charBudget) break;
+     selected.push(r);
+     used += (r.content || "").length;
+@@ -168,6 +173,81 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   return selected;
+ }
+ 
++// ─── Post-processing: MMR reranking + temporal decay ─────────────
++
++function applyMMR(results, lambda = 0.7, maxResults = results.length) {
++  if (results.length <= 1) return results.slice(0, maxResults);
+```
+
+---
+
+## 2026-03-19 15:41:07 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 1 insertion(+)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..6bdfe85 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+```
+
+---
+
+## 2026-03-19 15:41:40 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 147 insertions(+)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..5fc3865 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+@@ -365,6 +366,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 4: Knowledge graph ────────────────────────────────
++
++function loadGraph() {
++  try {
++    if (existsSync(GRAPH_PATH)) {
++      return JSON.parse(readFileSync(GRAPH_PATH, "utf-8"));
++    }
++  } catch { /* corrupted file, start fresh */ }
++  return { entities: {}, edges: [] };
++}
++
++function saveGraph(graph) {
++  const dir = resolve(GRAPH_PATH, "..");
++  mkdirSync(dir, { recursive: true });
+```
+
+---
+
+## 2026-03-19 15:41:45 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 150 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..5cf9763 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+@@ -142,8 +143,10 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const graphResults = queryGraph(query, maxResults);
++
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -365,6 +368,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 4: Knowledge graph ────────────────────────────────
++
+```
+
+---
+
+## 2026-03-19 15:41:52 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 158 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..5717f67 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+@@ -142,8 +143,10 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const graphResults = queryGraph(query, maxResults);
++
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -365,6 +368,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 4: Knowledge graph ────────────────────────────────
++
+```
+
+---
+
+## 2026-03-19 15:42:01 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 179 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..be3155d 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+@@ -142,8 +143,10 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const graphResults = queryGraph(query, maxResults);
++
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -365,6 +368,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 4: Knowledge graph ────────────────────────────────
++
+```
+
+---
+
+## 2026-03-19 15:42:10 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 180 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 0e16b1a..cb63f35 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+ const WORKSPACE = resolve(HOME, ".openclaw/workspace");
+ const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
+ const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
++const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+ const QMD_BIN = (() => {
+   // Find qmd binary
+   const paths = [
+@@ -142,8 +143,10 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const graphResults = queryGraph(query, maxResults);
++
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -365,6 +368,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 4: Knowledge graph ────────────────────────────────
++
+```
+
+---
+
+## 2026-03-19 15:44:14 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 72 insertions(+)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index cb63f35..f907149 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -368,6 +368,78 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 2b: Self-evolving memory (consolidation) ──────────
++
++function consolidateMemories() {
++  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
++  if (!existsSync(memoryMdPath)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
++
++  const content = readFileSync(memoryMdPath, "utf-8");
++  const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
++  const totalMemories = lines.length;
++
++  // Build word bags (words > 3 chars)
++  const wordBags = lines.map(l =>
++    new Set(l.toLowerCase().split(/\W+/).filter(w => w.length > 3))
++  );
++
++  // Find clusters via Jaccard similarity > 0.4
++  const parent = lines.map((_, i) => i);
++  function find(i) { return parent[i] === i ? i : (parent[i] = find(parent[i])); }
++  function union(a, b) { parent[find(a)] = find(b); }
++
++  for (let i = 0; i < lines.length; i++) {
++    for (let j = i + 1; j < lines.length; j++) {
+```
+
+---
+
+## 2026-03-19 15:44:19 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 74 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index cb63f35..259cf64 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -143,10 +143,11 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const sessions = searchSessions(query, maxResults);
+   const graphResults = queryGraph(query, maxResults);
+ 
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...sessions, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -368,6 +369,78 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 2b: Self-evolving memory (consolidation) ──────────
++
++function consolidateMemories() {
++  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
++  if (!existsSync(memoryMdPath)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
++
++  const content = readFileSync(memoryMdPath, "utf-8");
++  const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
++  const totalMemories = lines.length;
+```
+
+---
+
+## 2026-03-19 15:44:28 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 90 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index cb63f35..50beaea 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -143,10 +143,11 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
+   const md = searchMemoryMd(query, maxResults);
+   const rescue = searchRescueStore(query, maxResults);
+ 
++  const sessions = searchSessions(query, maxResults);
+   const graphResults = queryGraph(query, maxResults);
+ 
+   // Merge, sort by relevance, dedupe
+-  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
++  const all = [...rescue, ...graphResults, ...sessions, ...qmd, ...fts5, ...md]
+     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+ 
+   const seen = new Set();
+@@ -368,6 +369,78 @@ function cleanupOldRescueFiles(maxAgeDays) {
+   } catch { /* no files */ }
+ }
+ 
++// ─── Direction 2b: Self-evolving memory (consolidation) ──────────
++
++function consolidateMemories() {
++  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
++  if (!existsSync(memoryMdPath)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
++
++  const content = readFileSync(memoryMdPath, "utf-8");
++  const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
++  const totalMemories = lines.length;
+```
+
+---
+
+## 2026-03-19 15:45:38 | `plugin/openclaw.plugin.json`
+
+**Stats:**  1 file changed, 15 insertions(+)
+
+```diff
+diff --git a/plugin/openclaw.plugin.json b/plugin/openclaw.plugin.json
+index 4b5cc65..3293cc7 100644
+--- a/plugin/openclaw.plugin.json
++++ b/plugin/openclaw.plugin.json
+@@ -28,6 +28,21 @@
+         "type": "integer",
+         "minimum": 100,
+         "maximum": 5000
++      },
++      "mmrLambda": {
++        "type": "number",
++        "minimum": 0,
++        "maximum": 1
++      },
++      "halfLifeDays": {
++        "type": "integer",
++        "minimum": 1
++      },
++      "graphEnabled": {
++        "type": "boolean"
++      },
++      "sessionSearch": {
++        "type": "boolean"
+       }
+     }
+   },
+```
+
+---
+
+## 2026-03-19 15:46:15 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 25 insertions(+), 8 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index ecac641..2cddc49 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -227,7 +227,7 @@ import Layout from "../layouts/Layout.astro";
+     /* ── Routing flow ── */
+     .routing-grid {
+       display: grid;
+-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
++      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+       gap: 0.75rem;
+     }
+     .route-item {
+@@ -239,6 +239,8 @@ import Layout from "../layouts/Layout.astro";
+       border-radius: 8px;
+       padding: 1rem 1.25rem;
+       font-size: 0.85rem;
++      overflow: hidden;
++      word-break: break-word;
+     }
+     .route-label {
+       color: var(--fg-bright);
+@@ -399,19 +401,34 @@ import Layout from "../layouts/Layout.astro";
+     <p class="section-desc">Three features that make long conversations actually work.</p>
+     <div class="features">
+       <div class="feature-card">
+-        <div class="feature-icon">&#x1F512;</div>
+-        <h3>No Embedding Setup Needed</h3>
+-        <p>Search works instantly with BM25 text matching — no embedding provider configuration required. OpenClaw's built-in memory needs you to set up an embedding provider (OpenAI, Gemini, etc.) for vector search. Memory Stack gives you fast, accurate search out of the box, plus optional local vector search via QMD with zero external API calls.</p>
++        <div class="feature-icon">&#x1F517;</div>
+```
+
+---
+
+## 2026-03-19 15:50:47 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 5 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 50beaea..fbd84d7 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -731,8 +731,11 @@ export default {
+     // ─── Compaction rescue: save key facts after each turn ─────
+ 
+     api.on("agent_end", async (event) => {
+-      const content = event.turnSummary || event.agentResponse || "";
+-      if (content.length < 100) return;
++      // Log event keys for debugging (remove after confirming hook works)
++      api.logger.info("agent_end fired, event keys: " + Object.keys(event || {}).join(", "));
++
++      const content = event.turnSummary || event.agentResponse || event.response || event.content || event.text || "";
++      if (content.length < 20) return;
+ 
+       // Extract key facts from this turn
+       const facts = extractKeyFacts(content);
+```
+
+---
+
+## 2026-03-19 15:50:55 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 15 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 50beaea..a892138 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -461,6 +461,16 @@ function saveGraph(graph) {
+ function extractEntities(text) {
+   const entities = new Map();
+   const edges = [];
++
++  // Also extract standalone capitalized multi-word names (e.g. "Team Alpha", "XYZ Corp", "Project Beta")
++  const standaloneNames = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
++  for (const name of standaloneNames) {
++    if (name.length < 3 || name.length > 60) continue;
++    const key = name.toLowerCase();
++    if (!entities.has(key)) entities.set(key, { name, type: "entity", mentions: 0 });
++    entities.get(key).mentions++;
++  }
++
+   const lines = text.split("\n").filter(l => l.trim());
+ 
+   // Entity patterns: category keyword followed by a name
+@@ -731,8 +741,11 @@ export default {
+     // ─── Compaction rescue: save key facts after each turn ─────
+ 
+     api.on("agent_end", async (event) => {
+-      const content = event.turnSummary || event.agentResponse || "";
+-      if (content.length < 100) return;
++      // Log event keys for debugging (remove after confirming hook works)
++      api.logger.info("agent_end fired, event keys: " + Object.keys(event || {}).join(", "));
++
+```
+
+---
+
+## 2026-03-19 15:54:33 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 25 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 50beaea..54fd4c7 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -461,6 +461,16 @@ function saveGraph(graph) {
+ function extractEntities(text) {
+   const entities = new Map();
+   const edges = [];
++
++  // Also extract standalone capitalized multi-word names (e.g. "Team Alpha", "XYZ Corp", "Project Beta")
++  const standaloneNames = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
++  for (const name of standaloneNames) {
++    if (name.length < 3 || name.length > 60) continue;
++    const key = name.toLowerCase();
++    if (!entities.has(key)) entities.set(key, { name, type: "entity", mentions: 0 });
++    entities.get(key).mentions++;
++  }
++
+   const lines = text.split("\n").filter(l => l.trim());
+ 
+   // Entity patterns: category keyword followed by a name
+@@ -731,8 +741,21 @@ export default {
+     // ─── Compaction rescue: save key facts after each turn ─────
+ 
+     api.on("agent_end", async (event) => {
+-      const content = event.turnSummary || event.agentResponse || "";
+-      if (content.length < 100) return;
++      // Extract text from event.messages (array of message objects)
++      let content = "";
++      if (Array.isArray(event.messages)) {
+```
+
+---
+
+## 2026-03-19 15:54:52 | `plugin/index.mjs`
+
+**Stats:**  1 file changed, 37 insertions(+), 3 deletions(-)
+
+```diff
+diff --git a/plugin/index.mjs b/plugin/index.mjs
+index 50beaea..5f6a601 100644
+--- a/plugin/index.mjs
++++ b/plugin/index.mjs
+@@ -461,6 +461,16 @@ function saveGraph(graph) {
+ function extractEntities(text) {
+   const entities = new Map();
+   const edges = [];
++
++  // Also extract standalone capitalized multi-word names (e.g. "Team Alpha", "XYZ Corp", "Project Beta")
++  const standaloneNames = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
++  for (const name of standaloneNames) {
++    if (name.length < 3 || name.length > 60) continue;
++    const key = name.toLowerCase();
++    if (!entities.has(key)) entities.set(key, { name, type: "entity", mentions: 0 });
++    entities.get(key).mentions++;
++  }
++
+   const lines = text.split("\n").filter(l => l.trim());
+ 
+   // Entity patterns: category keyword followed by a name
+@@ -715,7 +725,18 @@ export default {
+ 
+     if (autoRecall) {
+       api.on("before_agent_start", async (event) => {
+-        const query = event.lastUserMessage || event.summary || "";
++        // Extract last user message from event
++        let query = event.lastUserMessage || event.summary || "";
++        if (!query && Array.isArray(event.messages)) {
++          // Find last user message
+```
+
+---
+
+## 2026-03-19 16:16:10 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 74 insertions(+)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 2cddc49..697b984 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -471,6 +471,80 @@ import Layout from "../layouts/Layout.astro";
+     </div>
+   </div>
+ 
++  <div class="section" id="compare">
++    <div class="section-label">// vs native memory</div>
++    <h2>What you get that built-in memory doesn't have.</h2>
++    <p class="section-desc">OpenClaw's native memory is good. Memory Stack makes it better.</p>
++    <div class="compare-table-wrap">
++      <table class="compare-table">
++        <thead>
++          <tr>
++            <th>Feature</th>
++            <th>Native Memory</th>
++            <th>Memory Stack</th>
++          </tr>
++        </thead>
++        <tbody>
++          <tr>
++            <td>Text search (BM25)</td>
++            <td class="yes">Yes</td>
++            <td class="yes">Yes</td>
++          </tr>
++          <tr>
++            <td>Vector search</td>
++            <td class="yes">Yes (needs API key or local setup)</td>
+```
+
+---
+
+## 2026-03-19 16:16:22 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 123 insertions(+)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 2cddc49..1459e3a 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -259,6 +259,55 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+     }
+ 
++    /* ── Compare table ── */
++    .compare-table-wrap {
++      overflow-x: auto;
++      margin: 0 -0.5rem;
++    }
++    .compare-table {
++      width: 100%;
++      border-collapse: collapse;
++      font-size: 0.85rem;
++    }
++    .compare-table th {
++      font-family: var(--font-mono);
++      font-size: 0.75rem;
++      text-transform: uppercase;
++      letter-spacing: 0.08em;
++      color: var(--accent);
++      text-align: left;
++      padding: 0.75rem 1rem;
++      border-bottom: 2px solid var(--border-bright);
++    }
++    .compare-table th:not(:first-child) {
++      text-align: center;
+```
+
+---
+
+## 2026-03-19 16:16:39 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 124 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 2cddc49..583b5c0 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -259,6 +259,55 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+     }
+ 
++    /* ── Compare table ── */
++    .compare-table-wrap {
++      overflow-x: auto;
++      margin: 0 -0.5rem;
++    }
++    .compare-table {
++      width: 100%;
++      border-collapse: collapse;
++      font-size: 0.85rem;
++    }
++    .compare-table th {
++      font-family: var(--font-mono);
++      font-size: 0.75rem;
++      text-transform: uppercase;
++      letter-spacing: 0.08em;
++      color: var(--accent);
++      text-align: left;
++      padding: 0.75rem 1rem;
++      border-bottom: 2px solid var(--border-bright);
++    }
++    .compare-table th:not(:first-child) {
++      text-align: center;
+```
+
+---
+
+## 2026-03-19 17:11:24 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 130 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..1c0ed6d 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -81,6 +81,136 @@ PYEOF
+ FALLBACK_THRESHOLD=$(json_field "$ROUTER_CONFIG" "fallback_threshold" 2>/dev/null || echo "0.4")
+ TIMEOUT_MS=$(json_field "$ROUTER_CONFIG" "timeout_ms" 2>/dev/null || echo "5000")
+ 
++# ── RRF Fusion: Hybrid BM25 + Vector Search ─────────────────
++rrf_fusion() {
++  local query="$1"
++  local bm25_weight="${2:-1.0}"
++  local vector_weight="${3:-0.7}"
++  local top_k="${4:-20}"
++
++  if ! has_command qmd; then
++    contract_error "$query" "qmd" "BACKEND_UNAVAILABLE" "qmd CLI not found (required for hybrid search)"
++    return 1
++  fi
++
++  local start_ms
++  start_ms=$(now_ms)
++
++  # Run BM25 and vector searches in parallel
++  local bm25_output="" vector_output=""
++  local bm25_tmp="/tmp/openclaw-rrf-bm25-$$.json"
++  local vector_tmp="/tmp/openclaw-rrf-vector-$$.json"
++  trap "rm -f '$bm25_tmp' '$vector_tmp'" RETURN
++
++  qmd search "$query" --json > "$bm25_tmp" 2>/dev/null &
+```
+
+---
+
+## 2026-03-19 17:11:33 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 133 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..695f3a3 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,13 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -81,6 +84,136 @@ PYEOF
+ FALLBACK_THRESHOLD=$(json_field "$ROUTER_CONFIG" "fallback_threshold" 2>/dev/null || echo "0.4")
+ TIMEOUT_MS=$(json_field "$ROUTER_CONFIG" "timeout_ms" 2>/dev/null || echo "5000")
+ 
++# ── RRF Fusion: Hybrid BM25 + Vector Search ─────────────────
++rrf_fusion() {
++  local query="$1"
++  local bm25_weight="${2:-1.0}"
++  local vector_weight="${3:-0.7}"
++  local top_k="${4:-20}"
++
++  if ! has_command qmd; then
+```
+
+---
+
+## 2026-03-19 17:11:48 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 171 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..ab7ba6a 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,13 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -81,6 +84,136 @@ PYEOF
+ FALLBACK_THRESHOLD=$(json_field "$ROUTER_CONFIG" "fallback_threshold" 2>/dev/null || echo "0.4")
+ TIMEOUT_MS=$(json_field "$ROUTER_CONFIG" "timeout_ms" 2>/dev/null || echo "5000")
+ 
++# ── RRF Fusion: Hybrid BM25 + Vector Search ─────────────────
++rrf_fusion() {
++  local query="$1"
++  local bm25_weight="${2:-1.0}"
++  local vector_weight="${3:-0.7}"
++  local top_k="${4:-20}"
++
++  if ! has_command qmd; then
+```
+
+---
+
+## 2026-03-19 17:11:54 | `skills/memory-router/router-config.json`
+
+**Stats:**  1 file changed, 7 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router-config.json b/skills/memory-router/router-config.json
+index 0a96ad2..ddaebe9 100644
+--- a/skills/memory-router/router-config.json
++++ b/skills/memory-router/router-config.json
+@@ -11,6 +11,13 @@
+     "context_engine":   { "backends": ["lossless"] }
+   },
+   "rules": [
++    {
++      "id": "hybrid_search",
++      "description": "Combined BM25 + vector search with RRF fusion",
++      "signals": ["hybrid", "comprehensive search", "find.*everything", "thorough search", "search.*all"],
++      "primary_class": "retrieval_engine",
++      "hint": "hybrid"
++    },
+     {
+       "id": "exact_symbol",
+       "description": "Exact symbol, function, class, or method name lookup",
+```
+
+---
+
+## 2026-03-19 17:11:55 | `lib/hyde.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:12:10 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 36 insertions(+), 5 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..d6ed0e5 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -35,30 +35,61 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
++  # Parse optional flags
++  local event_time="" tags=""
++  local content_parts=()
++  while [ $# -gt 0 ]; do
++    case "$1" in
++      --event-time) event_time="$2"; shift 2 ;;
++      --tags)       tags="$2"; shift 2 ;;
++      *)            content_parts+=("$1"); shift ;;
++    esac
++  done
++  local content="${content_parts[*]}"
++
++  # Auto-generate record_time (when it was recorded)
++  local record_time
++  record_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
++
++  # If no event_time provided, default to record_time
+```
+
+---
+
+## 2026-03-19 17:12:20 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:**  1 file changed, 138 insertions(+)
+
+```diff
+diff --git a/skills/memory-nowledge/wrapper.sh b/skills/memory-nowledge/wrapper.sh
+index d6069e4..334a6b7 100755
+--- a/skills/memory-nowledge/wrapper.sh
++++ b/skills/memory-nowledge/wrapper.sh
+@@ -233,6 +233,144 @@ cmd_health() {
+   contract_health "$BACKEND" "ready" ""
+ }
+ 
++# ============================================================
++# Layer D: Evolution Chains (EVOLVES relationship in graph)
++# ============================================================
++store_evolution() {
++  local from_key="$1"      # e.g., "chose-postgres-2026-03-15"
++  local to_key="$2"        # e.g., "switched-cockroachdb-2026-03-18"
++  local reason="$3"        # Why the evolution happened
++
++  if [ -z "$from_key" ] || [ -z "$to_key" ]; then
++    echo '{"error": "from_key and to_key are required"}' >&2
++    return 1
++  fi
++
++  local timestamp
++  timestamp=$(now_iso)
++
++  # Create an EVOLVES edge in the graph via Nowledge API
++  # Store as a memory with structured evolution metadata
++  python3 -c "
++import json, sys, urllib.request
++
++payload = {
+```
+
+---
+
+## 2026-03-19 17:12:27 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:**  1 file changed, 139 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-nowledge/wrapper.sh b/skills/memory-nowledge/wrapper.sh
+index d6069e4..a394faf 100755
+--- a/skills/memory-nowledge/wrapper.sh
++++ b/skills/memory-nowledge/wrapper.sh
+@@ -233,6 +233,144 @@ cmd_health() {
+   contract_health "$BACKEND" "ready" ""
+ }
+ 
++# ============================================================
++# Layer D: Evolution Chains (EVOLVES relationship in graph)
++# ============================================================
++store_evolution() {
++  local from_key="$1"      # e.g., "chose-postgres-2026-03-15"
++  local to_key="$2"        # e.g., "switched-cockroachdb-2026-03-18"
++  local reason="$3"        # Why the evolution happened
++
++  if [ -z "$from_key" ] || [ -z "$to_key" ]; then
++    echo '{"error": "from_key and to_key are required"}' >&2
++    return 1
++  fi
++
++  local timestamp
++  timestamp=$(now_iso)
++
++  # Create an EVOLVES edge in the graph via Nowledge API
++  # Store as a memory with structured evolution metadata
++  python3 -c "
++import json, sys, urllib.request
++
++payload = {
+```
+
+---
+
+## 2026-03-19 17:12:39 | `lib/tiered-loading.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:12:46 | `skills/memory-router/router-config.json`
+
+**Stats:**  1 file changed, 23 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router-config.json b/skills/memory-router/router-config.json
+index 0a96ad2..db4dfb7 100644
+--- a/skills/memory-router/router-config.json
++++ b/skills/memory-router/router-config.json
+@@ -11,6 +11,13 @@
+     "context_engine":   { "backends": ["lossless"] }
+   },
+   "rules": [
++    {
++      "id": "hybrid_search",
++      "description": "Combined BM25 + vector search with RRF fusion",
++      "signals": ["hybrid", "comprehensive search", "find.*everything", "thorough search", "search.*all"],
++      "primary_class": "retrieval_engine",
++      "hint": "hybrid"
++    },
+     {
+       "id": "exact_symbol",
+       "description": "Exact symbol, function, class, or method name lookup",
+@@ -83,6 +90,22 @@
+       "fallback_class": "memory_store",
+       "hint": "exact"
+     },
++    {
++      "id": "evolution_query",
++      "description": "How decisions evolved over time",
++      "signals": ["evolv", "changed.*from", "used to be", "originally.*now", "timeline of", "history of.*decision"],
++      "primary_class": "knowledge_graph",
++      "fallback_class": "retrieval_engine",
++      "hint": "evolution"
++    },
+```
+
+---
+
+## 2026-03-19 17:12:46 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 108 insertions(+), 9 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..00a7dda 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -35,30 +35,61 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
++  # Parse optional flags
++  local event_time="" tags=""
++  local content_parts=()
++  while [ $# -gt 0 ]; do
++    case "$1" in
++      --event-time) event_time="$2"; shift 2 ;;
++      --tags)       tags="$2"; shift 2 ;;
++      *)            content_parts+=("$1"); shift ;;
++    esac
++  done
++  local content="${content_parts[*]}"
++
++  # Auto-generate record_time (when it was recorded)
++  local record_time
++  record_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
++
++  # If no event_time provided, default to record_time
+```
+
+---
+
+## 2026-03-19 17:12:59 | `skills/memory-totalrecall/config.json`
+
+**Stats:**  1 file changed, 12 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/config.json b/skills/memory-totalrecall/config.json
+index 75ab37b..9a61a05 100644
+--- a/skills/memory-totalrecall/config.json
++++ b/skills/memory-totalrecall/config.json
+@@ -15,12 +15,22 @@
+     "commit_grep": true,
+     "content_grep": true,
+     "case_sensitive": true,
+-    "max_results": 20
++    "max_results": 20,
++    "temporal_filtering": {
++      "supported": true,
++      "params": ["--event-after", "--event-before"],
++      "note": "Filters on event_time from frontmatter; falls back to record_time or file mtime"
++    }
+   },
+   "store": {
+     "commit_prefix": "memory:",
+     "filename_format": "{timestamp}_{slug}.md",
+-    "timestamp_format": "YYYY-MM-DDTHH-MM-SS"
++    "timestamp_format": "YYYY-MM-DDTHH-MM-SS",
++    "frontmatter": {
++      "fields": ["key", "event_time", "record_time", "tags"],
++      "event_time": "When the event actually happened (ISO 8601, passed by caller or defaults to record_time)",
++      "record_time": "When the memory was recorded (ISO 8601, auto-generated)"
++    }
+   },
+   "tier": "starter"
+ }
+```
+
+---
+
+## 2026-03-19 17:13:26 | `lib/hyde.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:13:39 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:**  1 file changed, 143 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/skills/memory-nowledge/wrapper.sh b/skills/memory-nowledge/wrapper.sh
+index d6069e4..66923cd 100755
+--- a/skills/memory-nowledge/wrapper.sh
++++ b/skills/memory-nowledge/wrapper.sh
+@@ -65,11 +65,12 @@ except Exception as e:
+ # Layer B: Router Adapter
+ # ============================================================
+ adapter() {
+-  local query="" hint=""
++  local query="" hint="" depth="${OPENCLAW_NOWLEDGE_DEPTH:-1}"
+   while [ $# -gt 0 ]; do
+     case "$1" in
+-      --hint) hint="$2"; shift 2 ;;
+-      *)      query="$1"; shift ;;
++      --hint)  hint="$2"; shift 2 ;;
++      --depth) depth="$2"; shift 2 ;;
++      *)       query="$1"; shift ;;
+     esac
+   done
+ 
+@@ -233,6 +234,144 @@ cmd_health() {
+   contract_health "$BACKEND" "ready" ""
+ }
+ 
++# ============================================================
++# Layer D: Evolution Chains (EVOLVES relationship in graph)
++# ============================================================
++store_evolution() {
++  local from_key="$1"      # e.g., "chose-postgres-2026-03-15"
++  local to_key="$2"        # e.g., "switched-cockroachdb-2026-03-18"
+```
+
+---
+
+## 2026-03-19 17:13:50 | `skills/memory-nowledge/wrapper.sh`
+
+**Stats:**  1 file changed, 206 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/skills/memory-nowledge/wrapper.sh b/skills/memory-nowledge/wrapper.sh
+index d6069e4..7a448d5 100755
+--- a/skills/memory-nowledge/wrapper.sh
++++ b/skills/memory-nowledge/wrapper.sh
+@@ -65,11 +65,12 @@ except Exception as e:
+ # Layer B: Router Adapter
+ # ============================================================
+ adapter() {
+-  local query="" hint=""
++  local query="" hint="" depth="${OPENCLAW_NOWLEDGE_DEPTH:-1}"
+   while [ $# -gt 0 ]; do
+     case "$1" in
+-      --hint) hint="$2"; shift 2 ;;
+-      *)      query="$1"; shift ;;
++      --hint)  hint="$2"; shift 2 ;;
++      --depth) depth="$2"; shift 2 ;;
++      *)       query="$1"; shift ;;
+     esac
+   done
+ 
+@@ -97,6 +98,69 @@ adapter() {
+   local encoded_query
+   encoded_query=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$query" 2>/dev/null) || encoded_query="$query"
+ 
++  # Multi-hop Cypher query for relationship hints with depth > 1
++  if [ "$hint" = "relationship" ] && [ "$depth" -gt 1 ] 2>/dev/null; then
++    local cypher_result
++    cypher_result=$(python3 -c "
++import json, sys, urllib.request
++
+```
+
+---
+
+## 2026-03-19 17:13:57 | `skills/memory-nowledge/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-nowledge/capability.json b/skills/memory-nowledge/capability.json
+index 798894a..a19eb44 100644
+--- a/skills/memory-nowledge/capability.json
++++ b/skills/memory-nowledge/capability.json
+@@ -1,7 +1,7 @@
+ {
+   "capability_version": 1,
+   "backend": "nowledge",
+-  "supported_modes": ["semantic", "relationship", "timeline"],
++  "supported_modes": ["semantic", "relationship", "timeline", "multi_hop"],
+   "requires_credentials": false,
+   "requires_external_service": true,
+   "cold_start_ms": 300,
+```
+
+---
+
+## 2026-03-19 17:13:58 | `lib/expertise.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:14:11 | `lib/tiered-loading.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:14:11 | `skills/memory-router/router-config.json`
+
+**Stats:**  1 file changed, 31 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router-config.json b/skills/memory-router/router-config.json
+index 0a96ad2..d9756d1 100644
+--- a/skills/memory-router/router-config.json
++++ b/skills/memory-router/router-config.json
+@@ -11,6 +11,13 @@
+     "context_engine":   { "backends": ["lossless"] }
+   },
+   "rules": [
++    {
++      "id": "hybrid_search",
++      "description": "Combined BM25 + vector search with RRF fusion",
++      "signals": ["hybrid", "comprehensive search", "find.*everything", "thorough search", "search.*all"],
++      "primary_class": "retrieval_engine",
++      "hint": "hybrid"
++    },
+     {
+       "id": "exact_symbol",
+       "description": "Exact symbol, function, class, or method name lookup",
+@@ -83,6 +90,30 @@
+       "fallback_class": "memory_store",
+       "hint": "exact"
+     },
++    {
++      "id": "evolution_query",
++      "description": "How decisions evolved over time",
++      "signals": ["evolv", "changed.*from", "used to be", "originally.*now", "timeline of", "history of.*decision"],
++      "primary_class": "knowledge_graph",
++      "fallback_class": "retrieval_engine",
++      "hint": "evolution"
++    },
+```
+
+---
+
+## 2026-03-19 17:14:16 | `skills/memory-lossless/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-lossless/capability.json b/skills/memory-lossless/capability.json
+index de8ef94..a7bc9e4 100644
+--- a/skills/memory-lossless/capability.json
++++ b/skills/memory-lossless/capability.json
+@@ -1,7 +1,7 @@
+ {
+   "capability_version": 1,
+   "backend": "lossless",
+-  "supported_modes": ["decision", "timeline", "semantic"],
++  "supported_modes": ["decision", "timeline", "semantic", "expand"],
+   "requires_credentials": false,
+   "requires_external_service": false,
+   "cold_start_ms": 200,
+```
+
+---
+
+## 2026-03-19 17:14:42 | `skills/memory-lossless/wrapper.sh`
+
+**Stats:**  1 file changed, 83 insertions(+)
+
+```diff
+diff --git a/skills/memory-lossless/wrapper.sh b/skills/memory-lossless/wrapper.sh
+index daddd6f..13e125b 100755
+--- a/skills/memory-lossless/wrapper.sh
++++ b/skills/memory-lossless/wrapper.sh
+@@ -114,6 +114,89 @@ adapter() {
+   local tmp_results="/tmp/openclaw-lcm-$$.json"
+   trap "rm -f '$tmp_results'" RETURN
+ 
++  # hint=expand: drill down into compacted nodes, returning full uncompacted content
++  if [ "$hint" = "expand" ]; then
++    local count normalized
++    read -r count normalized < <(python3 -c "
++import sqlite3, json, sys
++
++db_path = '$LCM_DB'
++query = sys.stdin.read().strip()
++
++try:
++    conn = sqlite3.connect(db_path)
++    # Find the compacted node matching the query
++    cursor = conn.execute(
++        'SELECT rowid, content, created_at FROM nodes WHERE content LIKE ? ORDER BY created_at DESC LIMIT 5',
++        (f'%{query}%',)
++    )
++    parent_rows = list(cursor)
++
++    results = []
++    max_score = 0.0
++
++    for rowid, parent_content, parent_ts in parent_rows:
+```
+
+---
+
+## 2026-03-19 17:14:47 | `lib/self-organize.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:14:57 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 113 insertions(+), 9 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..9099593 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -7,6 +7,11 @@ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
++# Source A-MEM self-organize library if available
++if [ -f "$INSTALL_ROOT/lib/self-organize.sh" ]; then
++  source "$INSTALL_ROOT/lib/self-organize.sh"
++fi
++
+ BACKEND="totalrecall"
+ 
+ # ============================================================
+@@ -35,30 +40,61 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
++  # Parse optional flags
++  local event_time="" tags=""
++  local content_parts=()
++  while [ $# -gt 0 ]; do
++    case "$1" in
+```
+
+---
+
+## 2026-03-19 17:15:00 | `lib/distill.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:15:19 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 119 insertions(+), 9 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..2ee16a9 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -7,6 +7,11 @@ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
++# Source A-MEM self-organize library if available
++if [ -f "$INSTALL_ROOT/lib/self-organize.sh" ]; then
++  source "$INSTALL_ROOT/lib/self-organize.sh"
++fi
++
+ BACKEND="totalrecall"
+ 
+ # ============================================================
+@@ -35,30 +40,61 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
++  # Parse optional flags
++  local event_time="" tags=""
++  local content_parts=()
++  while [ $# -gt 0 ]; do
++    case "$1" in
+```
+
+---
+
+## 2026-03-19 17:15:33 | `lib/dedup.sh`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 17:15:34 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 173 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..182b9c7 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -81,6 +86,136 @@ PYEOF
+ FALLBACK_THRESHOLD=$(json_field "$ROUTER_CONFIG" "fallback_threshold" 2>/dev/null || echo "0.4")
+ TIMEOUT_MS=$(json_field "$ROUTER_CONFIG" "timeout_ms" 2>/dev/null || echo "5000")
+ 
++# ── RRF Fusion: Hybrid BM25 + Vector Search ─────────────────
++rrf_fusion() {
++  local query="$1"
++  local bm25_weight="${2:-1.0}"
++  local vector_weight="${3:-0.7}"
++  local top_k="${4:-20}"
+```
+
+---
+
+## 2026-03-19 17:15:39 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:**  1 file changed, 5 insertions(+)
+
+```diff
+diff --git a/skills/memory-qmd/wrapper.sh b/skills/memory-qmd/wrapper.sh
+index e1d6e41..c823bb7 100755
+--- a/skills/memory-qmd/wrapper.sh
++++ b/skills/memory-qmd/wrapper.sh
+@@ -7,6 +7,11 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="qmd"
++QMD_CONFIG="$WRAPPER_DIR/config.json"
++
++# Load HyDE support
++source "$INSTALL_ROOT/lib/hyde.sh"
++[ -f "$QMD_CONFIG" ] && hyde_load_config "$QMD_CONFIG"
+ 
+ # ============================================================
+ # Layer A: Native API
+```
+
+---
+
+## 2026-03-19 17:15:45 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:**  1 file changed, 9 insertions(+), 3 deletions(-)
+
+```diff
+diff --git a/skills/memory-qmd/wrapper.sh b/skills/memory-qmd/wrapper.sh
+index e1d6e41..8d19746 100755
+--- a/skills/memory-qmd/wrapper.sh
++++ b/skills/memory-qmd/wrapper.sh
+@@ -7,6 +7,11 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="qmd"
++QMD_CONFIG="$WRAPPER_DIR/config.json"
++
++# Load HyDE support
++source "$INSTALL_ROOT/lib/hyde.sh"
++[ -f "$QMD_CONFIG" ] && hyde_load_config "$QMD_CONFIG"
+ 
+ # ============================================================
+ # Layer A: Native API
+@@ -30,11 +35,12 @@ cmd_status()          { qmd status "$@"; }
+ # Layer B: Router Adapter
+ # ============================================================
+ adapter() {
+-  local query="" hint=""
++  local query="" hint="" use_hyde=false
+   while [ $# -gt 0 ]; do
+     case "$1" in
+-      --hint) hint="$2"; shift 2 ;;
+-      *)      query="$1"; shift ;;
++      --hint)  hint="$2"; shift 2 ;;
++      --hyde)  use_hyde=true; shift ;;
++      *)       query="$1"; shift ;;
+     esac
+```
+
+---
+
+## 2026-03-19 17:15:50 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 237 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..62a1e25 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -39,6 +44,70 @@ log_event() {
+   echo "[$(now_iso)] $level query=$(json_escape "$QUERY") $msg" >> "$LOG_PATH" 2>/dev/null || true
+ }
+ 
++# ── Trajectory tracking ─────────────────────────────────────
++TRAJECTORY_STEP=0
++TRAJECTORY_DIR="$HOME/.openclaw/state"
++TRAJECTORY_TMP="/tmp/openclaw-trajectory-$$.json"
++
++trajectory_add() {
+```
+
+---
+
+## 2026-03-19 17:15:52 | `skills/memory-qmd/wrapper.sh`
+
+**Stats:**  1 file changed, 22 insertions(+), 4 deletions(-)
+
+```diff
+diff --git a/skills/memory-qmd/wrapper.sh b/skills/memory-qmd/wrapper.sh
+index e1d6e41..086d072 100755
+--- a/skills/memory-qmd/wrapper.sh
++++ b/skills/memory-qmd/wrapper.sh
+@@ -7,6 +7,11 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
+ BACKEND="qmd"
++QMD_CONFIG="$WRAPPER_DIR/config.json"
++
++# Load HyDE support
++source "$INSTALL_ROOT/lib/hyde.sh"
++[ -f "$QMD_CONFIG" ] && hyde_load_config "$QMD_CONFIG"
+ 
+ # ============================================================
+ # Layer A: Native API
+@@ -30,11 +35,12 @@ cmd_status()          { qmd status "$@"; }
+ # Layer B: Router Adapter
+ # ============================================================
+ adapter() {
+-  local query="" hint=""
++  local query="" hint="" use_hyde=false
+   while [ $# -gt 0 ]; do
+     case "$1" in
+-      --hint) hint="$2"; shift 2 ;;
+-      *)      query="$1"; shift ;;
++      --hint)  hint="$2"; shift 2 ;;
++      --hyde)  use_hyde=true; shift ;;
++      *)       query="$1"; shift ;;
+     esac
+```
+
+---
+
+## 2026-03-19 17:15:57 | `skills/memory-qmd/config.json`
+
+**Stats:**  1 file changed, 7 insertions(+)
+
+```diff
+diff --git a/skills/memory-qmd/config.json b/skills/memory-qmd/config.json
+index 47f6ac6..0f8e9b9 100644
+--- a/skills/memory-qmd/config.json
++++ b/skills/memory-qmd/config.json
+@@ -36,6 +36,13 @@
+     "fallback_threshold": 0.4,
+     "timeout_ms": 5000
+   },
++  "hyde": {
++    "enabled": false,
++    "model": "qwen2.5:7b",
++    "endpoint": "http://localhost:11434",
++    "max_tokens": 300,
++    "temperature": 0.7
++  },
+   "commands": {
+     "store": "qmd collection add <name> --pattern '<glob>' --path <dir> && qmd embed <name>",
+     "retrieve": "qmd get qmd://<collection>/path/to/file",
+```
+
+---
+
+## 2026-03-19 17:16:00 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 256 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..9866f6d 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -39,6 +44,70 @@ log_event() {
+   echo "[$(now_iso)] $level query=$(json_escape "$QUERY") $msg" >> "$LOG_PATH" 2>/dev/null || true
+ }
+ 
++# ── Trajectory tracking ─────────────────────────────────────
++TRAJECTORY_STEP=0
++TRAJECTORY_DIR="$HOME/.openclaw/state"
++TRAJECTORY_TMP="/tmp/openclaw-trajectory-$$.json"
++
++trajectory_add() {
+```
+
+---
+
+## 2026-03-19 17:16:17 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 277 insertions(+)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..4b59837 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -39,6 +44,70 @@ log_event() {
+   echo "[$(now_iso)] $level query=$(json_escape "$QUERY") $msg" >> "$LOG_PATH" 2>/dev/null || true
+ }
+ 
++# ── Trajectory tracking ─────────────────────────────────────
++TRAJECTORY_STEP=0
++TRAJECTORY_DIR="$HOME/.openclaw/state"
++TRAJECTORY_TMP="/tmp/openclaw-trajectory-$$.json"
++
++trajectory_add() {
+```
+
+---
+
+## 2026-03-19 17:16:30 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 310 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..ae4438c 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -15,10 +15,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -39,6 +44,70 @@ log_event() {
+   echo "[$(now_iso)] $level query=$(json_escape "$QUERY") $msg" >> "$LOG_PATH" 2>/dev/null || true
+ }
+ 
++# ── Trajectory tracking ─────────────────────────────────────
++TRAJECTORY_STEP=0
++TRAJECTORY_DIR="$HOME/.openclaw/state"
++TRAJECTORY_TMP="/tmp/openclaw-trajectory-$$.json"
++
++trajectory_add() {
+```
+
+---
+
+## 2026-03-19 17:16:43 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 311 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..51f7069 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -6,6 +6,7 @@ set -euo pipefail
+ ROUTER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
++source "$INSTALL_ROOT/lib/tiered-loading.sh"
+ 
+ ROUTER_CONFIG="${OPENCLAW_ROUTER_CONFIG:-$ROUTER_DIR/router-config.json}"
+ BACKENDS_JSON="${OPENCLAW_BACKENDS_JSON:-$HOME/.openclaw/state/backends.json}"
+@@ -15,10 +16,15 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+@@ -39,6 +45,70 @@ log_event() {
+   echo "[$(now_iso)] $level query=$(json_escape "$QUERY") $msg" >> "$LOG_PATH" 2>/dev/null || true
+```
+
+---
+
+## 2026-03-19 17:16:49 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 313 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..2b9c8f4 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -6,6 +6,7 @@ set -euo pipefail
+ ROUTER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
++source "$INSTALL_ROOT/lib/tiered-loading.sh"
+ 
+ ROUTER_CONFIG="${OPENCLAW_ROUTER_CONFIG:-$ROUTER_DIR/router-config.json}"
+ BACKENDS_JSON="${OPENCLAW_BACKENDS_JSON:-$HOME/.openclaw/state/backends.json}"
+@@ -15,10 +16,17 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
++TIER_LEVEL=""
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
++    --tier) TIER_LEVEL="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+```
+
+---
+
+## 2026-03-19 17:17:05 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 325 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..ff4eaa0 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -6,6 +6,7 @@ set -euo pipefail
+ ROUTER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
++source "$INSTALL_ROOT/lib/tiered-loading.sh"
+ 
+ ROUTER_CONFIG="${OPENCLAW_ROUTER_CONFIG:-$ROUTER_DIR/router-config.json}"
+ BACKENDS_JSON="${OPENCLAW_BACKENDS_JSON:-$HOME/.openclaw/state/backends.json}"
+@@ -15,10 +16,17 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
++TIER_LEVEL=""
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
++    --tier) TIER_LEVEL="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+```
+
+---
+
+## 2026-03-19 17:17:15 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 328 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..61aab2a 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -6,6 +6,7 @@ set -euo pipefail
+ ROUTER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
++source "$INSTALL_ROOT/lib/tiered-loading.sh"
+ 
+ ROUTER_CONFIG="${OPENCLAW_ROUTER_CONFIG:-$ROUTER_DIR/router-config.json}"
+ BACKENDS_JSON="${OPENCLAW_BACKENDS_JSON:-$HOME/.openclaw/state/backends.json}"
+@@ -15,10 +16,17 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
++TIER_LEVEL=""
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
++    --tier) TIER_LEVEL="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+```
+
+---
+
+## 2026-03-19 17:17:29 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 124 insertions(+), 9 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..65790a9 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -7,6 +7,16 @@ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
++# Source A-MEM self-organize library if available
++if [ -f "$INSTALL_ROOT/lib/self-organize.sh" ]; then
++  source "$INSTALL_ROOT/lib/self-organize.sh"
++fi
++
++# Source deduplication library
++source "$INSTALL_ROOT/lib/dedup.sh"
++TR_CONFIG="$WRAPPER_DIR/config.json"
++[ -f "$TR_CONFIG" ] && dedup_load_config "$TR_CONFIG"
++
+ BACKEND="totalrecall"
+ 
+ # ============================================================
+@@ -35,30 +45,61 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
+```
+
+---
+
+## 2026-03-19 17:17:31 | `skills/memory-router/router.sh`
+
+**Stats:**  1 file changed, 325 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/skills/memory-router/router.sh b/skills/memory-router/router.sh
+index 71dc949..f565499 100755
+--- a/skills/memory-router/router.sh
++++ b/skills/memory-router/router.sh
+@@ -6,6 +6,7 @@ set -euo pipefail
+ ROUTER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
++source "$INSTALL_ROOT/lib/tiered-loading.sh"
+ 
+ ROUTER_CONFIG="${OPENCLAW_ROUTER_CONFIG:-$ROUTER_DIR/router-config.json}"
+ BACKENDS_JSON="${OPENCLAW_BACKENDS_JSON:-$HOME/.openclaw/state/backends.json}"
+@@ -15,10 +16,17 @@ trap 'rm -f "$SESSION_CACHE"' EXIT
+ 
+ # Parse arguments
+ QUERY="" HINT="" CUSTOM_BACKENDS=""
++BM25_WEIGHT="1.0" VECTOR_WEIGHT="0.7"
++TRAJECTORY_ENABLED=false
++TIER_LEVEL=""
+ while [ $# -gt 0 ]; do
+   case "$1" in
+     --hint) HINT="$2"; shift 2 ;;
+     --backends-json) CUSTOM_BACKENDS="$2"; shift 2 ;;
++    --bm25-weight) BM25_WEIGHT="$2"; shift 2 ;;
++    --vector-weight) VECTOR_WEIGHT="$2"; shift 2 ;;
++    --trajectory) TRAJECTORY_ENABLED=true; shift ;;
++    --tier) TIER_LEVEL="$2"; shift 2 ;;
+     *) QUERY="$1"; shift ;;
+   esac
+ done
+```
+
+---
+
+## 2026-03-19 17:17:42 | `skills/memory-totalrecall/wrapper.sh`
+
+**Stats:**  1 file changed, 149 insertions(+), 9 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/wrapper.sh b/skills/memory-totalrecall/wrapper.sh
+index 7dead9d..c123776 100755
+--- a/skills/memory-totalrecall/wrapper.sh
++++ b/skills/memory-totalrecall/wrapper.sh
+@@ -7,6 +7,16 @@ WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
+ source "$INSTALL_ROOT/lib/contracts.sh"
+ 
++# Source A-MEM self-organize library if available
++if [ -f "$INSTALL_ROOT/lib/self-organize.sh" ]; then
++  source "$INSTALL_ROOT/lib/self-organize.sh"
++fi
++
++# Source deduplication library
++source "$INSTALL_ROOT/lib/dedup.sh"
++TR_CONFIG="$WRAPPER_DIR/config.json"
++[ -f "$TR_CONFIG" ] && dedup_load_config "$TR_CONFIG"
++
+ BACKEND="totalrecall"
+ 
+ # ============================================================
+@@ -35,30 +45,86 @@ MEMORY_ROOT="$(discover_memory_root)" || true
+ # Layer A: Native API
+ # ============================================================
+ cmd_store() {
+-  # Usage: wrapper.sh store <tier> <slug> <content...>
+-  local tier="$1" slug="$2" content="${*:3}"
++  # Usage: wrapper.sh store <tier> <slug> [--event-time <ISO8601>] [--tags <comma,separated>] <content...>
++  local tier="$1" slug="$2"; shift 2
++
+```
+
+---
+
+## 2026-03-19 17:17:56 | `skills/memory-totalrecall/config.json`
+
+**Stats:**  1 file changed, 24 insertions(+), 2 deletions(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/config.json b/skills/memory-totalrecall/config.json
+index 75ab37b..d209d01 100644
+--- a/skills/memory-totalrecall/config.json
++++ b/skills/memory-totalrecall/config.json
+@@ -15,12 +15,34 @@
+     "commit_grep": true,
+     "content_grep": true,
+     "case_sensitive": true,
+-    "max_results": 20
++    "max_results": 20,
++    "temporal_filtering": {
++      "supported": true,
++      "params": ["--event-after", "--event-before"],
++      "note": "Filters on event_time from frontmatter; falls back to record_time or file mtime"
++    }
+   },
+   "store": {
+     "commit_prefix": "memory:",
+     "filename_format": "{timestamp}_{slug}.md",
+-    "timestamp_format": "YYYY-MM-DDTHH-MM-SS"
++    "timestamp_format": "YYYY-MM-DDTHH-MM-SS",
++    "frontmatter": {
++      "fields": ["key", "event_time", "record_time", "tags"],
++      "event_time": "When the event actually happened (ISO 8601, passed by caller or defaults to record_time)",
++      "record_time": "When the memory was recorded (ISO 8601, auto-generated)"
++    }
++  },
++  "dedup": {
++    "enabled": true,
++    "threshold": 0.9,
+```
+
+---
+
+## 2026-03-19 19:54:05 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 62 insertions(+), 36 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 583b5c0..7145fe4 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -522,72 +522,98 @@ import Layout from "../layouts/Layout.astro";
+ 
+   <div class="section" id="compare">
+     <div class="section-label">// vs native memory</div>
+-    <h2>What you get that built-in memory doesn't have.</h2>
+-    <p class="section-desc">OpenClaw's native memory is good. Memory Stack makes it better.</p>
++    <h2>Side by side. Plain and simple.</h2>
++    <p class="section-desc">Same agent, same conversations. One remembers more, uses fewer tokens, and finds things faster.</p>
++
++    <div class="compare-header-cards">
++      <div class="compare-stat">
++        <div class="compare-stat-number">6</div>
++        <div class="compare-stat-label">search engines<br/><span>vs native's 2</span></div>
++      </div>
++      <div class="compare-stat">
++        <div class="compare-stat-number">3</div>
++        <div class="compare-stat-label">local AI models<br/><span>vs native's 0</span></div>
++      </div>
++      <div class="compare-stat">
++        <div class="compare-stat-number">0</div>
++        <div class="compare-stat-label">API keys needed<br/><span>runs 100% offline</span></div>
++      </div>
++    </div>
++
+     <div class="compare-table-wrap">
+       <table class="compare-table">
+```
+
+---
+
+## 2026-03-19 19:54:23 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 115 insertions(+), 39 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 583b5c0..ffb0032 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -259,6 +259,38 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+     }
+ 
++    /* ── Compare stats ── */
++    .compare-header-cards {
++      display: grid;
++      grid-template-columns: repeat(3, 1fr);
++      gap: 1rem;
++      margin-bottom: 3rem;
++    }
++    .compare-stat {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 10px;
++      padding: 1.5rem;
++      text-align: center;
++    }
++    .compare-stat-number {
++      font-family: var(--font-mono);
++      font-size: 2.5rem;
++      font-weight: 800;
++      color: var(--accent);
++      line-height: 1;
++      margin-bottom: 0.5rem;
++    }
+```
+
+---
+
+## 2026-03-19 19:54:32 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 117 insertions(+), 41 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 583b5c0..48c1720 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -259,6 +259,38 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+     }
+ 
++    /* ── Compare stats ── */
++    .compare-header-cards {
++      display: grid;
++      grid-template-columns: repeat(3, 1fr);
++      gap: 1rem;
++      margin-bottom: 3rem;
++    }
++    .compare-stat {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 10px;
++      padding: 1.5rem;
++      text-align: center;
++    }
++    .compare-stat-number {
++      font-family: var(--font-mono);
++      font-size: 2.5rem;
++      font-weight: 800;
++      color: var(--accent);
++      line-height: 1;
++      margin-bottom: 0.5rem;
++    }
+```
+
+---
+
+## 2026-03-19 19:54:43 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 119 insertions(+), 43 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 583b5c0..913d622 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -259,6 +259,38 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+     }
+ 
++    /* ── Compare stats ── */
++    .compare-header-cards {
++      display: grid;
++      grid-template-columns: repeat(3, 1fr);
++      gap: 1rem;
++      margin-bottom: 3rem;
++    }
++    .compare-stat {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 10px;
++      padding: 1.5rem;
++      text-align: center;
++    }
++    .compare-stat-number {
++      font-family: var(--font-mono);
++      font-size: 2.5rem;
++      font-weight: 800;
++      color: var(--accent);
++      line-height: 1;
++      margin-bottom: 0.5rem;
++    }
+```
+
+---
+
+## 2026-03-19 20:13:56 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 38 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index f370db5..0fd169a 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,11 +9,48 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="OpenClaw Memory Stack — Guided memory routing for AI coding agents. $49 one-time." />
++    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
++    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
++    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
++    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta property="og:type" content="website" />
++    <meta name="twitter:card" content="summary_large_image" />
++    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
++    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <link rel="canonical" href="https://memory-stack.openclaw.dev" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+     <title>{title}</title>
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "SoftwareApplication",
++      "name": "OpenClaw Memory Stack",
++      "applicationCategory": "DeveloperApplication",
++      "operatingSystem": "macOS, Linux, Windows (WSL2)",
++      "description": "Memory plugin for OpenClaw that adds 6-engine search with RRF fusion, knowledge graph, compaction rescue, and memory health checks. Runs 100% locally with 3 built-in AI models. No API keys needed.",
+```
+
+---
+
+## 2026-03-19 20:14:15 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 17 insertions(+), 5 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..b34564c 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -445,21 +445,33 @@ import Layout from "../layouts/Layout.astro";
+   </style>
+ 
+   <nav>
+-    <div class="nav-logo">openclaw<span>/memory-stack</span></div>
++    <div class="nav-logo">
++      <svg class="nav-claw-icon" width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
++        <path d="M50 8C38 8 28 14 22 24C16 34 14 46 18 58C22 70 30 78 42 84C46 86 50 86 54 84C58 82 62 78 64 74L66 68C68 62 66 56 62 52C58 48 52 46 46 48C40 50 36 56 36 62C36 66 38 70 42 72" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" fill="none"/>
++        <circle cx="38" cy="30" r="4" fill="var(--accent)"/>
++        <circle cx="58" cy="28" r="4" fill="var(--accent)"/>
++        <path d="M20 40C14 36 8 38 6 42" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M18 48C10 46 4 50 4 54" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M76 36C82 32 88 34 90 38" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M78 44C86 42 92 46 92 50" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++      </svg>
++      openclaw<span>/memory-stack</span>
++    </div>
+     <div class="nav-links">
+       <a href="#features">Features</a>
+       <a href="#compare">vs Native</a>
++      <a href="#faq">FAQ</a>
+       <a href="/manage">Manage License</a>
+     </div>
+   </nav>
+ 
+   <div class="hero">
+```
+
+---
+
+## 2026-03-19 20:14:39 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 53 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..da13999 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -445,21 +445,33 @@ import Layout from "../layouts/Layout.astro";
+   </style>
+ 
+   <nav>
+-    <div class="nav-logo">openclaw<span>/memory-stack</span></div>
++    <div class="nav-logo">
++      <svg class="nav-claw-icon" width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
++        <path d="M50 8C38 8 28 14 22 24C16 34 14 46 18 58C22 70 30 78 42 84C46 86 50 86 54 84C58 82 62 78 64 74L66 68C68 62 66 56 62 52C58 48 52 46 46 48C40 50 36 56 36 62C36 66 38 70 42 72" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" fill="none"/>
++        <circle cx="38" cy="30" r="4" fill="var(--accent)"/>
++        <circle cx="58" cy="28" r="4" fill="var(--accent)"/>
++        <path d="M20 40C14 36 8 38 6 42" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M18 48C10 46 4 50 4 54" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M76 36C82 32 88 34 90 38" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M78 44C86 42 92 46 92 50" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++      </svg>
++      openclaw<span>/memory-stack</span>
++    </div>
+     <div class="nav-links">
+       <a href="#features">Features</a>
+       <a href="#compare">vs Native</a>
++      <a href="#faq">FAQ</a>
+       <a href="/manage">Manage License</a>
+     </div>
+   </nav>
+ 
+   <div class="hero">
+```
+
+---
+
+## 2026-03-19 20:14:45 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 54 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..bb1b49d 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -445,21 +446,33 @@ import Layout from "../layouts/Layout.astro";
+   </style>
+ 
+   <nav>
+-    <div class="nav-logo">openclaw<span>/memory-stack</span></div>
++    <div class="nav-logo">
++      <svg class="nav-claw-icon" width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
++        <path d="M50 8C38 8 28 14 22 24C16 34 14 46 18 58C22 70 30 78 42 84C46 86 50 86 54 84C58 82 62 78 64 74L66 68C68 62 66 56 62 52C58 48 52 46 46 48C40 50 36 56 36 62C36 66 38 70 42 72" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" fill="none"/>
++        <circle cx="38" cy="30" r="4" fill="var(--accent)"/>
++        <circle cx="58" cy="28" r="4" fill="var(--accent)"/>
++        <path d="M20 40C14 36 8 38 6 42" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M18 48C10 46 4 50 4 54" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M76 36C82 32 88 34 90 38" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++        <path d="M78 44C86 42 92 46 92 50" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
++      </svg>
++      openclaw<span>/memory-stack</span>
++    </div>
+     <div class="nav-links">
+```
+
+---
+
+## 2026-03-19 20:15:01 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 102 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..aef768c 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:15:11 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 78 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index f370db5..cd03efe 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,11 +9,88 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="OpenClaw Memory Stack — Guided memory routing for AI coding agents. $49 one-time." />
++    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
++    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
++    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
++    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta property="og:type" content="website" />
++    <meta name="twitter:card" content="summary_large_image" />
++    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
++    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <link rel="canonical" href="https://memory-stack.openclaw.dev" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+     <title>{title}</title>
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "SoftwareApplication",
++      "name": "OpenClaw Memory Stack",
++      "applicationCategory": "DeveloperApplication",
++      "operatingSystem": "macOS, Linux, Windows (WSL2)",
++      "description": "Memory plugin for OpenClaw that adds 6-engine search with RRF fusion, knowledge graph, compaction rescue, and memory health checks. Runs 100% locally with 3 built-in AI models. No API keys needed.",
+```
+
+---
+
+## 2026-03-19 20:16:04 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 103 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..d299400 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:16:16 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 79 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index f370db5..98c98f0 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,11 +9,89 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="OpenClaw Memory Stack — Guided memory routing for AI coding agents. $49 one-time." />
++    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
++    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
++    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
++    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta property="og:type" content="website" />
++    <meta name="twitter:card" content="summary_large_image" />
++    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
++    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <link rel="canonical" href="https://memory-stack.openclaw.dev" />
++    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+     <title>{title}</title>
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "SoftwareApplication",
++      "name": "OpenClaw Memory Stack",
++      "applicationCategory": "DeveloperApplication",
++      "operatingSystem": "macOS, Linux, Windows (WSL2)",
+```
+
+---
+
+## 2026-03-19 20:32:39 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 113 insertions(+), 16 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..1bdddec 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:32:53 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 113 insertions(+), 16 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..3fd1e40 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:33:03 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 115 insertions(+), 18 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..1ee77cd 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:41:49 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 116 insertions(+), 19 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..0653093 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:41:57 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 118 insertions(+), 21 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..44228f6 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:06 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 119 insertions(+), 22 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..324051f 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:14 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 120 insertions(+), 23 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..e61d1fc 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:23 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 121 insertions(+), 24 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..ec8ce83 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:33 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 122 insertions(+), 25 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..739ac99 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:43 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 123 insertions(+), 26 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..999c606 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:42:51 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 125 insertions(+), 28 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..c230dcb 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:43:00 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 127 insertions(+), 30 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..94a2a5d 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:43:15 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 128 insertions(+), 31 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 913d622..9a8c840 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
+       letter-spacing: -0.02em;
+     }
+     .nav-logo span { color: var(--muted); }
++    .nav-claw-icon { vertical-align: -4px; margin-right: 4px; }
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+@@ -422,6 +423,54 @@ import Layout from "../layouts/Layout.astro";
+       font-weight: 600;
+     }
+ 
++    /* ── FAQ ── */
++    .faq-list {
++      display: flex;
++      flex-direction: column;
++      gap: 0.5rem;
++    }
++    .faq-item {
++      background: var(--surface);
++      border: 1px solid var(--border);
++      border-radius: 8px;
++      overflow: hidden;
++      transition: border-color 0.2s;
++    }
++    .faq-item[open] {
+```
+
+---
+
+## 2026-03-19 20:45:59 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 79 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index f370db5..38cf732 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,11 +9,89 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="OpenClaw Memory Stack — Guided memory routing for AI coding agents. $49 one-time." />
++    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
++    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
++    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
++    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta property="og:type" content="website" />
++    <meta name="twitter:card" content="summary_large_image" />
++    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
++    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <link rel="canonical" href="https://openclaw-memory.apptah.com" />
++    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+     <title>{title}</title>
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "SoftwareApplication",
++      "name": "OpenClaw Memory Stack",
++      "applicationCategory": "DeveloperApplication",
++      "operatingSystem": "macOS, Linux, Windows (WSL2)",
+```
+
+---
+
+## 2026-03-19 20:59:25 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 24 insertions(+)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..81bbcd9 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgba(6, 8, 12, 0.95);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 20:59:31 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 28 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..fdd06c3 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgba(6, 8, 12, 0.95);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 20:59:37 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 39 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..23aa73c 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgba(6, 8, 12, 0.95);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:01:58 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 39 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..d7ac4bc 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:19:20 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 40 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..723a6af 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:19:46 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 144 insertions(+), 10 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..2da151d 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:20:15 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 216 insertions(+), 10 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..2227435 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:33:32 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 118 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..54aa72d 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:33:56 | `site/src/pages/index.astro`
+
+**Stats:**  1 file changed, 46 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/pages/index.astro b/site/src/pages/index.astro
+index 9a8c840..41096a2 100644
+--- a/site/src/pages/index.astro
++++ b/site/src/pages/index.astro
+@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
+     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
++    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
++    .nav-toggle:hover { color: var(--fg-bright); }
++    @media (max-width: 640px) {
++      .nav-toggle { display: block; }
++      .nav-links {
++        display: none;
++        position: absolute;
++        top: 100%;
++        left: 0; right: 0;
++        flex-direction: column;
++        gap: 0;
++        background: rgb(6, 8, 12);
++        backdrop-filter: blur(12px);
++        border-bottom: 1px solid var(--border);
++        padding: 0.5rem 0;
++      }
++      .nav-links.open { display: flex; }
++      .nav-links a {
++        padding: 0.75rem 1.5rem;
++        font-size: 0.95rem;
++        width: 100%;
++      }
+```
+
+---
+
+## 2026-03-19 21:39:14 | `site/public/robots.txt`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 21:39:16 | `site/public/sitemap.xml`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 21:39:25 | `site/public/llms.txt`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 21:39:30 | `site/public/.well-known/ai-plugin.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 21:43:52 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 6 insertions(+), 6 deletions(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index 38cf732..5d0af95 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,14 +9,14 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
+-    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
+-    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
+-    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta name="description" content="Cut your OpenClaw API bill by up to 90%. Memory Stack loads summaries instead of full text, removes duplicate results, and auto-cleans old memories — so every token counts. $49 one-time, runs locally, no subscription." />
++    <meta name="keywords" content="OpenClaw save money, reduce API costs, lower token usage, OpenClaw plugin, cut AI bill, reduce Claude tokens, save on API, OpenClaw cheaper, AI cost reduction, token optimization, OpenClaw efficiency" />
++    <meta property="og:title" content="Spending too much on OpenClaw? Cut your API bill by 90%." />
++    <meta property="og:description" content="Memory Stack uses up to 90% fewer tokens per search. Loads summaries first, removes duplicates, auto-cleans junk. $49 one-time — pays for itself in the first week." />
+     <meta property="og:type" content="website" />
+     <meta name="twitter:card" content="summary_large_image" />
+-    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
+-    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <meta name="twitter:title" content="Cut your OpenClaw API bill by 90%" />
++    <meta name="twitter:description" content="Your OpenClaw agent wastes tokens re-reading the same context. Memory Stack fixes that — up to 90% fewer tokens per search. $49 one-time, no subscription." />
+     <link rel="canonical" href="https://openclaw-memory.apptah.com" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+```
+
+---
+
+## 2026-03-19 21:43:58 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 7 insertions(+), 7 deletions(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index 38cf732..20349a2 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,14 +9,14 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
+-    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
+-    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
+-    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta name="description" content="Cut your OpenClaw API bill by up to 90%. Memory Stack loads summaries instead of full text, removes duplicate results, and auto-cleans old memories — so every token counts. $49 one-time, runs locally, no subscription." />
++    <meta name="keywords" content="OpenClaw save money, reduce API costs, lower token usage, OpenClaw plugin, cut AI bill, reduce Claude tokens, save on API, OpenClaw cheaper, AI cost reduction, token optimization, OpenClaw efficiency" />
++    <meta property="og:title" content="Spending too much on OpenClaw? Cut your API bill by 90%." />
++    <meta property="og:description" content="Memory Stack uses up to 90% fewer tokens per search. Loads summaries first, removes duplicates, auto-cleans junk. $49 one-time — pays for itself in the first week." />
+     <meta property="og:type" content="website" />
+     <meta name="twitter:card" content="summary_large_image" />
+-    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
+-    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <meta name="twitter:title" content="Cut your OpenClaw API bill by 90%" />
++    <meta name="twitter:description" content="Your OpenClaw agent wastes tokens re-reading the same context. Memory Stack fixes that — up to 90% fewer tokens per search. $49 one-time, no subscription." />
+     <link rel="canonical" href="https://openclaw-memory.apptah.com" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+@@ -30,7 +30,7 @@ const { title } = Astro.props;
+       "name": "OpenClaw Memory Stack",
+       "applicationCategory": "DeveloperApplication",
+       "operatingSystem": "macOS, Linux, Windows (WSL2)",
+-      "description": "Memory plugin for OpenClaw that adds 6-engine search with RRF fusion, knowledge graph, compaction rescue, and memory health checks. Runs 100% locally with 3 built-in AI models. No API keys needed.",
+```
+
+---
+
+## 2026-03-19 21:44:09 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 17 insertions(+), 17 deletions(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index 38cf732..c2a822c 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,14 +9,14 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
+-    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
+-    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
+-    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta name="description" content="Cut your OpenClaw API bill by up to 90%. Memory Stack loads summaries instead of full text, removes duplicate results, and auto-cleans old memories — so every token counts. $49 one-time, runs locally, no subscription." />
++    <meta name="keywords" content="OpenClaw save money, reduce API costs, lower token usage, OpenClaw plugin, cut AI bill, reduce Claude tokens, save on API, OpenClaw cheaper, AI cost reduction, token optimization, OpenClaw efficiency" />
++    <meta property="og:title" content="Spending too much on OpenClaw? Cut your API bill by 90%." />
++    <meta property="og:description" content="Memory Stack uses up to 90% fewer tokens per search. Loads summaries first, removes duplicates, auto-cleans junk. $49 one-time — pays for itself in the first week." />
+     <meta property="og:type" content="website" />
+     <meta name="twitter:card" content="summary_large_image" />
+-    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
+-    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <meta name="twitter:title" content="Cut your OpenClaw API bill by 90%" />
++    <meta name="twitter:description" content="Your OpenClaw agent wastes tokens re-reading the same context. Memory Stack fixes that — up to 90% fewer tokens per search. $49 one-time, no subscription." />
+     <link rel="canonical" href="https://openclaw-memory.apptah.com" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+@@ -30,7 +30,7 @@ const { title } = Astro.props;
+       "name": "OpenClaw Memory Stack",
+       "applicationCategory": "DeveloperApplication",
+       "operatingSystem": "macOS, Linux, Windows (WSL2)",
+-      "description": "Memory plugin for OpenClaw that adds 6-engine search with RRF fusion, knowledge graph, compaction rescue, and memory health checks. Runs 100% locally with 3 built-in AI models. No API keys needed.",
+```
+
+---
+
+## 2026-03-19 21:44:27 | `site/src/layouts/Layout.astro`
+
+**Stats:**  1 file changed, 25 insertions(+), 25 deletions(-)
+
+```diff
+diff --git a/site/src/layouts/Layout.astro b/site/src/layouts/Layout.astro
+index 38cf732..89126a3 100644
+--- a/site/src/layouts/Layout.astro
++++ b/site/src/layouts/Layout.astro
+@@ -9,14 +9,14 @@ const { title } = Astro.props;
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <meta name="description" content="Memory Stack — the #1 memory plugin for OpenClaw. 6-engine search, knowledge graph, compaction rescue. Your AI agent remembers everything, no matter how long the conversation. $49 one-time, runs 100% locally." />
+-    <meta name="keywords" content="OpenClaw, OpenClaw plugin, OpenClaw memory, AI agent memory, long-term memory, context window, compaction rescue, knowledge graph, BM25, vector search, local AI, memory plugin, AI coding agent" />
+-    <meta property="og:title" content="Memory Stack for OpenClaw — Long conversations. Nothing lost." />
+-    <meta property="og:description" content="6-engine search with local AI reranking. Knowledge graph. Compaction rescue. The memory plugin that makes your OpenClaw agent remember everything." />
++    <meta name="description" content="Cut your OpenClaw API bill by up to 90%. Memory Stack loads summaries instead of full text, removes duplicate results, and auto-cleans old memories — so every token counts. $49 one-time, runs locally, no subscription." />
++    <meta name="keywords" content="OpenClaw save money, reduce API costs, lower token usage, OpenClaw plugin, cut AI bill, reduce Claude tokens, save on API, OpenClaw cheaper, AI cost reduction, token optimization, OpenClaw efficiency" />
++    <meta property="og:title" content="Spending too much on OpenClaw? Cut your API bill by 90%." />
++    <meta property="og:description" content="Memory Stack uses up to 90% fewer tokens per search. Loads summaries first, removes duplicates, auto-cleans junk. $49 one-time — pays for itself in the first week." />
+     <meta property="og:type" content="website" />
+     <meta name="twitter:card" content="summary_large_image" />
+-    <meta name="twitter:title" content="Memory Stack for OpenClaw" />
+-    <meta name="twitter:description" content="Your OpenClaw agent forgets decisions after long conversations. Memory Stack fixes that with 6-engine search, knowledge graph, and compaction rescue. $49, runs locally." />
++    <meta name="twitter:title" content="Cut your OpenClaw API bill by 90%" />
++    <meta name="twitter:description" content="Your OpenClaw agent wastes tokens re-reading the same context. Memory Stack fixes that — up to 90% fewer tokens per search. $49 one-time, no subscription." />
+     <link rel="canonical" href="https://openclaw-memory.apptah.com" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+@@ -30,7 +30,7 @@ const { title } = Astro.props;
+       "name": "OpenClaw Memory Stack",
+       "applicationCategory": "DeveloperApplication",
+       "operatingSystem": "macOS, Linux, Windows (WSL2)",
+-      "description": "Memory plugin for OpenClaw that adds 6-engine search with RRF fusion, knowledge graph, compaction rescue, and memory health checks. Runs 100% locally with 3 built-in AI models. No API keys needed.",
+```
+
+---
+
+## 2026-03-19 21:44:45 | `site/public/llms.txt`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 21:44:50 | `site/public/.well-known/ai-plugin.json`
+
+**Stats:** 
+
+```diff
+
+```
+
+---
+
+## 2026-03-19 22:09:32 | `site/src/pages/thanks.astro`
+
+**Stats:**  1 file changed, 41 insertions(+), 127 deletions(-)
+
+```diff
+diff --git a/site/src/pages/thanks.astro b/site/src/pages/thanks.astro
+index ffd63b7..d5e8993 100644
+--- a/site/src/pages/thanks.astro
++++ b/site/src/pages/thanks.astro
+@@ -1,7 +1,7 @@
+ ---
+ import Layout from "../layouts/Layout.astro";
+ ---
+-<Layout title="Activated — OpenClaw Memory Stack">
++<Layout title="Thank You — OpenClaw Memory Stack">
+   <style>
+     .container {
+       max-width: 640px;
+@@ -30,6 +30,33 @@ import Layout from "../layouts/Layout.astro";
+       color: var(--muted);
+       font-size: 1rem;
+       margin-bottom: 0.5rem;
++      line-height: 1.6;
++    }
++    .email-box {
++      background: var(--surface);
++      border: 1px solid var(--accent);
++      border-radius: 10px;
++      padding: 1.75rem;
++      margin: 2rem 0;
++      text-align: left;
++    }
++    .email-box h2 {
++      font-family: var(--font-mono);
++      font-size: 0.8rem;
+```
+
+---
+
+## 2026-03-19 22:32:18 | `server/src/webhook.ts`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/server/src/webhook.ts b/server/src/webhook.ts
+index e91fcf4..daf3338 100644
+--- a/server/src/webhook.ts
++++ b/server/src/webhook.ts
+@@ -103,7 +103,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
+ 
+   // Send email via Resend (retry once on failure)
+   const emailBody = JSON.stringify({
+-    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
++    from: "OpenClaw Memory Stack <noreply@apptah.com>",
+     to: [email],
+     subject: "Your OpenClaw Memory Stack License",
+     html: `
+```
+
+---
+
+## 2026-03-19 23:37:52 | `skills/memory-openviking/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-openviking/capability.json b/skills/memory-openviking/capability.json
+index d5e73d5..6fb2fda 100644
+--- a/skills/memory-openviking/capability.json
++++ b/skills/memory-openviking/capability.json
+@@ -11,5 +11,5 @@
+     "l3_functional": "python3 -c 'import openviking as ov; c=ov.SyncOpenViking(); c.initialize(); c.close()' 2>/dev/null",
+     "l3_deep": null
+   },
+-  "install_hint": "pip install openviking"
++  "install_hint": "$HOME/.openclaw/venv/bin/pip install openviking"
+ }
+```
+
+---
+
+## 2026-03-19 23:37:54 | `skills/memory-nowledge/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-nowledge/capability.json b/skills/memory-nowledge/capability.json
+index a19eb44..00f8642 100644
+--- a/skills/memory-nowledge/capability.json
++++ b/skills/memory-nowledge/capability.json
+@@ -11,5 +11,5 @@
+     "l3_functional": "curl -sf 'http://127.0.0.1:14242/api/memories?limit=1' >/dev/null 2>&1",
+     "l3_deep": null
+   },
+-  "install_hint": "Install Nowledge Mem: https://github.com/nowledge-co/nowledge-mem"
++  "install_hint": "command -v docker &>/dev/null && docker pull nowledge/nowledge-mem:latest || echo 'nowledge requires Docker — install manually: https://github.com/nowledge-co/nowledge-mem'"
+ }
+```
+
+---
+
+## 2026-03-19 23:37:56 | `skills/memory-lossless/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-lossless/capability.json b/skills/memory-lossless/capability.json
+index a7bc9e4..f1655ae 100644
+--- a/skills/memory-lossless/capability.json
++++ b/skills/memory-lossless/capability.json
+@@ -11,5 +11,5 @@
+     "l3_functional": "python3 -c \"import sqlite3; c=sqlite3.connect('${OPENCLAW_LCM_DB:-$HOME/.openclaw/lcm/lcm.sqlite}'); c.execute('SELECT count(*) FROM nodes'); print('ok')\" 2>/dev/null",
+     "l3_deep": null
+   },
+-  "install_hint": "openclaw plugins install @martian-engineering/lossless-claw"
++  "install_hint": "command -v openclaw &>/dev/null && openclaw plugins install @martian-engineering/lossless-claw || echo 'openclaw CLI not in PATH — install lossless-claw after PATH is set'"
+ }
+```
+
+---
+
+## 2026-03-19 23:37:57 | `skills/memory-totalrecall/capability.json`
+
+**Stats:**  1 file changed, 1 insertion(+), 1 deletion(-)
+
+```diff
+diff --git a/skills/memory-totalrecall/capability.json b/skills/memory-totalrecall/capability.json
+index f3e0cfe..14d6963 100644
+--- a/skills/memory-totalrecall/capability.json
++++ b/skills/memory-totalrecall/capability.json
+@@ -11,5 +11,5 @@
+     "l3_functional": "find \"${OPENCLAW_REPO_ROOT:-.}/memory\" -name '*.md' -type f 2>/dev/null | head -1 | grep -q .",
+     "l3_deep": null
+   },
+-  "install_hint": "Run: openclaw-memory init (creates memory/ directory)"
++  "install_hint": "mkdir -p \"${INSTALL_ROOT:-$HOME/.openclaw/memory-stack}/memory\""
+ }
+```
+
+---
+
+## 2026-03-19 23:38:12 | `install.sh`
+
+**Stats:**  1 file changed, 6 insertions(+)
+
+```diff
+diff --git a/install.sh b/install.sh
+index cb14e0d..8af88c9 100755
+--- a/install.sh
++++ b/install.sh
+@@ -245,6 +245,12 @@ ok "Files installed to $INSTALL_ROOT"
+ 
+ # ── Step 4b/6 — Installing backend dependencies ─────────────────────
+ header "Step 4b/6 — Installing backend dependencies"
++
++# Bootstrap Python venv + ensure PATH includes openclaw bins
++install_uv
++setup_python_venv
++export PATH="$BIN_DIR:$INSTALL_ROOT/bin:$PATH"
++
+ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
+   [[ -f "$skill_dir/capability.json" ]] || continue
+   bname=$(basename "$skill_dir" | sed 's/memory-//')
+```
+
+---
+
+## 2026-03-19 23:38:19 | `install.sh`
+
+**Stats:**  1 file changed, 12 insertions(+), 1 deletion(-)
+
+```diff
+diff --git a/install.sh b/install.sh
+index cb14e0d..f2a1b5c 100755
+--- a/install.sh
++++ b/install.sh
+@@ -245,6 +245,12 @@ ok "Files installed to $INSTALL_ROOT"
+ 
+ # ── Step 4b/6 — Installing backend dependencies ─────────────────────
+ header "Step 4b/6 — Installing backend dependencies"
++
++# Bootstrap Python venv + ensure PATH includes openclaw bins
++install_uv
++setup_python_venv
++export PATH="$BIN_DIR:$INSTALL_ROOT/bin:$PATH"
++
+ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
+   [[ -f "$skill_dir/capability.json" ]] || continue
+   bname=$(basename "$skill_dir" | sed 's/memory-//')
+@@ -258,7 +264,12 @@ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
+   [[ -z "$install_hint" ]] && continue
+ 
+   info "Installing $bname..."
+-  eval "$install_hint" 2>/dev/null && ok "$bname installed" || warn "$bname: install failed (non-fatal)"
++  if eval "$install_hint" 2>&1 | tail -3; then
++    ok "$bname installed"
++  else
++    warn "$bname: install failed (non-fatal)"
++    warn "  hint: $install_hint"
++  fi
+ done
+ 
+```
+
+---

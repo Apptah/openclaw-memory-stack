@@ -11,5 +11,5 @@
     "l3_functional": "python3 -c 'import openviking as ov; c=ov.SyncOpenViking(); c.initialize(); c.close()' 2>/dev/null",
     "l3_deep": null
   },
-  "install_hint": "pip install openviking"
+  "install_hint": "$HOME/.openclaw/venv/bin/pip install openviking"
 }

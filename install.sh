@@ -245,6 +245,12 @@ ok "Files installed to $INSTALL_ROOT"
 
 # ── Step 4b/6 — Installing backend dependencies ─────────────────────
 header "Step 4b/6 — Installing backend dependencies"
+
+# Bootstrap Python venv + ensure PATH includes openclaw bins
+install_uv
+setup_python_venv
+export PATH="$BIN_DIR:$INSTALL_ROOT/bin:$PATH"
+
 for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
   [[ -f "$skill_dir/capability.json" ]] || continue
   bname=$(basename "$skill_dir" | sed 's/memory-//')
@@ -258,7 +264,12 @@ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
   [[ -z "$install_hint" ]] && continue
 
   info "Installing $bname..."
-  eval "$install_hint" 2>/dev/null && ok "$bname installed" || warn "$bname: install failed (non-fatal)"
+  if eval "$install_hint" 2>&1 | tail -3; then
+    ok "$bname installed"
+  else
+    warn "$bname: install failed (non-fatal)"
+    warn "  hint: $install_hint"
+  fi
 done
 
 if ! $SKIP_MODELS && command -v qmd &>/dev/null; then

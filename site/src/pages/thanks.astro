@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 ---
-<Layout title="Activated — OpenClaw Memory Stack">
+<Layout title="Thank You — OpenClaw Memory Stack">
   <style>
     .container {
       max-width: 640px;
@@ -30,6 +30,33 @@ import Layout from "../layouts/Layout.astro";
       color: var(--muted);
       font-size: 1rem;
       margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+    .email-box {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.75rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+    .email-box h2 {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .email-box p {
+      color: var(--fg);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+    .email-box .hint {
+      color: var(--muted);
+      font-size: 0.82rem;
     }
     .steps {
       text-align: left;
@@ -37,7 +64,7 @@ import Layout from "../layouts/Layout.astro";
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 2rem;
-      margin-top: 2.5rem;
+      margin-top: 2rem;
     }
     .steps h2 {
       font-family: var(--font-mono);
@@ -71,61 +98,6 @@ import Layout from "../layouts/Layout.astro";
       color: var(--fg);
       line-height: 1.5;
     }
-    .key-box {
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin: 1.5rem 0 1rem;
-      text-align: left;
-    }
-    .key-box label {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    .key-value {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .key-value code {
-      font-size: 0.95rem;
-      color: var(--fg-bright);
-      word-break: break-all;
-      flex: 1;
-    }
-    .key-value button {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.4rem 0.8rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--surface);
-      color: var(--fg);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .key-value button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .download-btn {
-      display: inline-block;
-      background: var(--accent);
-      color: #000;
-      padding: 0.6rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      text-decoration: none;
-      margin-bottom: 0.5rem;
-    }
-    .download-btn:hover { opacity: 0.9; }
     .bottom-link {
       margin-top: 2rem;
       font-size: 0.85rem;
@@ -134,97 +106,39 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="container">
     <div class="status-icon">&#x2713;</div>
-    <h1>You're in.</h1>
+    <h1>Payment received.</h1>
+    <p class="sub">Your license key and download link have been sent to your email.</p>
 
-    <div id="loading" class="sub">Getting your license key...</div>
-
-    <div id="license-info" style="display:none;">
-      <div class="key-box">
-        <label>Your license key</label>
-        <div class="key-value">
-          <code id="license-key"></code>
-          <button id="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('license-key').textContent).then(()=>{this.textContent='Copied!'})">Copy</button>
-        </div>
-      </div>
-      <a id="download-link" class="download-btn" href="#">Download</a>
+    <div class="email-box">
+      <h2>// check your inbox</h2>
+      <p>Look for an email from <strong>OpenClaw Memory Stack</strong> with your license key and a download link (expires in 24 hours).</p>
+      <p class="hint">Don't see it? Check your spam folder. Still nothing after a few minutes? Contact support@dragdrop26.com</p>
     </div>
-
-    <div id="fallback" style="display:none;">
-      <p class="sub">We also sent the key to your email. Check your inbox (or spam).</p>
-    </div>
-
-    <p class="sub" style="font-size: 0.85rem; margin-top: 1rem;">Need help? <a href="/manage">Manage License</a></p>
 
     <div class="steps">
-      <h2>// next steps</h2>
+      <h2>// once you get the email</h2>
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-text">Download and unzip the file</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text">Run <code>./install.sh --key=<span class="key-placeholder">YOUR_KEY</span></code></div>
+        <div class="step-text">Run <code>./install.sh --key=YOUR_KEY</code></div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-text">In your project: <code>openclaw-memory init</code></div>
+        <div class="step-text">Restart OpenClaw: <code>openclaw gateway restart</code></div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
-        <div class="step-text">Query: <code>openclaw-memory "find function parseAuth"</code></div>
+        <div class="step-text">Done — memory works automatically in the background</div>
       </div>
     </div>
+
+    <p class="sub" style="font-size: 0.85rem; margin-top: 1.5rem;">Need help? <a href="/manage">Manage License</a></p>
 
     <div class="bottom-link">
       <a href="/">&larr; Back to home</a>
     </div>
   </div>
-
-  <script>
-    const API = "https://openclaw-license.busihoward.workers.dev";
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-
-    async function poll() {
-      if (!sessionId) {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("fallback").style.display = "block";
-        return;
-      }
-
-      let attempts = 0;
-      const maxAttempts = 15;
-
-      const interval = setInterval(async () => {
-        attempts++;
-        try {
-          const res = await fetch(`${API}/api/session-status?session_id=${sessionId}`);
-          const data = await res.json();
-          if (data.ready) {
-            clearInterval(interval);
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("license-info").style.display = "block";
-            document.getElementById("license-key").textContent = data.key;
-            // Use key-based download as primary (reliable, no token/KV consistency issues)
-            // Token-based URL kept as fallback
-            const keyDownloadUrl = `${API}/api/download/latest?key=${encodeURIComponent(data.key)}`;
-            document.getElementById("download-link").href = keyDownloadUrl;
-            // Fill key into install command
-            document.querySelectorAll(".key-placeholder").forEach(el => {
-              el.textContent = data.key;
-            });
-            document.getElementById("fallback").style.display = "block";
-          }
-        } catch {}
-
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          document.getElementById("loading").textContent = "Taking longer than expected. Check your email for the key.";
-          document.getElementById("fallback").style.display = "block";
-        }
-      }, 2000);
-    }
-
-    poll();
-  </script>
 </Layout>

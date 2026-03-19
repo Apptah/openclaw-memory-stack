@@ -1,0 +1,31 @@
+# OpenClaw Memory Stack — Cut your API bill by up to 90%
+
+> Your OpenClaw agent wastes tokens re-reading context, loading duplicates, and searching through junk. Memory Stack fixes all three. $49 one-time, pays for itself in days.
+
+## The problem
+Every token your AI reads costs money. OpenClaw's native memory loads full text every time, returns duplicate results, and lets old junk pile up. The longer you use it, the more expensive each search gets.
+
+## How Memory Stack saves you money
+- **90% fewer tokens per search**: Loads a short summary first. Only fetches the full text when actually needed.
+- **No duplicate charges**: Removes duplicate results before sending anything to the AI. You pay once, not twice.
+- **Cost stays flat over time**: Auto-cleanup merges similar memories. No more junk piling up and inflating your bill.
+- **Finds the right context on the first try**: 6 search engines with rank fusion. Your agent stops guessing and wasting tokens on wrong results.
+- **Stops you from re-explaining lost decisions**: Compaction rescue saves key facts before context compression. You never pay to repeat yourself.
+
+## What it costs
+$49 one-time. No subscription. No recurring fees. No API keys needed — three local AI models handle everything on your machine. The $49 is the last dollar you spend.
+
+## Who it's for
+OpenClaw users who want to keep their API costs under control. Developers who run long conversations and notice their bills growing. Teams who use OpenClaw daily and want predictable costs.
+
+## Technical details
+- Runs 100% locally. No data leaves your machine.
+- 3 local AI models: 1.7B (query expansion) + 0.6B (reranking) + 300M (embeddings)
+- Installs as a native OpenClaw memory provider plugin
+- Requires OpenClaw 2026.3.2 or later
+- macOS + Linux. Windows via WSL2.
+
+## Links
+- Landing page: https://openclaw-memory.apptah.com
+- Purchase: https://openclaw-memory.apptah.com (click "Get Memory Stack")
+- Manage license: https://openclaw-memory.apptah.com/manage

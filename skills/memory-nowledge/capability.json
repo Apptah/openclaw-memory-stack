@@ -11,5 +11,5 @@
     "l3_functional": "curl -sf 'http://127.0.0.1:14242/api/memories?limit=1' >/dev/null 2>&1",
     "l3_deep": null
   },
-  "install_hint": "Install Nowledge Mem: https://github.com/nowledge-co/nowledge-mem"
+  "install_hint": "command -v docker &>/dev/null && docker pull nowledge/nowledge-mem:latest || echo 'nowledge requires Docker — install manually: https://github.com/nowledge-co/nowledge-mem'"
 }

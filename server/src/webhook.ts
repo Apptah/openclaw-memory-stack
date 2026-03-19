@@ -103,7 +103,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 
   // Send email via Resend (retry once on failure)
   const emailBody = JSON.stringify({
-    from: "OpenClaw Memory Stack <noreply@openclaw.dev>",
+    from: "OpenClaw Memory Stack <noreply@apptah.com>",
     to: [email],
     subject: "Your OpenClaw Memory Stack License",
     html: `

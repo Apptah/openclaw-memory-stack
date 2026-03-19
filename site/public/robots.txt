@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /manage
+
+Sitemap: https://openclaw-memory.apptah.com/sitemap.xml

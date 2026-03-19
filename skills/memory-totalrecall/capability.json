@@ -11,5 +11,5 @@
     "l3_functional": "find \"${OPENCLAW_REPO_ROOT:-.}/memory\" -name '*.md' -type f 2>/dev/null | head -1 | grep -q .",
     "l3_deep": null
   },
-  "install_hint": "Run: openclaw-memory init (creates memory/ directory)"
+  "install_hint": "mkdir -p \"${INSTALL_ROOT:-$HOME/.openclaw/memory-stack}/memory\""
 }

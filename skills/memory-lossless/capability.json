@@ -11,5 +11,5 @@
     "l3_functional": "python3 -c \"import sqlite3; c=sqlite3.connect('${OPENCLAW_LCM_DB:-$HOME/.openclaw/lcm/lcm.sqlite}'); c.execute('SELECT count(*) FROM nodes'); print('ok')\" 2>/dev/null",
     "l3_deep": null
   },
-  "install_hint": "openclaw plugins install @martian-engineering/lossless-claw"
+  "install_hint": "command -v openclaw &>/dev/null && openclaw plugins install @martian-engineering/lossless-claw || echo 'openclaw CLI not in PATH — install lossless-claw after PATH is set'"
 }

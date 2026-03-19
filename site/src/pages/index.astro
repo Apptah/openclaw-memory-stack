@@ -24,6 +24,30 @@ import Layout from "../layouts/Layout.astro";
     .nav-links { display: flex; gap: 1.5rem; align-items: center; }
     .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
     .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.25rem; color: var(--muted); }
+    .nav-toggle:hover { color: var(--fg-bright); }
+    @media (max-width: 640px) {
+      .nav-toggle { display: block; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0; right: 0;
+        flex-direction: column;
+        gap: 0;
+        background: rgb(6, 8, 12);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 0;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+        width: 100%;
+      }
+      .nav-links a:hover { background: rgba(0, 229, 255, 0.05); }
+    }
 
     /* ── Hero ── */
     .hero {
@@ -353,11 +377,7 @@ import Layout from "../layouts/Layout.astro";
       border-bottom: 1px solid var(--border-bright);
       font-weight: 700;
     }
-    @media (max-width: 640px) {
-      .compare-header-cards {
-        grid-template-columns: 1fr;
-      }
-    }
+
 
     /* ── CTA ── */
     .cta-section {
@@ -483,6 +503,12 @@ import Layout from "../layouts/Layout.astro";
     footer .links { display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.75rem; }
     footer .links a { color: var(--muted); font-size: 0.75rem; }
 
+    @media (max-width: 640px) {
+      .compare-header-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       nav { padding: 0.75rem 1rem; }
@@ -507,7 +533,10 @@ import Layout from "../layouts/Layout.astro";
       </svg>
       openclaw<span>/memory-stack</span>
     </div>
-    <div class="nav-links">
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="nav-links">
       <a href="#features">Features</a>
       <a href="#compare">vs Native</a>
       <a href="#faq">FAQ</a>
@@ -824,5 +853,16 @@ import Layout from "../layouts/Layout.astro";
     }
     document.getElementById("buy-btn")?.addEventListener("click", handleBuy);
     document.getElementById("buy-btn-2")?.addEventListener("click", handleBuy);
+
+    // Mobile nav toggle
+    document.getElementById("nav-toggle")?.addEventListener("click", () => {
+      document.getElementById("nav-links")?.classList.toggle("open");
+    });
+    // Close menu on link click
+    document.querySelectorAll("#nav-links a").forEach(a => {
+      a.addEventListener("click", () => {
+        document.getElementById("nav-links")?.classList.remove("open");
+      });
+    });
   </script>
 </Layout>
