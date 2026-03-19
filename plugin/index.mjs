@@ -29,6 +29,7 @@ const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
 const WORKSPACE = resolve(HOME, ".openclaw/workspace");
 const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
 const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
+const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
 const QMD_BIN = (() => {
   // Find qmd binary
   const paths = [
@@ -142,8 +143,10 @@ function combinedSearch(query, maxResults, maxTokens, searchMode) {
   const md = searchMemoryMd(query, maxResults);
   const rescue = searchRescueStore(query, maxResults);
 
+  const graphResults = queryGraph(query, maxResults);
+
   // Merge, sort by relevance, dedupe
-  const all = [...rescue, ...qmd, ...fts5, ...md]
+  const all = [...rescue, ...graphResults, ...qmd, ...fts5, ...md]
     .sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
   const seen = new Set();
@@ -365,6 +368,152 @@ function cleanupOldRescueFiles(maxAgeDays) {
   } catch { /* no files */ }
 }
 
+// ─── Direction 4: Knowledge graph ────────────────────────────────
+
+function loadGraph() {
+  try {
+    if (existsSync(GRAPH_PATH)) {
+      return JSON.parse(readFileSync(GRAPH_PATH, "utf-8"));
+    }
+  } catch { /* corrupted file, start fresh */ }
+  return { entities: {}, edges: [] };
+}
+
+function saveGraph(graph) {
+  const dir = resolve(GRAPH_PATH, "..");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(GRAPH_PATH, JSON.stringify(graph, null, 2));
+}
+
+function extractEntities(text) {
+  const entities = new Map();
+  const edges = [];
+  const lines = text.split("\n").filter(l => l.trim());
+
+  // Entity patterns: category keyword followed by a name
+  const entityPatterns = [
+    { pattern: /\b(project|app|service|system)\s+([A-Z][A-Za-z0-9_-]+)/g, type: "project" },
+    { pattern: /\b(api|endpoint)\s+([/A-Za-z0-9._-]+)/g, type: "api" },
+    { pattern: /\b(function|method|class)\s+([A-Za-z_][A-Za-z0-9_]*)/g, type: "code" },
+    { pattern: /\b(client|customer|team)\s+([A-Z][A-Za-z0-9_-]+)/g, type: "person" },
+    { pattern: /\b(database|table|collection)\s+([A-Za-z_][A-Za-z0-9_-]*)/g, type: "data" },
+    { pattern: /\b(file|module)\s+([A-Za-z0-9_./-]+)/g, type: "file" },
+  ];
+
+  for (const line of lines) {
+    for (const { pattern, type } of entityPatterns) {
+      // Reset regex lastIndex for each line
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(line)) !== null) {
+        const name = match[2];
+        if (name.length < 2) continue;
+        const existing = entities.get(name);
+        if (existing) {
+          existing.mentions = (existing.mentions || 1) + 1;
+        } else {
+          entities.set(name, { name, type, mentions: 1 });
+        }
+      }
+    }
+
+    // Relationship patterns
+    const relPatterns = [
+      /([A-Za-z_][A-Za-z0-9_-]*)\s+(?:uses|calls|imports|requires|depends on|connects to)\s+([A-Za-z_][A-Za-z0-9_-]*)/gi,
+      /([A-Za-z_][A-Za-z0-9_-]*)\s*(?:→|->|=>)\s*([A-Za-z_][A-Za-z0-9_-]*)/g,
+    ];
+
+    for (const rp of relPatterns) {
+      rp.lastIndex = 0;
+      let match;
+      while ((match = rp.exec(line)) !== null) {
+        const from = match[1];
+        const to = match[2];
+        if (from.length >= 2 && to.length >= 2 && from !== to) {
+          edges.push({ from, to, context: line.trim().slice(0, 120) });
+        }
+      }
+    }
+  }
+
+  return { entities, edges };
+}
+
+function mergeIntoGraph(graph, extracted) {
+  // Merge entities
+  for (const [name, entity] of extracted.entities) {
+    if (graph.entities[name]) {
+      graph.entities[name].mentions = (graph.entities[name].mentions || 1) + (entity.mentions || 1);
+      // Keep the more specific type if available
+      if (!graph.entities[name].type && entity.type) {
+        graph.entities[name].type = entity.type;
+      }
+    } else {
+      graph.entities[name] = { ...entity };
+    }
+  }
+
+  // Merge edges, deduplicating by from+to
+  const existingEdgeKeys = new Set(
+    graph.edges.map(e => `${e.from}|||${e.to}`)
+  );
+
+  for (const edge of extracted.edges) {
+    const key = `${edge.from}|||${edge.to}`;
+    if (!existingEdgeKeys.has(key)) {
+      graph.edges.push(edge);
+      existingEdgeKeys.add(key);
+    }
+  }
+
+  // Cap edges at 500 (keep most recent)
+  if (graph.edges.length > 500) {
+    graph.edges = graph.edges.slice(-500);
+  }
+}
+
+function queryGraph(query, maxResults) {
+  const graph = loadGraph();
+  const entityNames = Object.keys(graph.entities);
+  if (entityNames.length === 0) return [];
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  if (words.length === 0) return [];
+
+  const scored = [];
+
+  for (const name of entityNames) {
+    const entity = graph.entities[name];
+    const nameLower = name.toLowerCase();
+    const matchCount = words.filter(w => nameLower.includes(w)).length;
+    if (matchCount === 0) continue;
+
+    // Gather related edges
+    const relatedEdges = graph.edges.filter(
+      e => e.from === name || e.to === name
+    );
+
+    let content = `[Entity] ${name} (${entity.type || "unknown"}, mentions: ${entity.mentions || 1})`;
+    if (relatedEdges.length > 0) {
+      const edgeDescriptions = relatedEdges.slice(0, 5).map(e =>
+        e.from === name ? `${name} → ${e.to}` : `${e.from} → ${name}`
+      );
+      content += `\nRelationships: ${edgeDescriptions.join(", ")}`;
+    }
+
+    scored.push({
+      content,
+      source: "knowledge-graph",
+      relevance: Math.min(1, 0.4 + matchCount * 0.15 + (entity.mentions || 1) * 0.05),
+      engine: "graph",
+    });
+  }
+
+  return scored
+    .sort((a, b) => b.relevance - a.relevance)
+    .slice(0, maxResults);
+}
+
 // ─── Plugin registration ─────────────────────────────────────────
 
 export default {
@@ -435,6 +584,27 @@ export default {
               return { content: [{ type: "text", text: report }] };
             }
 
+            // Special command: "graph" shows knowledge graph summary
+            if (/^graph\b/i.test(params.query)) {
+              const graph = loadGraph();
+              const entityNames = Object.keys(graph.entities);
+              const edgeCount = graph.edges.length;
+              let report = `Knowledge Graph Summary\nEntities: ${entityNames.length}\nEdges: ${edgeCount}\n`;
+              if (entityNames.length > 0) {
+                const sorted = entityNames
+                  .map(n => ({ name: n, ...graph.entities[n] }))
+                  .sort((a, b) => (b.mentions || 1) - (a.mentions || 1))
+                  .slice(0, 15);
+                report += `\nTop entities:\n`;
+                sorted.forEach((e, i) => {
+                  report += `  ${i + 1}. ${e.name} (${e.type || "unknown"}, ${e.mentions || 1} mentions)\n`;
+                });
+              } else {
+                report += "\nNo entities tracked yet. Entities are extracted automatically from conversations.";
+              }
+              return { content: [{ type: "text", text: report }] };
+            }
+
             const results = combinedSearch(params.query, maxResults, maxTokens, searchMode);
             if (results.length === 0) {
               return { content: [{ type: "text", text: "No relevant memories found." }] };
@@ -480,8 +650,16 @@ export default {
       if (facts.length > 0) {
         saveRescueFacts(facts, event.sessionKey);
       }
+
+      // Extract entities and merge into knowledge graph
+      const extracted = extractEntities(content);
+      if (extracted.entities.size > 0 || extracted.edges.length > 0) {
+        const graph = loadGraph();
+        mergeIntoGraph(graph, extracted);
+        saveGraph(graph);
+      }
     });
 
-    api.logger.info(`Memory Stack v2 registered (engines: fts5${hasQMD ? "+qmd" : ""}+memorymd+rescue, health=on, rescue=on)`);
+    api.logger.info(`Memory Stack v2 registered (engines: fts5${hasQMD ? "+qmd" : ""}+memorymd+rescue+graph, health=on, rescue=on, graph=on)`);
   },
 };
