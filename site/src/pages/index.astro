@@ -1,0 +1,515 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="OpenClaw Memory Stack">
+  <style>
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(6, 8, 12, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--muted); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+    .nav-links a:hover { color: var(--fg-bright); text-shadow: none; }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10rem 2rem 5rem;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--border-bright);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge::before { content: '//'; color: var(--muted); }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.03em;
+      color: var(--fg-bright);
+    }
+    .hero h1 .glow {
+      color: var(--accent);
+      text-shadow: 0 0 40px var(--accent-glow);
+    }
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 3rem;
+      line-height: 1.7;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+      padding: 0.85rem 2.2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+      font-family: var(--font-sans);
+    }
+    .hero-cta:hover {
+      background: var(--accent-hover);
+      color: var(--bg);
+      text-shadow: none;
+      box-shadow: 0 0 30px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+    .hero-price {
+      display: block;
+      margin-top: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Terminal demo ── */
+    .terminal-wrap {
+      max-width: 700px;
+      margin: 0 auto 6rem;
+      padding: 0 2rem;
+    }
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 229, 255, 0.05);
+    }
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.75rem 1rem;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border-bright);
+    }
+    .terminal-dot:nth-child(1) { background: #ff5f57; }
+    .terminal-dot:nth-child(2) { background: #ffbd2e; }
+    .terminal-dot:nth-child(3) { background: #28c840; }
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-right: 40px;
+    }
+    .terminal-body {
+      padding: 1.25rem 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .terminal-body .prompt { color: var(--accent); }
+    .terminal-body .cmd { color: var(--fg-bright); }
+    .terminal-body .comment { color: var(--muted); font-style: italic; }
+    .terminal-body .output { color: var(--muted); }
+    .terminal-body .success { color: var(--green); }
+
+    /* ── Section titles ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .section h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--fg-bright);
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .section .section-desc {
+      color: var(--muted);
+      max-width: 500px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Feature cards ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-dim);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fg-bright);
+      margin-bottom: 0.5rem;
+      font-family: var(--font-mono);
+    }
+    .feature-card p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Routing flow ── */
+    .routing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+    .route-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+    }
+    .route-label {
+      color: var(--fg-bright);
+      font-weight: 500;
+      font-size: 0.82rem;
+    }
+    .route-arrow {
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      white-space: nowrap;
+    }
+    .route-target {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+    .cta-box {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top, var(--accent-dim) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .cta-box .price {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--fg-bright);
+      margin-bottom: 0.25rem;
+      position: relative;
+      font-family: var(--font-mono);
+    }
+    .cta-box .price-note {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .cta-box .cta-btn-wrap { position: relative; }
+
+    /* ── Disclaimers ── */
+    .disclaimers-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    .disclaimers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+      list-style: none;
+    }
+    .disclaimers li {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      line-height: 1.5;
+    }
+    .disclaimers li strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+    }
+    footer .links { display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.75rem; }
+    footer .links a { color: var(--muted); font-size: 0.75rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      nav { padding: 0.75rem 1rem; }
+      .hero { padding: 8rem 1.25rem 3rem; }
+      .section { padding: 3rem 1.25rem; }
+      .terminal-wrap { padding: 0 1.25rem; }
+      .cta-section { padding: 3rem 1.25rem; }
+    }
+  </style>
+
+  <nav>
+    <div class="nav-logo">openclaw<span>/memory-stack</span></div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#routing">Routing</a>
+      <a href="/manage">Manage License</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="badge">v0.1.0 Starter</div>
+    <h1>Your agent forgets.<br/><span class="glow">Fix that.</span></h1>
+    <p class="subtitle">
+      Guided memory routing for AI coding agents. Three backends, one router,
+      zero context loss. Every query hits the right memory store — automatically.
+    </p>
+    <button class="hero-cta" id="buy-btn">
+      Get Memory Stack
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <span class="hero-price">$49 &mdash; one-time purchase, no subscription</span>
+  </div>
+
+  <div class="terminal-wrap">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <div class="terminal-title">openclaw-memory</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="comment"># Install + activate</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">./install.sh --key=oc-starter-xxxxxxxxxxxx</span></div>
+        <div><span class="success">  [OK]  License verified (tier: starter)</span></div>
+        <div><span class="success">  [OK]  Files installed</span></div>
+        <div>&nbsp;</div>
+        <div><span class="comment"># Initialize in your project</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">openclaw-memory init</span></div>
+        <div><span class="output">  Orphan branch created: openclaw/memory</span></div>
+        <div><span class="output">  QMD collection indexed: 142 files</span></div>
+        <div>&nbsp;</div>
+        <div><span class="comment"># Query — routed automatically</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">openclaw-memory "find function parseAuthToken"</span></div>
+        <div><span class="output">  Router: exact_symbol → QMD (BM25)</span></div>
+        <div><span class="success">  Found: src/auth/token.ts:42</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="features">
+    <div class="section-label">// components</div>
+    <h2>Three backends. One router.</h2>
+    <p class="section-desc">Each memory backend is optimized for a different kind of recall. The router picks the right one for every query.</p>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">&#x21CC;</div>
+        <h3>Memory Router</h3>
+        <p>Rule-based query classification with sequential fallback. Pattern-matches your query to the right backend — no LLM call needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F9E0;</div>
+        <h3>Total Recall</h3>
+        <p>Git-native memory. Stores decisions, context, and learned patterns as markdown on an orphan branch. Versioned. Portable. Searchable.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x26A1;</div>
+        <h3>QMD</h3>
+        <p>BM25 + vector search over your codebase. Instant symbol lookup, semantic concept search, and hybrid queries. Powered by Bun.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="routing">
+    <div class="section-label">// routing logic</div>
+    <h2>Queries find the right store.</h2>
+    <p class="section-desc">The router classifies every query and picks the optimal backend with automatic fallback.</p>
+    <div class="routing-grid">
+      <div class="route-item">
+        <div>
+          <div class="route-label">Symbol lookup</div>
+          <div class="route-arrow">QMD (BM25) &rarr; <span class="route-target">Total Recall</span></div>
+        </div>
+      </div>
+      <div class="route-item">
+        <div>
+          <div class="route-label">Concept search</div>
+          <div class="route-arrow">QMD (vector) &rarr; <span class="route-target">Total Recall</span></div>
+        </div>
+      </div>
+      <div class="route-item">
+        <div>
+          <div class="route-label">Recent context</div>
+          <div class="route-arrow">Total Recall &rarr; <span class="route-target">QMD</span></div>
+        </div>
+      </div>
+      <div class="route-item">
+        <div>
+          <div class="route-label">File patterns</div>
+          <div class="route-arrow">QMD (BM25) &rarr; <span class="route-target">Total Recall</span></div>
+        </div>
+      </div>
+      <div class="route-item">
+        <div>
+          <div class="route-label">Ambiguous</div>
+          <div class="route-arrow">QMD (hybrid) &rarr; <span class="route-target">Total Recall</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <div class="cta-box">
+      <div class="price">$49</div>
+      <div class="price-note">One-time purchase. No subscription. No SaaS. Just files.</div>
+      <div class="cta-btn-wrap">
+        <button class="hero-cta" id="buy-btn-2">
+          Get Memory Stack
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimers-section">
+    <ul class="disclaimers">
+      <li><strong>Rule-based routing, not AI.</strong> Pattern matching — no LLM calls, no API keys, no latency.</li>
+      <li><strong>QMD requires Bun.</strong> Total Recall works everywhere git does.</li>
+      <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
+      <li><strong>No subscription.</strong> You own the files. No updates included.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <div>openclaw/memory-stack &copy; 2026</div>
+    <div class="links">
+      <a href="/manage">Manage License</a>
+      <a href="/thanks">Post-Purchase</a>
+    </div>
+  </footer>
+
+  <script>
+    const API = (window as any).__API_BASE__;
+    async function handleBuy(e: Event) {
+      e.preventDefault();
+      const btn = e.currentTarget as HTMLButtonElement;
+      const orig = btn.innerHTML;
+      btn.textContent = "Connecting to Stripe...";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API}/api/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            success_url: window.location.origin + "/thanks",
+            cancel_url: window.location.origin + "/",
+          }),
+        });
+        const data = await res.json();
+        if (data.checkout_url) window.location.href = data.checkout_url;
+      } catch {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        alert("Connection failed. Please try again.");
+      }
+    }
+    document.getElementById("buy-btn")?.addEventListener("click", handleBuy);
+    document.getElementById("buy-btn-2")?.addEventListener("click", handleBuy);
+  </script>
+</Layout>

@@ -1,0 +1,239 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Manage License — OpenClaw Memory Stack">
+  <style>
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(6, 8, 12, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--muted); }
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 8rem 1.5rem 4rem;
+    }
+    .container h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--fg-bright);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    .container .desc {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: var(--bg);
+      color: var(--fg-bright);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      margin-bottom: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    input::placeholder { color: var(--muted); opacity: 0.6; }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+      padding: 0.65rem 1.5rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+    .devices {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem;
+      display: none;
+    }
+    .devices h2 {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .device-info {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .download-btn {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      margin-top: 0.5rem;
+    }
+    .download-btn:hover { background: var(--accent-dim); }
+    .status {
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+    }
+    .status.error {
+      background: rgba(255, 56, 96, 0.08);
+      border: 1px solid rgba(255, 56, 96, 0.3);
+      color: #ff6b8a;
+      display: block;
+    }
+    .status.success {
+      background: rgba(0, 230, 118, 0.08);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      color: var(--green);
+      display: block;
+    }
+    footer {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+  </style>
+
+  <nav>
+    <a href="/" class="nav-logo" style="text-decoration: none;">openclaw<span>/memory-stack</span></a>
+  </nav>
+
+  <div class="container">
+    <h1>Manage License</h1>
+    <p class="desc">Verify your license and request a new download link.</p>
+
+    <div id="status" class="status"></div>
+
+    <form id="lookup-form">
+      <label for="key">License Key</label>
+      <input type="text" id="key" name="key" placeholder="oc-starter-..." required />
+      <label for="email">Purchase Email</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com" required />
+      <button type="submit" id="lookup-btn">Verify License</button>
+    </form>
+
+    <div id="devices" class="devices">
+      <h2>// license active</h2>
+      <p class="device-info">Device management is available via the CLI: <code>openclaw-memory --help</code></p>
+      <button class="download-btn" id="download-btn">Request New Download Link</button>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/">&larr; openclaw/memory-stack</a>
+  </footer>
+
+  <script>
+    const API = (window as any).__API_BASE__;
+    const form = document.getElementById("lookup-form") as HTMLFormElement;
+    const devicesEl = document.getElementById("devices")!;
+    const statusEl = document.getElementById("status")!;
+    const downloadBtn = document.getElementById("download-btn")!;
+
+    let currentKey = "";
+    let currentEmail = "";
+
+    function showStatus(msg: string, type: "error" | "success") {
+      statusEl.textContent = msg;
+      statusEl.className = `status ${type}`;
+    }
+
+    function clearStatus() {
+      statusEl.className = "status";
+      statusEl.textContent = "";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearStatus();
+      currentKey = (document.getElementById("key") as HTMLInputElement).value;
+      currentEmail = (document.getElementById("email") as HTMLInputElement).value;
+
+      try {
+        const res = await fetch(`${API}/api/download-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: currentKey, email: currentEmail }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.valid === false) {
+          showStatus(data.reason ?? "Invalid license key or email", "error");
+          devicesEl.style.display = "none";
+          return;
+        }
+        showStatus("License verified.", "success");
+        devicesEl.style.display = "block";
+      } catch {
+        showStatus("Connection error. Please try again.", "error");
+      }
+    });
+
+    downloadBtn.addEventListener("click", async () => {
+      clearStatus();
+      try {
+        const res = await fetch(`${API}/api/download-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: currentKey, email: currentEmail }),
+        });
+        const data = await res.json();
+        if (data.download_url) {
+          window.location.href = `${API}${data.download_url}`;
+        } else {
+          showStatus("Could not generate download link.", "error");
+        }
+      } catch {
+        showStatus("Connection error. Please try again.", "error");
+      }
+    });
+  </script>
+</Layout>
