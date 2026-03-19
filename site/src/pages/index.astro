@@ -259,6 +259,38 @@ import Layout from "../layouts/Layout.astro";
       color: var(--muted);
     }
 
+    /* ── Compare stats ── */
+    .compare-header-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .compare-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .compare-stat-number {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .compare-stat-label {
+      font-size: 0.82rem;
+      color: var(--fg-bright);
+      line-height: 1.4;
+    }
+    .compare-stat-label span {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
     /* ── Compare table ── */
     .compare-table-wrap {
       overflow-x: auto;
@@ -281,19 +313,22 @@ import Layout from "../layouts/Layout.astro";
     }
     .compare-table th:not(:first-child) {
       text-align: center;
+      width: 35%;
     }
     .compare-table td {
-      padding: 0.65rem 1rem;
+      padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--border);
       color: var(--fg);
+      vertical-align: top;
+      line-height: 1.5;
     }
     .compare-table td:not(:first-child) {
-      text-align: center;
+      text-align: left;
     }
     .compare-table td:first-child {
       font-weight: 500;
       color: var(--fg-bright);
-      white-space: nowrap;
+      width: 30%;
     }
     .compare-table tr:hover {
       background: rgba(0, 229, 255, 0.03);
@@ -306,6 +341,21 @@ import Layout from "../layouts/Layout.astro";
     }
     .compare-table td.partial {
       color: #ffbd2e;
+    }
+    .compare-group td {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      padding: 1.5rem 1rem 0.5rem;
+      border-bottom: 1px solid var(--border-bright);
+      font-weight: 700;
+    }
+    @media (max-width: 640px) {
+      .compare-header-cards {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ── CTA ── */
@@ -434,11 +484,11 @@ import Layout from "../layouts/Layout.astro";
         <div>&nbsp;</div>
         <div><span class="comment"># Restart OpenClaw — memory is now active</span></div>
         <div><span class="prompt">$</span> <span class="cmd">openclaw gateway restart</span></div>
-        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+rescue)</span></div>
+        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+rescue+graph)</span></div>
         <div>&nbsp;</div>
         <div><span class="comment"># Just talk — memory works in the background</span></div>
         <div><span class="output">  You: What did we decide about the API design?</span></div>
-        <div><span class="success">  [memory_search] Found 3 results (engines: fts5, qmd, rescue)</span></div>
+        <div><span class="success">  [memory] 6 engines searched, 4 results merged (RRF fusion)</span></div>
         <div><span class="output">  Agent: We decided to use REST with /api/v2/...</span></div>
       </div>
     </div>
@@ -466,8 +516,8 @@ import Layout from "../layouts/Layout.astro";
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F50D;</div>
-        <h3>Smarter Search</h3>
-        <p>MMR diversity ranking prevents redundant results. Temporal decay prioritizes recent memories. Session indexing searches across past conversations. All running locally — no API keys, no extra cost.</p>
+        <h3>6-Engine Search</h3>
+        <p>Six search engines run on every query, results merged by rank fusion. A local 1.7B AI rewrites your question before searching, and a 0.6B model reranks the results. All offline, zero API cost.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
@@ -522,72 +572,98 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="section" id="compare">
     <div class="section-label">// vs native memory</div>
-    <h2>What you get that built-in memory doesn't have.</h2>
-    <p class="section-desc">OpenClaw's native memory is good. Memory Stack makes it better.</p>
+    <h2>Side by side. Plain and simple.</h2>
+    <p class="section-desc">Same agent, same conversations. One remembers more, uses fewer tokens, and finds things faster.</p>
+
+    <div class="compare-header-cards">
+      <div class="compare-stat">
+        <div class="compare-stat-number">6</div>
+        <div class="compare-stat-label">search engines<br/><span>vs native's 2</span></div>
+      </div>
+      <div class="compare-stat">
+        <div class="compare-stat-number">3</div>
+        <div class="compare-stat-label">local AI models<br/><span>vs native's 0</span></div>
+      </div>
+      <div class="compare-stat">
+        <div class="compare-stat-number">0</div>
+        <div class="compare-stat-label">API keys needed<br/><span>runs 100% offline</span></div>
+      </div>
+    </div>
+
     <div class="compare-table-wrap">
       <table class="compare-table">
         <thead>
           <tr>
-            <th>Feature</th>
+            <th></th>
             <th>Native Memory</th>
             <th>Memory Stack</th>
           </tr>
         </thead>
         <tbody>
+          <tr class="compare-group"><td colspan="3">Remembers longer</td></tr>
           <tr>
-            <td>Text search (BM25)</td>
-            <td class="yes">Yes</td>
-            <td class="yes">Yes</td>
+            <td>What happens when the conversation gets too long?</td>
+            <td class="no">Old messages get compressed. Decisions disappear.</td>
+            <td class="yes">Key facts are saved before compression and brought back automatically.</td>
           </tr>
           <tr>
-            <td>Vector search</td>
-            <td class="yes">Yes (needs API key or local setup)</td>
-            <td class="yes">Yes (QMD, zero config)</td>
+            <td>Can it remember things from last week?</td>
+            <td class="no">Only if it's still in the conversation window.</td>
+            <td class="yes">Yes. Recent memories rank higher, but older ones are still searchable.</td>
           </tr>
           <tr>
-            <td>Hybrid search + MMR</td>
-            <td class="yes">Yes</td>
-            <td class="yes">Yes</td>
+            <td>Does it understand how things connect?</td>
+            <td class="no">No. It searches text, not relationships.</td>
+            <td class="yes">Yes. A knowledge graph tracks who, what, and how they relate.</td>
           </tr>
           <tr>
-            <td>Temporal decay</td>
-            <td class="yes">Yes</td>
-            <td class="yes">Yes</td>
+            <td>Can it trace how a decision evolved?</td>
+            <td class="no">No.</td>
+            <td class="yes">Yes. Evolution chains link past decisions to current ones.</td>
+          </tr>
+
+          <tr class="compare-group"><td colspan="3">Uses fewer tokens</td></tr>
+          <tr>
+            <td>How much context does it load per search?</td>
+            <td class="no">Full text chunks every time.</td>
+            <td class="yes">Summaries first, full text only when needed. Three detail levels.</td>
           </tr>
           <tr>
-            <td>Knowledge graph</td>
-            <td class="no">No</td>
-            <td class="yes">Yes — tracks entities and relationships</td>
+            <td>Does it avoid repeating similar results?</td>
+            <td class="no">Can return near-duplicate chunks.</td>
+            <td class="yes">MMR diversification removes redundancy before injecting into context.</td>
           </tr>
           <tr>
-            <td>Self-evolving memory</td>
-            <td class="no">No</td>
-            <td class="yes">Yes — finds duplicates, suggests consolidation</td>
+            <td>Does memory get bloated over time?</td>
+            <td class="no">Yes. No cleanup mechanism.</td>
+            <td class="yes">No. Duplicate detection and auto-consolidation keep it clean.</td>
+          </tr>
+
+          <tr class="compare-group"><td colspan="3">Finds things faster</td></tr>
+          <tr>
+            <td>How many search methods run per query?</td>
+            <td class="partial">2 (keyword + vector)</td>
+            <td class="yes">6 engines, results merged by rank fusion (RRF).</td>
           </tr>
           <tr>
-            <td>Compaction rescue</td>
-            <td class="no">LLM-based flush only (costs tokens)</td>
-            <td class="yes">Rule-based extraction (zero token cost)</td>
+            <td>Does it understand what you meant, not just what you typed?</td>
+            <td class="no">Basic keyword matching.</td>
+            <td class="yes">AI query expansion rewrites your question using a local 1.7B model before searching.</td>
           </tr>
           <tr>
-            <td>Memory health check</td>
-            <td class="no">No</td>
-            <td class="yes">Yes — scores quality 0-100</td>
+            <td>Can it search across past conversations?</td>
+            <td class="partial">Limited.</td>
+            <td class="yes">Full session search across all past conversations.</td>
           </tr>
           <tr>
-            <td>Multi-engine search</td>
-            <td class="no">Single backend</td>
-            <td class="yes">5 engines with fallback routing</td>
+            <td>Can you check if your memory is healthy?</td>
+            <td class="no">No.</td>
+            <td class="yes">Quality score 0-100. Shows duplicates, stale entries, noise.</td>
           </tr>
           <tr>
-            <td>Session search</td>
-            <td class="partial">Experimental</td>
-            <td class="yes">Yes</td>
-          </tr>
-          <tr>
-            <td>Embedding setup needed</td>
-            <td class="no">Yes — requires provider config</td>
-            <td class="yes">No — works out of the box</td>
+            <td>Does it need API keys or cloud services?</td>
+            <td class="no">Vector search needs an embedding provider.</td>
+            <td class="yes">Nothing. Three local AI models handle everything offline.</td>
           </tr>
         </tbody>
       </table>
