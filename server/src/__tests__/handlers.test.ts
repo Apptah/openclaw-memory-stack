@@ -3,6 +3,7 @@ import { handleWebhook } from "../webhook";
 import { handleActivate } from "../activate";
 import type { Env } from "../utils";
 import { isNewer, isValidSemver } from "../download";
+import { handleCheckUpdate } from "../check-update";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -87,6 +88,38 @@ async function signedWebhookRequest(
       "stripe-signature": `t=${timestamp},v1=${sig}`,
     },
     body,
+  });
+}
+
+function makeR2(files: Record<string, object> = {}) {
+  return {
+    get: mock(async (key: string) => {
+      const data = files[key];
+      if (!data) return null;
+      return { json: async () => data };
+    }),
+  };
+}
+
+function checkUpdateRequest(params: Record<string, string>, ip = "1.2.3.4"): Request {
+  const qs = new URLSearchParams(params).toString();
+  return new Request(`https://worker.test/api/check-update?${qs}`, {
+    method: "GET",
+    headers: { "CF-Connecting-IP": ip },
+  });
+}
+
+function storedLicenseFull(overrides: Partial<Record<string, unknown>> = {}) {
+  return JSON.stringify({
+    tier: "starter",
+    email: "user@example.com",
+    created_at: "2025-01-01T00:00:00Z",
+    active: true,
+    version: "0.1.0",
+    purchased_minor: "0.1",
+    devices: [{ id: "d1", name: "Mac1", added_at: "2025-01-01T00:00:00Z" }],
+    max_devices: 3,
+    ...overrides,
   });
 }
 
@@ -438,5 +471,121 @@ describe("isValidSemver", () => {
     expect(isValidSemver("1.2.3.4")).toBe(false);
     expect(isValidSemver("1.2.3-beta")).toBe(false);
     expect(isValidSemver("")).toBe(false);
+  });
+});
+
+describe("handleCheckUpdate", () => {
+  it("returns 400 when key is missing", async () => {
+    const env = makeEnv();
+    const req = checkUpdateRequest({ current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Missing key");
+  });
+
+  it("returns 400 when current is invalid", async () => {
+    const env = makeEnv({ "license:oc-starter-abc": storedLicenseFull() });
+    const req = checkUpdateRequest({ key: "oc-starter-abc", current: "main" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.reason).toBe("invalid_version");
+  });
+
+  it("returns 403 when key is invalid", async () => {
+    const env = makeEnv();
+    const req = checkUpdateRequest({ key: "fake", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.reason).toBe("invalid_key");
+  });
+
+  it("returns 403 when license is revoked", async () => {
+    const env = makeEnv({
+      "license:oc-starter-rev": storedLicenseFull({ active: false }),
+    });
+    const req = checkUpdateRequest({ key: "oc-starter-rev", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.reason).toBe("revoked");
+  });
+
+  it("starter gets patch within purchased minor, not global latest", async () => {
+    const env = makeEnv({
+      "license:oc-starter-s1": storedLicenseFull({ tier: "starter", purchased_minor: "0.1" }),
+    });
+    env.RELEASES = makeR2({
+      "latest.json": { version: "0.2.0" },
+      "v0.1/latest-patch.json": { version: "0.1.3" },
+    }) as unknown as R2Bucket;
+
+    const req = checkUpdateRequest({ key: "oc-starter-s1", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.update_available).toBe(true);
+    expect(data.latest).toBe("0.1.3");
+    expect(data.current).toBe("0.1.0");
+  });
+
+  it("subscriber gets global latest", async () => {
+    const env = makeEnv({
+      "license:oc-sub-s1": storedLicenseFull({ tier: "subscriber", purchased_minor: "0.1" }),
+    });
+    env.RELEASES = makeR2({
+      "latest.json": { version: "0.2.0" },
+      "v0.1/latest-patch.json": { version: "0.1.3" },
+    }) as unknown as R2Bucket;
+
+    const req = checkUpdateRequest({ key: "oc-sub-s1", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.update_available).toBe(true);
+    expect(data.latest).toBe("0.2.0");
+  });
+
+  it("returns update_available:false when already up to date", async () => {
+    const env = makeEnv({
+      "license:oc-starter-up": storedLicenseFull({ tier: "starter", purchased_minor: "0.1" }),
+    });
+    env.RELEASES = makeR2({
+      "v0.1/latest-patch.json": { version: "0.1.3" },
+    }) as unknown as R2Bucket;
+
+    const req = checkUpdateRequest({ key: "oc-starter-up", current: "0.1.3" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.update_available).toBe(false);
+  });
+
+  it("returns update_available:false on fallback (no patch file)", async () => {
+    const env = makeEnv({
+      "license:oc-starter-fb": storedLicenseFull({ tier: "starter", purchased_minor: "0.1", version: "0.1.0" }),
+    });
+    env.RELEASES = makeR2({}) as unknown as R2Bucket;
+
+    const req = checkUpdateRequest({ key: "oc-starter-fb", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.update_available).toBe(false);
+    expect(data.latest).toBe("0.1.0");
+  });
+
+  it("returns 429 when rate limited", async () => {
+    const env = makeEnv();
+    (env.KV.get as Mock<any>).mockImplementation(async (key: string) => {
+      if (key.startsWith("ratelimit:")) return "10";
+      return null;
+    });
+
+    const req = checkUpdateRequest({ key: "oc-starter-rl", current: "0.1.0" });
+    const res = await handleCheckUpdate(req, env);
+    expect(res.status).toBe(429);
   });
 });
