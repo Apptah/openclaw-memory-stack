@@ -5,6 +5,7 @@ import { handleActivate } from "./activate";
 import { handleVerify } from "./verify";
 import { handleResetDevice } from "./reset-device";
 import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./download";
+import { handleCheckUpdate } from "./check-update";
 import { handleRevoke } from "./revoke";
 import { handleSessionStatus } from "./session-status";
 
@@ -46,6 +47,8 @@ export default {
         response = await handleDownload(request, env);
       } else if (method === "GET" && path === "/api/session-status") {
         response = await handleSessionStatus(request, env);
+      } else if (method === "GET" && path === "/api/check-update") {
+        response = await handleCheckUpdate(request, env);
       } else if (method === "POST" && path === "/api/revoke") {
         response = await handleRevoke(request, env);
       } else {
