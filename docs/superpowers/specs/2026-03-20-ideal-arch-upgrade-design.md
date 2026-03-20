@@ -6,9 +6,11 @@
 
 ## Context
 
-The current `plugin/index.mjs` (789 lines, single file) implements 2/12 ideal capabilities fully (RRF Fusion, Tiered Loading) and 4/12 partially (Bi-temporal, HyDE, Thread Distillation, Dedup). Six capabilities are missing entirely (Multi-hop, Lossless integration, Evolution Chains, Expertise Graph, A-MEM, Retrieval Trajectory).
+The current `plugin/index.mjs` (789 lines, single file) implements Tiered Loading fully, and 5 capabilities partially (RRF — current code does naive concat+sort, not true RRF; Bi-temporal; HyDE; Thread Distillation; Dedup). Six capabilities are missing entirely (Multi-hop, Lossless integration, Evolution Chains, Expertise Graph, A-MEM, Retrieval Trajectory).
 
-This spec covers: modular restructuring + implementing all 10 gaps to reach 12/12.
+**Note:** `index.mjs` (gateway-loaded) and `v2-index.mjs` (experimental, NOT loaded) differ. `index.mjs` lacks RRF; `v2-index.mjs` has it. This spec targets `index.mjs` as the base and incorporates all improvements.
+
+This spec covers: modular restructuring + implementing all gaps to reach 12/12.
 
 ## Module Architecture
 
@@ -35,7 +37,7 @@ plugin/
 
 ### Design Rationale
 
-- Each module < 300 lines, independently understandable
+- Target: each module < 300 lines. If `pipeline.mjs` exceeds this (due to 9 responsibilities: HyDE, fan-out, RRF, dedup, MMR, tiered, trajectory, temporal, token budget), split into `pipeline.mjs` (orchestration + fan-out) and `postprocess.mjs` (dedup + MMR + temporal decay + token budget)
 - `engines/` directory: one file per engine, barrel export via `engines/index.mjs`
 - `graph/` split by responsibility: store (CRUD) vs algorithms (traversal, analysis)
 - `pipeline.mjs` does orchestration only, never touches storage directly
@@ -70,13 +72,27 @@ interface Engine {
     maxResults?: number;
     after?: Date;     // Bi-temporal: inclusive lower bound
     before?: Date;    // Bi-temporal: inclusive upper bound
-  }): Result[];
+  }): Promise<Result[]>;                  // All engines are async
 }
 ```
+
+**Async contract:** All engines return `Promise<Result[]>`. The pipeline uses `Promise.allSettled()` for fan-out, allowing engines to run in parallel. Engines that use `execSync` internally should wrap in `Promise.resolve()` — the async interface is for pipeline-level parallelism, not mandating internal async I/O.
 
 - `queryType: "raw"` — receives original user query (e.g., memorymd keyword match)
 - `queryType: "expanded"` — receives HyDE-expanded query (e.g., qmd semantic search)
 - `queryType: "both"` — receives both, engine decides internally
+
+**Temporal push-down by engine:**
+
+| Engine | Push-down | Strategy |
+|--------|-----------|----------|
+| `fts5` | Yes | SQL `WHERE created_at BETWEEN ? AND ?` |
+| `qmd` | No | Post-filter by pipeline `fallbackFilter` |
+| `memorymd` | No | No timestamps in MEMORY.md lines; all results returned, pipeline skips temporal filter for results with no timestamp |
+| `rescue` | Partial | Use `facts[].timestamp` from JSON content; fallback to file timestamp |
+| `sessions` | Yes | SQL `WHERE created_at BETWEEN ? AND ?` |
+| `lossless` | Yes | SQL `WHERE created_at BETWEEN ? AND ?` |
+| `graph` | Partial | Filter edges by `timestamp` field (edges without timestamp pass through) |
 
 ### Pipeline Return Type
 
@@ -100,6 +116,19 @@ interface SearchResponse {
 ```
 
 **`meta.trajectory` is best-effort.** It may be partially populated or absent. Not every engine guarantees complete timing or candidate detail. Consumers MUST NOT depend on trajectory completeness for correctness — it is observability-only.
+
+### RRF (Reciprocal Rank Fusion) — New Implementation
+
+The current `index.mjs` does NOT implement true RRF — it concatenates results and sorts by raw relevance score. The pipeline MUST implement proper RRF:
+
+```javascript
+// For each engine's result list, compute RRF score by rank position:
+// rrfScore = weight / (K + rank + 1), where K = 60
+// Merge across engines: sum RRF scores for same content key
+// This replaces the naive concat+sort currently in combinedSearch()
+```
+
+This is a prerequisite for all pipeline work, not a standalone gap.
 
 ## Gap Implementations
 
@@ -165,8 +194,10 @@ class LosslessClient {
 }
 ```
 
-- SQL is generated from schema metadata, not hardcoded
-- Supports `leaf` and `condensed` node kinds
+- Minimum expected schema: `nodes(rowid, content, created_at)`, optionally `nodes.kind` (leaf/condensed) and `edges(source_id, target_id)`
+- Schema probing: on init, `PRAGMA table_info(nodes)` to detect columns; missing columns → exclude from queries, don't fail
+- SQL templates parameterized from discovered columns, not hardcoded
+- Pure JS/sqlite3 CLI implementation — does NOT call the shell wrapper
 - `queryType: "raw"` — keyword search against DAG content
 - Registered in `engines/index.mjs` alongside other engines
 - Graceful degrade: if `lcm.db` not found, engine returns `[]`
@@ -212,7 +243,9 @@ Level 3: Substring overlap > 80% of shorter string — always runs
 Level 4: Cosine similarity > 0.9 via QMD embedding — only if QMD available
 ```
 
-- Level 4 skipped when QMD unavailable; `trajectory.cosineDedupUsed = false`
+- Level 4 uses `qmd embed --text "..."` to get vectors, then computes cosine similarity
+- If `qmd embed` is not available (older QMD version), Level 4 is skipped; `trajectory.cosineDedupUsed = false`
+- Availability check: on init, try `qmd embed --text "test" --json`; cache result
 - When merging duplicates: keep longer content + higher relevance score
 - Max dedup candidates: 50 (avoid O(n²) blowup on large result sets)
 
@@ -231,6 +264,8 @@ Edge structure extended:
   context: string,      // Source line, max 120 chars
 }
 ```
+
+**Migration:** Existing `graph.json` edges have `{ from, to, context }` only — no `type` or `timestamp`. `graph/store.mjs` MUST treat missing `type` as `"RELATES"` and missing `timestamp` as `null` (excluded from temporal queries). No one-time migration needed; edges are enriched on next merge.
 
 Evolution extraction patterns (in `algorithms.mjs`, NOT in store):
 
@@ -336,9 +371,40 @@ Query interface:
 - `memory_search("organize --apply")` → execute with backup
 - `cfg.autoOrganize === true` → enable auto-organize (off by default)
 
+## Command Dispatch Table
+
+The `memory_search` tool uses prefix matching to route special commands. Commands are checked in order; first match wins. If no command matches, the query is treated as a search.
+
+| Pattern | Regex | Handler | Module |
+|---------|-------|---------|--------|
+| `health` | `/^health\b/i` | `analyzeMemoryHealth()` | `quality.mjs` |
+| `graph` (summary) | `/^graph$/i` | graph summary report | `graph/store.mjs` |
+| `graph:Entity` | `/^graph:(\S+)(?:\s+depth:(\d+))?/i` | `multiHopQuery(entity, depth)` | `graph/algorithms.mjs` |
+| `evolution:Entity` | `/^evolution:(\S+)/i` | timeline of EVOLVES edges | `graph/algorithms.mjs` |
+| `expertise` | `/^expertise$/i` | communities + PageRank | `graph/algorithms.mjs` |
+| `consolidate` | `/^consolidate\b/i` | `consolidateMemories()` | `quality.mjs` |
+| `organize` | `/^organize\b/i` | `organizeMemories({ apply: false })` | `quality.mjs` |
+| `organize --apply` | `/^organize\s+--apply\b/i` | `organizeMemories({ apply: true })` | `quality.mjs` |
+| *(no match)* | — | `combinedSearch(query)` | `pipeline.mjs` |
+
+**Note:** `graph` (exact) and `graph:Entity` are distinguished by the colon. No prefix collision risk.
+
+## Expertise Graph Caching
+
+`detectCommunities()` and `rankByPageRank()` are computed on-demand. Results are cached in memory for the plugin's lifetime (no disk persistence). Cache is invalidated when `mergeIntoGraph()` adds new entities or edges.
+
+For graphs < 500 nodes, computation is < 100ms. For larger graphs, the `maxNodes` cap (default 50 for multi-hop) limits traversal cost. Community detection operates on the full graph but is bounded by iteration convergence.
+
+## Rescue Field Migration
+
+Existing rescue JSON files use `weight` field. New schema uses `confidence`. `rescue.mjs` MUST support both:
+- Read: accept `confidence` or `weight`, prefer `confidence` if both present
+- Write: always use `confidence` (new schema)
+- No migration of existing files needed — they age out via 30-day cleanup
+
 ## Config Schema Additions
 
-New fields for `openclaw.plugin.json`:
+New fields for `openclaw.plugin.json` (added to existing schema):
 
 ```json
 {
@@ -351,6 +417,10 @@ New fields for `openclaw.plugin.json`:
   "graphMaxNodes": { "type": "integer", "minimum": 10, "maximum": 200, "default": 50 }
 }
 ```
+
+Existing fields preserved unchanged: `routerMode`, `searchMode`, `autoRecall`, `autoCapture`, `maxRecallResults`, `maxRecallTokens`, `mmrLambda`, `halfLifeDays`, `graphEnabled`, `sessionSearch`.
+
+Interaction: `graphEnabled: false` disables all graph features (multi-hop, evolution, expertise, entity extraction).
 
 ## Migration Path
 
