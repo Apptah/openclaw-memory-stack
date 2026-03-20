@@ -20,7 +20,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 
@@ -682,6 +682,67 @@ function queryGraph(query, maxResults) {
     .slice(0, maxResults);
 }
 
+/**
+ * Background update check — fire-and-forget, never blocks startup.
+ * Checks at most once every 24 hours. Silent on any error.
+ */
+function checkForUpdates(api) {
+  (async () => {
+    try {
+      const stateDir = resolve(HOME, ".openclaw/memory-stack");
+      const statePath = resolve(stateDir, "update-state.json");
+
+      // Throttle: 24hr
+      let state = {};
+      try { state = JSON.parse(readFileSync(statePath, "utf8")); } catch {}
+      if (Date.now() - (state.last_check || 0) < 86_400_000) return;
+
+      // Read local version + license
+      const versionFile = resolve(stateDir, "version.json");
+      const licenseFile = resolve(HOME, ".openclaw/state/license.json");
+      if (!existsSync(versionFile) || !existsSync(licenseFile)) return;
+
+      const version = JSON.parse(readFileSync(versionFile, "utf8"));
+      const license = JSON.parse(readFileSync(licenseFile, "utf8"));
+
+      // Check update (5s timeout)
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(
+        `https://api.openclaw.apptah.com/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        // Update last_check even on error to avoid hammering
+        const tmp = statePath + ".tmp";
+        writeFileSync(tmp, JSON.stringify({ last_check: Date.now(), latest: null }));
+        renameSync(tmp, statePath);
+        return;
+      }
+
+      const data = await res.json();
+
+      // Atomic write update-state.json
+      const newState = { last_check: Date.now(), latest: data.latest || null };
+      const tmp = statePath + ".tmp";
+      writeFileSync(tmp, JSON.stringify(newState));
+      renameSync(tmp, statePath);
+
+      // Notify if update available
+      if (data.update_available) {
+        api.logger.info(
+          `\u{1F504} Memory Stack v${data.latest} available (you have v${version.version})\n` +
+          `   Run: ~/.openclaw/memory-stack/install.sh --upgrade`
+        );
+      }
+    } catch {
+      // Silent — never block normal startup
+    }
+  })();
+}
+
 // ─── Plugin registration ─────────────────────────────────────────
 
 export default {
@@ -710,6 +771,9 @@ export default {
 
     // Cleanup old rescue files (> 30 days)
     cleanupOldRescueFiles(30);
+
+    // Background update check (fire-and-forget, no await)
+    checkForUpdates(api);
 
     // ─── Tools: memory_search + memory_health (factory pattern) ──
     // Uses memory-core's pattern: single registerTool with factory returning array
