@@ -38,15 +38,20 @@ header() { printf "\n${BOLD}%s${NC}\n" "$1"; }
 # ── Parse arguments ─────────────────────────────────────────────────
 LICENSE_KEY=""
 SKIP_MODELS=false
+UPGRADE=false
+FROM_SELF=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --key=*) LICENSE_KEY="${1#--key=}"; shift ;;
     --key)   LICENSE_KEY="$2"; shift 2 ;;
+    --upgrade) UPGRADE=true; shift ;;
+    --from-self) FROM_SELF=true; shift ;;
     --skip-models) SKIP_MODELS=true; shift ;;
     -h|--help)
       echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx"
       echo ""
       echo "  --key <key>    Your license key (received via email after purchase)"
+      echo "  --upgrade      Upgrade to latest version (reads key from license.json)"
       echo "  --help         Show this help"
       echo ""
       echo "Purchase: https://openclaw-site-53r.pages.dev"
@@ -59,6 +64,193 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# ── Guards ─────────────────────────────────────────────────────────
+if [[ "$FROM_SELF" == true && "$UPGRADE" != true ]]; then
+  echo "Error: --from-self is an internal flag. Use --upgrade instead." >&2
+  exit 1
+fi
+
+if [[ "$UPGRADE" == true && -n "$LICENSE_KEY" ]]; then
+  echo "Error: --upgrade and --key are mutually exclusive. --upgrade reads key from license.json." >&2
+  exit 1
+fi
+
+# ── Upgrade flow ───────────────────────────────────────────────────
+if [[ "$UPGRADE" == true && "$FROM_SELF" != true ]]; then
+  header "Upgrade — Phase 1: Download"
+
+  if [[ ! -f "$STATE_DIR/license.json" ]]; then
+    fail "No license.json found at $STATE_DIR/license.json"
+    echo "  Run a fresh install with --key instead." >&2
+    exit 1
+  fi
+
+  LICENSE_KEY=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['key'])" 2>/dev/null)
+  CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('$INSTALL_ROOT/version.json'))['version'])" 2>/dev/null || echo "0.0.0")
+
+  if [[ -z "$LICENSE_KEY" ]]; then
+    fail "Could not read license key from $STATE_DIR/license.json"
+    exit 1
+  fi
+
+  info "Current version: $CURRENT_VERSION"
+  info "Downloading latest release..."
+
+  DOWNLOAD_URL="${ACTIVATE_URL%/activate}/download/latest?key=$LICENSE_KEY"
+  TMP_TAR="/tmp/openclaw-update-$$.tar.gz"
+  TMP_DIR="/tmp/openclaw-update-$$"
+
+  HTTP_CODE=$(curl -sL -w "%{http_code}" -o "$TMP_TAR" "$DOWNLOAD_URL")
+  if [[ "$HTTP_CODE" != "200" ]]; then
+    fail "Download failed (HTTP $HTTP_CODE)"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+
+  # Verify tarball integrity
+  if ! tar -tzf "$TMP_TAR" > /dev/null 2>&1; then
+    fail "Downloaded file is corrupt"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+
+  if ! tar -tzf "$TMP_TAR" | grep -q 'install.sh'; then
+    fail "Invalid package: no installer found"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+
+  # Extract and check version
+  mkdir -p "$TMP_DIR"
+  tar -xzf "$TMP_TAR" -C "$TMP_DIR"
+  rm -f "$TMP_TAR"
+
+  # Find the extracted directory
+  EXTRACTED_DIR=$(find "$TMP_DIR" -maxdepth 1 -type d -name "openclaw-memory-stack-*" | head -1)
+  if [[ -z "$EXTRACTED_DIR" ]]; then
+    EXTRACTED_DIR="$TMP_DIR"
+  fi
+
+  if [[ ! -f "$EXTRACTED_DIR/install.sh" ]]; then
+    fail "Extracted package missing install.sh"
+    rm -rf "$TMP_DIR"
+    exit 1
+  fi
+
+  # Version check: new must be strictly greater than current
+  NEW_VERSION=$(python3 -c "import json; print(json.load(open('$EXTRACTED_DIR/version.json'))['version'])" 2>/dev/null || echo "")
+  if [[ -z "$NEW_VERSION" ]]; then
+    fail "Could not read version from downloaded package"
+    rm -rf "$TMP_DIR"
+    exit 1
+  fi
+
+  IS_NEWER=$(python3 -c "
+cv = list(map(int, '$CURRENT_VERSION'.split('.')))
+nv = list(map(int, '$NEW_VERSION'.split('.')))
+print('yes' if nv > cv else 'no')
+" 2>/dev/null || echo "no")
+
+  if [[ "$IS_NEWER" != "yes" ]]; then
+    ok "Already up to date (v$CURRENT_VERSION)"
+    rm -rf "$TMP_DIR"
+    exit 0
+  fi
+
+  info "Upgrading v$CURRENT_VERSION → v$NEW_VERSION"
+  ok "Download verified"
+
+  chmod +x "$EXTRACTED_DIR/install.sh"
+  exec "$EXTRACTED_DIR/install.sh" --upgrade --from-self
+fi
+
+if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
+  header "Upgrade — Phase 2: Install"
+
+  LICENSE_KEY=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['key'])" 2>/dev/null)
+  DEVICE_ID=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['device_id'])" 2>/dev/null)
+  NEW_VERSION=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/version.json'))['version'])" 2>/dev/null || echo "unknown")
+
+  # Copy files
+  info "Copying files..."
+  for dir in bin lib skills; do
+    if [[ -d "$SCRIPT_DIR/$dir" ]]; then
+      cp -R "$SCRIPT_DIR/$dir/" "$INSTALL_ROOT/$dir/"
+    fi
+  done
+  ok "Files updated"
+
+  # Copy plugin
+  EXT_DIR="$HOME/.openclaw/extensions/openclaw-memory-stack"
+  mkdir -p "$EXT_DIR"
+  cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
+  [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
+  [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
+  ok "Plugin updated"
+
+  # Update version.json
+  NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  OLD_VERSION=$(python3 -c "import json; print(json.load(open('$INSTALL_ROOT/version.json')).get('version','unknown'))" 2>/dev/null || echo "unknown")
+  cat > "$INSTALL_ROOT/version.json" <<JSONEOF
+{
+  "version": "$NEW_VERSION",
+  "installed_at": "$NOW",
+  "upgraded_from": "$OLD_VERSION"
+}
+JSONEOF
+  ok "version.json → v$NEW_VERSION"
+
+  # Update openclaw.json plugin install record
+  OPENCLAW_JSON="$HOME/.openclaw/openclaw.json"
+  if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
+    python3 -c "
+import json, datetime
+config_path = '$OPENCLAW_JSON'
+with open(config_path) as f:
+    config = json.load(f)
+installs = config.get('plugins', {}).get('installs', {})
+if 'openclaw-memory-stack' in installs:
+    installs['openclaw-memory-stack']['version'] = '$NEW_VERSION'
+    installs['openclaw-memory-stack']['resolvedVersion'] = '$NEW_VERSION'
+    installs['openclaw-memory-stack']['resolvedSpec'] = 'openclaw-memory-stack@$NEW_VERSION'
+    installs['openclaw-memory-stack']['updatedAt'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
+" 2>/dev/null && ok "openclaw.json updated" || warn "Could not update openclaw.json version"
+  fi
+
+  # Update Python deps if venv exists
+  if [[ -d "$INSTALL_ROOT/.venv" && -f "$SCRIPT_DIR/requirements.txt" ]]; then
+    info "Updating Python dependencies..."
+    "$INSTALL_ROOT/.venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt" --quiet 2>/dev/null && ok "Python deps updated" || warn "Python deps update failed (non-fatal)"
+  fi
+
+  # Verify license still valid
+  VERIFY_URL="${ACTIVATE_URL%/activate}/verify?key=$LICENSE_KEY&device_id=$DEVICE_ID"
+  VERIFY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$VERIFY_URL" 2>/dev/null || echo "000")
+  if [[ "$VERIFY_STATUS" == "200" ]]; then
+    ok "License verified"
+  else
+    warn "License verification returned HTTP $VERIFY_STATUS (non-fatal)"
+  fi
+
+  # Clean up tmp dir if we were exec'd from Phase 1
+  PARENT_TMP=$(dirname "$SCRIPT_DIR")
+  if [[ "$PARENT_TMP" == /tmp/openclaw-update-* ]]; then
+    rm -rf "$PARENT_TMP"
+  fi
+
+  echo ""
+  echo -e "${BOLD}=========================================${NC}"
+  echo -e "${GREEN}  ✅ Updated to v$NEW_VERSION${NC}"
+  echo -e "${BOLD}=========================================${NC}"
+  echo ""
+  echo "  Run: openclaw gateway restart"
+  echo ""
+  exit 0
+fi
 
 if [[ -z "$LICENSE_KEY" ]]; then
   echo "Error: license key required." >&2
