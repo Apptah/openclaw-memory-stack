@@ -2,6 +2,7 @@ import { describe, it, expect, mock, beforeEach, type Mock } from "bun:test";
 import { handleWebhook } from "../webhook";
 import { handleActivate } from "../activate";
 import type { Env } from "../utils";
+import { isNewer, isValidSemver } from "../download";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -399,5 +400,43 @@ describe("handleActivate", () => {
     );
     expect(logCall).toBeDefined();
     expect(logCall![1].device_id).toBe("d-log-test");
+  });
+});
+
+describe("isNewer", () => {
+  it("returns true when latest is greater (patch)", () => {
+    expect(isNewer("0.1.3", "0.1.0")).toBe(true);
+  });
+
+  it("returns true when latest is greater (minor)", () => {
+    expect(isNewer("0.2.0", "0.1.3")).toBe(true);
+  });
+
+  it("returns true when latest is greater (major)", () => {
+    expect(isNewer("1.0.0", "0.9.9")).toBe(true);
+  });
+
+  it("returns false when equal", () => {
+    expect(isNewer("0.1.0", "0.1.0")).toBe(false);
+  });
+
+  it("returns false when latest is older", () => {
+    expect(isNewer("0.1.0", "0.1.3")).toBe(false);
+  });
+});
+
+describe("isValidSemver", () => {
+  it("accepts valid versions", () => {
+    expect(isValidSemver("0.1.0")).toBe(true);
+    expect(isValidSemver("1.20.300")).toBe(true);
+  });
+
+  it("rejects invalid versions", () => {
+    expect(isValidSemver("main")).toBe(false);
+    expect(isValidSemver("v0.1.0")).toBe(false);
+    expect(isValidSemver("1.2")).toBe(false);
+    expect(isValidSemver("1.2.3.4")).toBe(false);
+    expect(isValidSemver("1.2.3-beta")).toBe(false);
+    expect(isValidSemver("")).toBe(false);
   });
 });

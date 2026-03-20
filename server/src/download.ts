@@ -1,4 +1,33 @@
-import { Env, jsonResponse, errorResponse, nanoid, LicenseData } from "./utils";
+import { Env, jsonResponse, errorResponse, nanoid, LicenseData, toMinor } from "./utils";
+
+/**
+ * Resolve the download version for a license.
+ *
+ * - subscriber → global latest (from R2 latest.json)
+ * - starter    → latest patch within purchased_minor (from R2 v{minor}/latest-patch.json)
+ *                Falls back to license.version if no latest-patch.json exists yet.
+ */
+export async function resolveVersion(license: LicenseData, env: Env): Promise<string> {
+  if (license.tier === "subscriber") {
+    // Subscribers get the global latest
+    const obj = await env.RELEASES.get("latest.json");
+    if (obj) {
+      const data = await obj.json<{ version: string }>();
+      return data.version;
+    }
+  }
+
+  // Starter: latest patch within their purchased minor
+  const minor = license.purchased_minor ?? toMinor(license.version);
+  const patchObj = await env.RELEASES.get(`v${minor}/latest-patch.json`);
+  if (patchObj) {
+    const data = await patchObj.json<{ version: string }>();
+    return data.version;
+  }
+
+  // Fallback: exact version at purchase
+  return license.version;
+}
 
 export async function handleDownloadToken(request: Request, env: Env): Promise<Response> {
   const body = (await request.json()) as { key?: string; email?: string };
@@ -20,11 +49,13 @@ export async function handleDownloadToken(request: Request, env: Env): Promise<R
     return jsonResponse({ valid: false, reason: "email_mismatch" }, 403);
   }
 
+  const version = await resolveVersion(license, env);
+
   // Generate one-time download token (1hr TTL)
   const token = nanoid(32);
   await env.KV.put(
     `dl:${token}`,
-    JSON.stringify({ version: license.version }),
+    JSON.stringify({ version }),
     { expirationTtl: 3600 },
   );
 
@@ -47,8 +78,6 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
   }
 
   const { version } = JSON.parse(raw) as { version: string };
-
-  // Let TTL handle expiration — no deletion, so retries work within the TTL window
 
   // Get artifact from R2
   const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
@@ -84,7 +113,7 @@ export async function handleDownloadLatest(request: Request, env: Env): Promise<
     return errorResponse("License has been revoked", 403);
   }
 
-  const version = license.version;
+  const version = await resolveVersion(license, env);
   const objectKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz`;
   const object = await env.RELEASES.get(objectKey);
 
@@ -98,4 +127,20 @@ export async function handleDownloadLatest(request: Request, env: Env): Promise<
       "Content-Disposition": `attachment; filename="openclaw-memory-stack-v${version}.tar.gz"`,
     },
   });
+}
+
+const SEMVER_RE = /^\d+\.\d+\.\d+$/;
+
+export function isValidSemver(v: string): boolean {
+  return SEMVER_RE.test(v);
+}
+
+export function isNewer(latest: string, current: string): boolean {
+  const l = latest.split(".").map(Number);
+  const c = current.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (l[i] > c[i]) return true;
+    if (l[i] < c[i]) return false;
+  }
+  return false;
 }
