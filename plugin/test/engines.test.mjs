@@ -31,15 +31,31 @@ describe("engine interface compliance", () => {
 });
 
 describe("engine registry", () => {
-  it("exports engines array with all 5 built-in engines", async () => {
+  it("exports engines array with all 6 built-in engines", async () => {
     const { engines } = await import("../lib/engines/index.mjs");
     assert.ok(Array.isArray(engines));
-    assert.equal(engines.length, 5);
+    assert.equal(engines.length, 6);
     const names = engines.map(e => e.name);
     assert.ok(names.includes("fts5"));
     assert.ok(names.includes("qmd"));
     assert.ok(names.includes("memorymd"));
     assert.ok(names.includes("rescue"));
     assert.ok(names.includes("sessions"));
+    assert.ok(names.includes("lossless"));
+  });
+});
+
+describe("lossless engine", () => {
+  it("exports valid Engine interface", async () => {
+    const { default: lossless } = await import("../lib/engines/lossless.mjs");
+    assert.equal(lossless.name, "lossless");
+    assert.equal(lossless.queryType, "raw");
+    assert.equal(typeof lossless.search, "function");
+  });
+
+  it("returns empty array when DB not found", async () => {
+    const { default: lossless } = await import("../lib/engines/lossless.mjs");
+    const results = await lossless.search("test query", { maxResults: 5 });
+    assert.ok(Array.isArray(results));
   });
 });
