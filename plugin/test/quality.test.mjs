@@ -44,8 +44,8 @@ describe("quality", () => {
   });
 
   describe("organizeMemories (Gap 10)", () => {
-    it("returns dry-run result by default", () => {
-      const result = organizeMemories();
+    it("returns dry-run result by default", async () => {
+      const result = await organizeMemories();
       assert.equal(result.applied, false);
       assert.equal(result.dryRun, true);
     });

@@ -6,6 +6,7 @@ import { HOME } from "../constants.mjs";
 const DB_PATH = process.env.OPENCLAW_LCM_DB || resolve(HOME, ".openclaw/lcm/lcm.sqlite");
 
 let schema = null;
+let disableLogged = false;
 
 function probeSchema() {
   if (schema !== null) return schema;
@@ -28,7 +29,14 @@ export default {
   queryType: "raw",
   async search(query, options = {}) {
     const s = probeSchema();
-    if (!s) return [];
+    if (!s) {
+      if (!disableLogged) {
+        // Log once per process — lcm.sqlite not found or schema mismatch
+        console.error(`[lossless] disabled: ${DB_PATH} not found or missing 'content' column`);
+        disableLogged = true;
+      }
+      return [];
+    }
     const maxResults = options.maxResults || 10;
     const safeQuery = query.replace(/'/g, "''").replace(/"/g, '""');
 

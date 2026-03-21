@@ -8,12 +8,13 @@ export const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
 export const WORKSPACE = resolve(HOME, ".openclaw/workspace");
 export const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
 export const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
+export const RESCUE_DB = resolve(HOME, ".openclaw/memory-stack/rescue/facts.sqlite");
 export const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
+export const GRAPH_DB = resolve(HOME, ".openclaw/memory-stack/graph.sqlite");
 
 export const DEFAULT_CONFIG = {
-  hyde: true,
-  hydeEndpoint: "http://localhost:11434",
-  hydeModel: "qwen2.5:7b",
+  llmEndpoint: "https://api.openai.com/v1",
+  llmModel: "gpt-4o-mini",
   autoOrganize: false,
   losslessEnabled: true,
   graphDepth: 2,
@@ -23,6 +24,13 @@ export const DEFAULT_CONFIG = {
   maxRecallResults: 5,
   maxRecallTokens: 1500,
   searchMode: "hybrid",
+  autoRecallTier: "L0",
+  toolResponseTier: "L1",
+  qmdCollection: null,
+  qmdProbeQuery: null,
+  qmdMode: "auto",
+  qmdProbeCooldown: 60,
+  qmdProbeMaxCooldown: 300,
 };
 
 /**

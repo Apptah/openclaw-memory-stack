@@ -44,14 +44,15 @@
       "sessionSearch": {
         "type": "boolean"
       },
-      "hyde": {
-        "type": "boolean",
-        "default": true
+      "llmEndpoint": {
+        "type": "string",
+        "default": "https://api.openai.com/v1"
       },
-      "hydeEndpoint": {
-        "type": "string"
+      "llmModel": {
+        "type": "string",
+        "default": "gpt-4o-mini"
       },
-      "hydeModel": {
+      "llmApiKey": {
         "type": "string"
       },
       "autoOrganize": {
@@ -73,6 +74,27 @@
         "minimum": 10,
         "maximum": 200,
         "default": 50
+      },
+      "autoRecallTier": {
+        "type": "string",
+        "enum": ["L0", "L1", "L2"],
+        "default": "L0"
+      },
+      "toolResponseTier": {
+        "type": "string",
+        "enum": ["L1", "L2"],
+        "default": "L1"
+      },
+      "qmdCollection": {
+        "type": "string"
+      },
+      "qmdProbeQuery": {
+        "type": "string"
+      },
+      "qmdMode": {
+        "type": "string",
+        "enum": ["auto", "search", "vsearch", "query"],
+        "default": "auto"
       }
     }
   },
@@ -88,6 +110,22 @@
     "maxRecallTokens": {
       "label": "Recall Token Budget",
       "help": "Maximum tokens used for injected memories per turn"
+    },
+    "autoRecallTier": {
+      "label": "Auto-Recall Tier",
+      "help": "L0 (~100 tokens), L1 (~800 tokens), L2 (~2000 tokens, full content)"
+    },
+    "toolResponseTier": {
+      "label": "Search Response Tier",
+      "help": "L1 (summary) or L2 (full content). Use --full suffix for one-off L2."
+    },
+    "qmdCollection": {
+      "label": "QMD Collection",
+      "help": "QMD collection name for scoped search. Auto-detected from .openclaw-memory.json if empty."
+    },
+    "qmdProbeQuery": {
+      "label": "QMD Probe Query",
+      "help": "Fixed query for runtime probe. Required to enable vsearch/query modes."
     }
   }
 }

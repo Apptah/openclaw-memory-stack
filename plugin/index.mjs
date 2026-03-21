@@ -12,14 +12,16 @@ import { existsSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { HOME, MEMORY_DB, DEFAULT_CONFIG, findQmdBin } from "./lib/constants.mjs";
+import { formatL0, formatL1, formatL2, parseFullSuffix } from "./lib/tiered.mjs";
 import { combinedSearch } from "./lib/pipeline.mjs";
-import { extractKeyFacts, saveRescueFacts, cleanupOldRescueFiles } from "./lib/rescue.mjs";
+import { extractFacts, extractKeyFacts, saveRescueFacts, cleanupOldRescueFiles } from "./lib/rescue.mjs";
 import { analyzeMemoryHealth, consolidateMemories, organizeMemories } from "./lib/quality.mjs";
 import { loadGraph, saveGraph, extractEntities, mergeIntoGraph } from "./lib/graph/store.mjs";
 import {
   multiHopQuery, getEvolutionTimeline, extractEvolutionEdges,
   detectCommunities, rankByPageRank, invalidateGraphCache,
 } from "./lib/graph/algorithms.mjs";
+import { configureLLM } from "./lib/llm.mjs";
 
 // ─── Background update check ─────────────────────────────────────
 
@@ -150,7 +152,7 @@ function textResult(text) {
 export default {
   id: "openclaw-memory-stack",
   name: "OpenClaw Memory Stack",
-  description: "Local semantic search + memory quality management + compaction rescue. No API keys needed.",
+  description: "Local semantic search + memory quality management + compaction rescue. Works out of the box — no API keys or external LLM needed.",
   kind: "memory",
 
   register(api) {
@@ -158,6 +160,9 @@ export default {
     const autoRecall = cfg.autoRecall !== false;
     const hasQMD = !!findQmdBin();
     const hasDB = existsSync(MEMORY_DB);
+
+    // Wire user's LLM config into provider chain
+    configureLLM(cfg);
 
     api.logger.info(`Memory Stack v2 initializing (qmd=${hasQMD}, db=${hasDB}, recall=${autoRecall})`);
 
@@ -247,15 +252,16 @@ export default {
             }
 
             // default: combined search
-            const response = await combinedSearch(q, cfg);
+            // Parse --full suffix for tier override
+            const { query: searchQuery, tier } = parseFullSuffix(q, cfg.toolResponseTier || DEFAULT_CONFIG.toolResponseTier);
+            const response = await combinedSearch(searchQuery, cfg);
             const results = response.results || [];
             if (results.length === 0) {
               return textResult("No relevant memories found.");
             }
             const enginesUsed = [...new Set(results.map(r => r.engine))];
-            const text = results
-              .map((r, i) => `[${i + 1}] (${r.source}, score: ${(r.relevance || 0).toFixed(2)})\n${r.content}`)
-              .join("\n---\n");
+            const formatter = tier === "L0" ? formatL0 : tier === "L2" ? formatL2 : formatL1;
+            const text = formatter(results);
             return textResult(text + `\n\n(engines: ${enginesUsed.join(", ")})`);
           },
         };
@@ -285,7 +291,9 @@ export default {
         const results = response.results || [];
         if (results.length === 0) return {};
 
-        const memoryText = results.map(r => `[${r.source}] ${r.content}`).join("\n");
+        const recallTier = cfg.autoRecallTier || DEFAULT_CONFIG.autoRecallTier;
+        const formatter = recallTier === "L1" ? formatL1 : recallTier === "L2" ? formatL2 : formatL0;
+        const memoryText = formatter(results);
         return {
           prependContext: `<memory-stack>\n${memoryText}\n</memory-stack>`,
         };
@@ -310,8 +318,8 @@ export default {
       if (!content) content = event.turnSummary || event.agentResponse || "";
       if (content.length < 20) return;
 
-      // Extract and save rescue facts
-      const facts = extractKeyFacts(content);
+      // Extract and save rescue facts (LLM if API key configured, regex fallback)
+      const facts = await extractFacts(content);
       if (facts.length > 0) {
         saveRescueFacts(facts, event.sessionKey);
       }
@@ -337,7 +345,7 @@ export default {
     });
 
     api.logger.info(
-      `Memory Stack v2 registered (engines: fts5${hasQMD ? "+qmd" : ""}+memorymd+rescue+sessions+lossless+graph, ` +
+      `Memory Stack v2 registered (engines: fts5${hasQMD ? "+qmd" : ""}+memorymd+rescue+lossless+graph, ` +
       `health=on, rescue=on, graph=${cfg.graphEnabled !== false ? "on" : "off"})`
     );
   },

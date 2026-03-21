@@ -80,10 +80,10 @@ describe("lib module imports (smoke)", () => {
     assert.equal(typeof mod.findQmdBin, "function");
   });
 
-  it("engines exports array of 6", async () => {
+  it("engines exports array of 5", async () => {
     const mod = await import("../lib/engines/index.mjs");
     assert.ok(Array.isArray(mod.engines));
-    assert.equal(mod.engines.length, 6);
+    assert.equal(mod.engines.length, 5);
     for (const e of mod.engines) {
       assert.equal(typeof e.name, "string");
       assert.equal(typeof e.search, "function");

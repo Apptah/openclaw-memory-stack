@@ -1,82 +1,196 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync, renameSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { GRAPH_PATH } from "../constants.mjs";
+import { GRAPH_PATH, GRAPH_DB } from "../constants.mjs";
+import { extractEntities } from "../extract.mjs";
+import { invalidateGraphCache as invalidateAlgorithmsCache } from "./algorithms.mjs";
 
+// Re-export extractEntities so existing imports from graph/store.mjs keep working
+export { extractEntities };
+
+// ─── SQLite helpers ─────────────────────────────────────────────
+
+function ensureDB() {
+  const dir = resolve(GRAPH_DB, "..");
+  mkdirSync(dir, { recursive: true });
+
+  const schema = `
+CREATE TABLE IF NOT EXISTS entities (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT,
+  mentions INTEGER DEFAULT 1,
+  recorded_at TEXT,
+  updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS edges (
+  id TEXT PRIMARY KEY,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  type TEXT DEFAULT 'RELATES',
+  context TEXT,
+  recorded_at TEXT
+);
+CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(name, type);
+`;
+  const safeSql = schema.replace(/"/g, '\\"');
+  execSync(`sqlite3 "${GRAPH_DB}" "${safeSql}"`, { timeout: 5000 });
+}
+
+function sqlEscape(val) {
+  if (val == null) return "NULL";
+  return "'" + String(val).replace(/'/g, "''") + "'";
+}
+
+/**
+ * Migrate graph.json → SQLite on first run.
+ * Renames graph.json to graph.json.bak afterwards.
+ */
+function migrateJsonIfNeeded() {
+  if (!existsSync(GRAPH_PATH)) return;
+  let data;
+  try {
+    data = JSON.parse(readFileSync(GRAPH_PATH, "utf-8"));
+  } catch {
+    // Corrupted JSON — just rename and move on
+    try { renameSync(GRAPH_PATH, GRAPH_PATH + ".bak"); } catch { /* ignore */ }
+    return;
+  }
+
+  const entities = data.entities || {};
+  const edges = data.edges || [];
+
+  // Batch insert entities
+  if (Object.keys(entities).length > 0) {
+    let sql = "";
+    for (const [name, ent] of Object.entries(entities)) {
+      const id = name.toLowerCase();
+      const type = ent.type || "entity";
+      const mentions = ent.mentions || 1;
+      const now = new Date().toISOString();
+      sql += `INSERT OR IGNORE INTO entities (id, name, type, mentions, recorded_at, updated_at) VALUES (${sqlEscape(id)}, ${sqlEscape(ent.name || name)}, ${sqlEscape(type)}, ${mentions}, ${sqlEscape(now)}, ${sqlEscape(now)});\n`;
+      sql += `INSERT OR IGNORE INTO entities_fts (rowid, name, type) VALUES ((SELECT rowid FROM entities WHERE id = ${sqlEscape(id)}), ${sqlEscape(ent.name || name)}, ${sqlEscape(type)});\n`;
+    }
+    execSync(`sqlite3 "${GRAPH_DB}" "${sql.replace(/"/g, '\\"')}"`, { timeout: 10000 });
+  }
+
+  // Batch insert edges
+  if (edges.length > 0) {
+    let sql = "";
+    for (const edge of edges) {
+      const id = `${edge.from}|||${edge.to}`;
+      const type = edge.type || "RELATES";
+      const ts = edge.timestamp || new Date().toISOString();
+      sql += `INSERT OR IGNORE INTO edges (id, from_id, to_id, type, context, recorded_at) VALUES (${sqlEscape(id)}, ${sqlEscape(edge.from)}, ${sqlEscape(edge.to)}, ${sqlEscape(type)}, ${sqlEscape(edge.context || "")}, ${sqlEscape(ts)});\n`;
+    }
+    execSync(`sqlite3 "${GRAPH_DB}" "${sql.replace(/"/g, '\\"')}"`, { timeout: 10000 });
+  }
+
+  // Rename old JSON file
+  try { renameSync(GRAPH_PATH, GRAPH_PATH + ".bak"); } catch { /* ignore */ }
+}
+
+// ─── Public API (backward-compatible shape) ─────────────────────
+
+let dbReady = false;
+
+function initDB() {
+  if (dbReady) return;
+  ensureDB();
+  migrateJsonIfNeeded();
+  dbReady = true;
+}
+
+/**
+ * Load graph from SQLite, returning the same { entities, edges } shape
+ * that the rest of the codebase expects (entities as plain object keyed
+ * by name, edges as array).
+ */
 export function loadGraph() {
   try {
-    if (existsSync(GRAPH_PATH)) {
-      return JSON.parse(readFileSync(GRAPH_PATH, "utf-8"));
+    initDB();
+
+    const entitiesRaw = execSync(
+      `sqlite3 -json "${GRAPH_DB}" "SELECT id, name, type, mentions, recorded_at, updated_at FROM entities;"`,
+      { encoding: "utf-8", timeout: 5000 }
+    );
+    const edgesRaw = execSync(
+      `sqlite3 -json "${GRAPH_DB}" "SELECT id, from_id, to_id, type, context, recorded_at FROM edges;"`,
+      { encoding: "utf-8", timeout: 5000 }
+    );
+
+    const entities = {};
+    for (const row of JSON.parse(entitiesRaw || "[]")) {
+      entities[row.name || row.id] = {
+        name: row.name || row.id,
+        type: row.type || "entity",
+        mentions: row.mentions || 1,
+      };
     }
-  } catch { /* corrupted file, start fresh */ }
-  return { entities: {}, edges: [] };
+
+    const edges = JSON.parse(edgesRaw || "[]").map(row => ({
+      from: row.from_id,
+      to: row.to_id,
+      type: row.type || "RELATES",
+      context: row.context || "",
+      timestamp: row.recorded_at || "",
+    }));
+
+    return { entities, edges };
+  } catch {
+    return { entities: {}, edges: [] };
+  }
 }
 
+/**
+ * Save (upsert) graph into SQLite. Accepts the same { entities, edges }
+ * shape produced by loadGraph / mergeIntoGraph.
+ */
 export function saveGraph(graph) {
-  const dir = resolve(GRAPH_PATH, "..");
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(GRAPH_PATH, JSON.stringify(graph, null, 2));
-}
+  try {
+    initDB();
+    const now = new Date().toISOString();
+    let sql = "";
 
-export function extractEntities(text) {
-  const entities = new Map();
-  const edges = [];
-
-  // Standalone capitalized multi-word names
-  const standaloneNames = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
-  for (const name of standaloneNames) {
-    if (name.length < 3 || name.length > 60) continue;
-    const key = name.toLowerCase();
-    if (!entities.has(key)) entities.set(key, { name, type: "entity", mentions: 0 });
-    entities.get(key).mentions++;
-  }
-
-  const lines = text.split("\n").filter(l => l.trim());
-
-  const entityPatterns = [
-    { pattern: /\b(project|app|service|system)\s+([A-Z][A-Za-z0-9_-]+)/g, type: "project" },
-    { pattern: /\b(api|endpoint)\s+([/A-Za-z0-9._-]+)/g, type: "api" },
-    { pattern: /\b(function|method|class)\s+([A-Za-z_][A-Za-z0-9_]*)/g, type: "code" },
-    { pattern: /\b(client|customer|team)\s+([A-Z][A-Za-z0-9_-]+)/g, type: "person" },
-    { pattern: /\b(database|table|collection)\s+([A-Za-z_][A-Za-z0-9_-]*)/g, type: "data" },
-    { pattern: /\b(file|module)\s+([A-Za-z0-9_./-]+)/g, type: "file" },
-  ];
-
-  for (const line of lines) {
-    for (const { pattern, type } of entityPatterns) {
-      pattern.lastIndex = 0;
-      let match;
-      while ((match = pattern.exec(line)) !== null) {
-        const name = match[2];
-        if (name.length < 2) continue;
-        const existing = entities.get(name);
-        if (existing) {
-          existing.mentions = (existing.mentions || 1) + 1;
-        } else {
-          entities.set(name, { name, type, mentions: 1 });
-        }
-      }
+    // Upsert entities
+    for (const [name, ent] of Object.entries(graph.entities)) {
+      const id = name.toLowerCase();
+      const type = ent.type || "entity";
+      const mentions = ent.mentions || 1;
+      sql += `INSERT INTO entities (id, name, type, mentions, recorded_at, updated_at) VALUES (${sqlEscape(id)}, ${sqlEscape(ent.name || name)}, ${sqlEscape(type)}, ${mentions}, ${sqlEscape(now)}, ${sqlEscape(now)}) ON CONFLICT(id) DO UPDATE SET mentions = ${mentions}, type = COALESCE(${sqlEscape(type)}, type), updated_at = ${sqlEscape(now)};\n`;
     }
 
-    const relPatterns = [
-      /([A-Za-z_][A-Za-z0-9_-]*)\s+(?:uses|calls|imports|requires|depends on|connects to)\s+([A-Za-z_][A-Za-z0-9_-]*)/gi,
-      /([A-Za-z_][A-Za-z0-9_-]*)\s*(?:→|->|=>)\s*([A-Za-z_][A-Za-z0-9_-]*)/g,
-    ];
-
-    for (const rp of relPatterns) {
-      rp.lastIndex = 0;
-      let match;
-      while ((match = rp.exec(line)) !== null) {
-        const from = match[1];
-        const to = match[2];
-        if (from.length >= 2 && to.length >= 2 && from !== to) {
-          edges.push({ from, to, context: line.trim().slice(0, 120) });
-        }
-      }
+    // Upsert edges (no 500-edge hard cap)
+    for (const edge of graph.edges) {
+      const id = `${edge.from}|||${edge.to}`;
+      const type = edge.type || "RELATES";
+      const ts = edge.timestamp || now;
+      sql += `INSERT OR IGNORE INTO edges (id, from_id, to_id, type, context, recorded_at) VALUES (${sqlEscape(id)}, ${sqlEscape(edge.from)}, ${sqlEscape(edge.to)}, ${sqlEscape(type)}, ${sqlEscape((edge.context || "").slice(0, 500))}, ${sqlEscape(ts)});\n`;
     }
-  }
 
-  return { entities, edges };
+    if (sql) {
+      execSync(`sqlite3 "${GRAPH_DB}" "${sql.replace(/"/g, '\\"')}"`, { timeout: 10000 });
+    }
+
+    // Rebuild FTS index
+    rebuildFTS(graph);
+
+    invalidateGraphCache();
+  } catch { /* best-effort save */ }
 }
+
+function rebuildFTS(graph) {
+  try {
+    let sql = "DELETE FROM entities_fts;\n";
+    for (const [name, ent] of Object.entries(graph.entities)) {
+      const id = name.toLowerCase();
+      sql += `INSERT OR IGNORE INTO entities_fts (rowid, name, type) SELECT rowid, name, type FROM entities WHERE id = ${sqlEscape(id)};\n`;
+    }
+    execSync(`sqlite3 "${GRAPH_DB}" "${sql.replace(/"/g, '\\"')}"`, { timeout: 10000 });
+  } catch { /* FTS rebuild is best-effort */ }
+}
+
+// ─── mergeIntoGraph (unchanged logic, no 500-edge cap) ──────────
 
 export function mergeIntoGraph(graph, extracted) {
   for (const [name, entity] of extracted.entities) {
@@ -106,10 +220,12 @@ export function mergeIntoGraph(graph, extracted) {
     }
   }
 
-  if (graph.edges.length > 500) {
-    graph.edges = graph.edges.slice(-500);
-  }
+  // No 500-edge hard cap — SQLite handles large datasets fine.
+
+  invalidateGraphCache();
 }
+
+// ─── queryGraph (unchanged) ─────────────────────────────────────
 
 export function queryGraph(graph, query, maxResults = 10) {
   const entityNames = Object.keys(graph.entities);
@@ -152,5 +268,12 @@ export function queryGraph(graph, query, maxResults = 10) {
     .slice(0, maxResults);
 }
 
-// Placeholder — will be replaced by algorithms.mjs invalidation hook
-export function invalidateGraphCache() {}
+// ─── Cache invalidation ─────────────────────────────────────────
+
+/**
+ * Invalidate both store-level and algorithms-level caches.
+ * Call after any graph mutation (merge, save, edge add).
+ */
+export function invalidateGraphCache() {
+  invalidateAlgorithmsCache();
+}

@@ -79,7 +79,6 @@ describe("pipeline", () => {
         assert.equal(typeof response.meta.trajectory.afterRRF, "number");
         assert.equal(typeof response.meta.trajectory.afterDedup, "number");
         assert.equal(typeof response.meta.trajectory.afterMMR, "number");
-        assert.equal(typeof response.meta.trajectory.hydeUsed, "boolean");
         assert.equal(typeof response.meta.trajectory.cosineDedupUsed, "boolean");
         assert.ok(["L0", "L1", "L2"].includes(response.meta.trajectory.tier));
       }

@@ -2,49 +2,8 @@ import { engines } from "./engines/index.mjs";
 import { deduplicateResults, applyCosineDedup } from "./quality.mjs";
 import { DEFAULT_CONFIG } from "./constants.mjs";
 
-// ─── HyDE (Gap 1) ───────────────────────────────────────────────
-
-let ollamaReachable = null;
-let ollamaCheckTime = 0;
-
-async function isOllamaReachable(endpoint) {
-  const now = Date.now();
-  if (ollamaReachable !== null && now - ollamaCheckTime < 60000) return ollamaReachable;
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`${endpoint}/api/tags`, { signal: controller.signal });
-    clearTimeout(timer);
-    ollamaReachable = res.ok;
-  } catch {
-    ollamaReachable = false;
-  }
-  ollamaCheckTime = now;
-  return ollamaReachable;
-}
-
-async function hydeExpand(query, endpoint, model) {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${endpoint}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        prompt: `Write a short paragraph that would be a good search result for: "${query}"`,
-        stream: false,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.response || null;
-  } catch {
-    return null;
-  }
-}
+// Query expansion is handled by qmd's built-in `query` mode
+// (local 1.7B model + reranking). No separate LLM call needed.
 
 // ─── RRF (Reciprocal Rank Fusion) ───────────────────────────────
 
@@ -173,10 +132,6 @@ export async function combinedSearch(query, options = {}) {
   const searchMode = cfg.searchMode || DEFAULT_CONFIG.searchMode;
   const mmrLambda = cfg.mmrLambda ?? DEFAULT_CONFIG.mmrLambda;
   const halfLifeDays = cfg.halfLifeDays ?? DEFAULT_CONFIG.halfLifeDays;
-  const hydeEnabled = cfg.hyde !== false;
-  const hydeEndpoint = cfg.hydeEndpoint || DEFAULT_CONFIG.hydeEndpoint;
-  const hydeModel = cfg.hydeModel || DEFAULT_CONFIG.hydeModel;
-
   const trajectory = {
     engines: [],
     timing: {},
@@ -184,7 +139,6 @@ export async function combinedSearch(query, options = {}) {
     afterRRF: 0,
     afterDedup: 0,
     afterMMR: 0,
-    hydeUsed: false,
     cosineDedupUsed: false,
     tier: "L0",
   };
@@ -194,26 +148,11 @@ export async function combinedSearch(query, options = {}) {
   if (cfg.after) temporal.after = cfg.after instanceof Date ? cfg.after : new Date(cfg.after);
   if (cfg.before) temporal.before = cfg.before instanceof Date ? cfg.before : new Date(cfg.before);
 
-  // Step 1: HyDE query expansion
-  let rawQuery = query;
-  let expandedQuery = query;
-
-  if (hydeEnabled && await isOllamaReachable(hydeEndpoint)) {
-    const expanded = await hydeExpand(query, hydeEndpoint, hydeModel);
-    if (expanded) {
-      expandedQuery = expanded;
-      trajectory.hydeUsed = true;
-    }
-  }
-
-  // Step 2: Fan-out to all engines
+  // Step 1: Fan-out to all engines (qmd `query` mode handles expansion internally)
   const enginePromises = engines.map(engine => {
-    const engineQuery = engine.queryType === "expanded" ? expandedQuery
-      : engine.queryType === "raw" ? rawQuery
-      : rawQuery; // "both" — could pass both, but raw is fine as default
 
     const start = performance.now();
-    return engine.search(engineQuery, {
+    return engine.search(query, {
       maxResults,
       after: temporal.after,
       before: temporal.before,
@@ -255,7 +194,7 @@ export async function combinedSearch(query, options = {}) {
   merged = deduplicateResults(merged);
 
   // Step 6: Cosine dedup (Level 4)
-  const cosineResult = applyCosineDedup(merged);
+  const cosineResult = await applyCosineDedup(merged);
   merged = cosineResult.results;
   trajectory.cosineDedupUsed = cosineResult.cosineDedupUsed;
   trajectory.afterDedup = merged.length;

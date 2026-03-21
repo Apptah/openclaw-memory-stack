@@ -557,6 +557,11 @@ if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
   elif [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]]; then
     cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
   fi
+  # Copy lib/ modules (engines, pipeline, graph, etc.)
+  if [[ -d "$SCRIPT_DIR/plugin/lib" ]]; then
+    rm -rf "$EXT_DIR/lib"
+    cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/lib"
+  fi
   ok "Plugin files → $EXT_DIR"
 
   # 2. Register in openclaw.json (matching native openclaw plugins install format)
@@ -597,14 +602,22 @@ entries['openclaw-memory-stack'] = {
 # installs — required by OpenClaw plugin validator
 installs = plugins.setdefault('installs', {})
 now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+pkg_version = '0.1.3'
+try:
+    import os
+    pkg_json = os.path.join('$SCRIPT_DIR', 'plugin', 'package.json')
+    with open(pkg_json) as pf:
+        pkg_version = json.load(pf).get('version', pkg_version)
+except:
+    pass
 installs['openclaw-memory-stack'] = {
     'source': 'path',
     'spec': ext_dir,
     'installPath': ext_dir,
-    'version': '0.1.0',
+    'version': pkg_version,
     'resolvedName': 'openclaw-memory-stack',
-    'resolvedVersion': '0.1.0',
-    'resolvedSpec': 'openclaw-memory-stack@0.1.0',
+    'resolvedVersion': pkg_version,
+    'resolvedSpec': f'openclaw-memory-stack@{pkg_version}',
     'installedAt': now
 }
 

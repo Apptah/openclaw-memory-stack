@@ -195,6 +195,78 @@ export function detectCommunities(graph) {
   return sorted;
 }
 
+// ─── A-MEM Entity Linking (Phase 3, Step 3.6) ───────────────────
+
+/**
+ * A-MEM style entity linking after extraction.
+ * Queries existing entities and creates RELATES or SUPERSEDES edges
+ * when newly extracted entities overlap with the existing graph.
+ *
+ * @param {Object} newExtraction - { entities: Map, edges: Array } from extractEntities()
+ * @param {Object} existingGraph - { entities: {}, edges: [] } from loadGraph()
+ * @returns {Array} newEdges - edges to add to the graph
+ */
+export function amemLink(newExtraction, existingGraph) {
+  const newEdges = [];
+
+  for (const [name, entity] of newExtraction.entities) {
+    // Check if entity already exists in graph
+    const existing = existingGraph.entities[name];
+    if (!existing) continue;
+
+    // Find edges involving this entity in new extraction
+    const newContextEdges = newExtraction.edges.filter(
+      e => e.from === name || e.to === name
+    );
+    // Find edges involving this entity in existing graph
+    const existingContextEdges = existingGraph.edges.filter(
+      e => e.from === name || e.to === name
+    );
+
+    for (const newEdge of newContextEdges) {
+      for (const existingEdge of existingContextEdges) {
+        // Same entity pair, different context -> RELATES
+        if (
+          sameEntityPair(newEdge, existingEdge) &&
+          newEdge.context !== existingEdge.context
+        ) {
+          newEdges.push({
+            from: name,
+            to: otherEntity(newEdge, name),
+            type: "RELATES",
+            context: `New: ${newEdge.context} | Prior: ${existingEdge.context}`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    // Check for type evolution (entity type changed -> SUPERSEDES)
+    if (existing.type && entity.type && existing.type !== entity.type) {
+      newEdges.push({
+        from: name,
+        to: name,
+        type: "SUPERSEDES",
+        context: `Type changed: ${existing.type} \u2192 ${entity.type}`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  return newEdges;
+}
+
+function sameEntityPair(e1, e2) {
+  return (
+    (e1.from === e2.from && e1.to === e2.to) ||
+    (e1.from === e2.to && e1.to === e2.from)
+  );
+}
+
+function otherEntity(edge, name) {
+  return edge.from === name ? edge.to : edge.from;
+}
+
 // ─── PageRank (Gap 9) ────────────────────────────────────────────
 
 export function rankByPageRank(graph, iterations = 20, damping = 0.85) {

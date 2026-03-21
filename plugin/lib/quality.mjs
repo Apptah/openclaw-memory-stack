@@ -1,7 +1,7 @@
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { WORKSPACE, findQmdBin } from "./constants.mjs";
+import { createHash } from "node:crypto";
+import { WORKSPACE } from "./constants.mjs";
 
 // ─── Memory Health Analysis ──────────────────────────────────────
 
@@ -50,32 +50,52 @@ export function analyzeMemoryHealth() {
   return issues;
 }
 
-// ─── Cosine Deduplication (Gap 6) ────────────────────────────────
+// ─── Embedding Cache (Phase 3, Step 3.5) ─────────────────────────
 
-let qmdEmbedAvailable = null;
+const CACHE_MAX = 100;
+const embeddingCache = new Map();
 
-function checkQmdEmbed() {
-  if (qmdEmbedAvailable !== null) return qmdEmbedAvailable;
-  const bin = findQmdBin();
-  if (!bin) { qmdEmbedAvailable = false; return false; }
-  try {
-    execSync(`"${bin}" embed --text "test" --json 2>/dev/null`, { encoding: "utf-8", timeout: 5000 });
-    qmdEmbedAvailable = true;
-  } catch {
-    qmdEmbedAvailable = false;
+function cacheKey(text) {
+  return createHash("sha256").update(text.trim().toLowerCase()).digest("hex");
+}
+
+/**
+ * Get an embedding vector with LRU caching.
+ * Uses the LLM provider chain (llm.mjs) instead of qmd shell-outs.
+ * Returns null if no LLM provider is available.
+ */
+export async function getEmbedding(text) {
+  const key = cacheKey(text);
+  if (embeddingCache.has(key)) {
+    // Move to end (LRU refresh)
+    const val = embeddingCache.get(key);
+    embeddingCache.delete(key);
+    embeddingCache.set(key, val);
+    return val;
   }
-  return qmdEmbedAvailable;
+
+  // Try llmEmbed from provider chain
+  const { llmEmbed, llmAvailable } = await import("./llm.mjs");
+  if (!(await llmAvailable())) return null;
+
+  const embedding = await llmEmbed(text);
+  if (!embedding) return null;
+
+  // Evict oldest if full
+  if (embeddingCache.size >= CACHE_MAX) {
+    const oldest = embeddingCache.keys().next().value;
+    embeddingCache.delete(oldest);
+  }
+  embeddingCache.set(key, embedding);
+  return embedding;
 }
 
-function getEmbedding(text) {
-  const bin = findQmdBin();
-  if (!bin) return null;
-  try {
-    const result = execSync(`"${bin}" embed --text "${text.replace(/"/g, '\\"').slice(0, 500)}" --json 2>/dev/null`, { encoding: "utf-8", timeout: 5000 });
-    const data = JSON.parse(result);
-    return data.embedding || data.vector || null;
-  } catch { return null; }
+/** Exposed for testing — returns current cache size. */
+export function embeddingCacheSize() {
+  return embeddingCache.size;
 }
+
+// ─── Cosine Similarity ──────────────────────────────────────────
 
 function cosineSimilarity(a, b) {
   if (!a || !b || a.length !== b.length) return 0;
@@ -94,7 +114,7 @@ function cosineSimilarity(a, b) {
  * Level 1: Exact content key (first 80 chars lowercase)
  * Level 2: Normalized text (lowercase, strip punctuation, collapse whitespace)
  * Level 3: Substring overlap > 80% of shorter string
- * Level 4: Cosine similarity > 0.9 via QMD embedding (if available)
+ * Level 4: Cosine similarity > 0.9 via LLM embedding (if available)
  */
 export function deduplicateResults(results) {
   if (results.length <= 1) return results;
@@ -159,10 +179,20 @@ export function deduplicateResults(results) {
 
 /**
  * Apply cosine dedup as a separate pass (Level 4).
+ * Uses the LLM provider chain embedding cache instead of qmd shell-outs.
+ * When no LLM is available, skips cosine dedup entirely
+ * (the 3 other dedup levels still catch most duplicates).
+ *
  * Returns { results, cosineDedupUsed }.
  */
-export function applyCosineDedup(results) {
-  if (!checkQmdEmbed() || results.length <= 1) {
+export async function applyCosineDedup(results) {
+  if (results.length <= 1) {
+    return { results, cosineDedupUsed: false };
+  }
+
+  // Check if LLM embedding is available
+  const { llmAvailable } = await import("./llm.mjs");
+  if (!(await llmAvailable())) {
     return { results, cosineDedupUsed: false };
   }
 
@@ -170,7 +200,7 @@ export function applyCosineDedup(results) {
   const kept = [];
 
   for (const result of results.slice(0, 50)) {
-    const embedding = getEmbedding(result.content);
+    const embedding = await getEmbedding(result.content);
     if (!embedding) { kept.push(result); continue; }
 
     let isDuplicate = false;

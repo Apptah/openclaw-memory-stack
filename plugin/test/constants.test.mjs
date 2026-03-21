@@ -19,7 +19,8 @@ describe("constants", () => {
   });
 
   it("DEFAULT_CONFIG has expected keys and values", () => {
-    assert.equal(DEFAULT_CONFIG.hyde, true);
+    assert.equal(DEFAULT_CONFIG.llmEndpoint, "https://api.openai.com/v1");
+    assert.equal(DEFAULT_CONFIG.llmModel, "gpt-4o-mini");
     assert.equal(DEFAULT_CONFIG.autoOrganize, false);
     assert.equal(DEFAULT_CONFIG.losslessEnabled, true);
     assert.equal(DEFAULT_CONFIG.graphDepth, 2);
