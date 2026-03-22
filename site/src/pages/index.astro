@@ -545,12 +545,12 @@ import Layout from "../layouts/Layout.astro";
   </nav>
 
   <div class="hero">
-    <div class="badge">v2 — Official OpenClaw Plugin</div>
-    <h1>Remember more.<br/><span class="glow">Spend less.</span></h1>
+    <div class="badge">v0.1.3 — Official OpenClaw Plugin</div>
+    <h1>Total recall.<br/><span class="glow">90% fewer tokens.</span></h1>
     <p class="subtitle">
-      Your <strong>OpenClaw</strong> agent forgets old decisions and wastes tokens re-reading the same context.
-      Memory Stack fixes both — smarter memory that uses up to 90% fewer tokens per search.
-      Your agent remembers everything. Your API bill stays low.
+      Your agent forgets past decisions and burns tokens re-reading the same context.
+      Memory Stack runs 5 search engines locally, returns only what matters, and never loses a fact.
+      Bring your own API key to unlock LLM-powered fact extraction for the complete experience.
     </p>
     <button class="hero-cta" id="buy-btn">
       Get Memory Stack
@@ -575,11 +575,11 @@ import Layout from "../layouts/Layout.astro";
         <div>&nbsp;</div>
         <div><span class="comment"># Restart OpenClaw — memory is now active</span></div>
         <div><span class="prompt">$</span> <span class="cmd">openclaw gateway restart</span></div>
-        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+rescue+graph)</span></div>
+        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+memorymd+rescue+lossless)</span></div>
         <div>&nbsp;</div>
         <div><span class="comment"># Just talk — memory works in the background</span></div>
         <div><span class="output">  You: What did we decide about the API design?</span></div>
-        <div><span class="success">  [memory] 6 engines searched, 4 results merged (RRF fusion)</span></div>
+        <div><span class="success">  [memory] 5 engines searched → RRF fusion → L0 tier (~98 tokens)</span></div>
         <div><span class="output">  Agent: We decided to use REST with /api/v2/...</span></div>
       </div>
     </div>
@@ -587,46 +587,46 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="section" id="features">
     <div class="section-label">// why memory stack</div>
-    <h2>Better memory. Lower bills.</h2>
-    <p class="section-desc">Every wasted token is money out of your pocket. Memory Stack cuts the waste.</p>
+    <h2>Less tokens. More memory. Faster answers.</h2>
+    <p class="section-desc">Every wasted token is money burned. Memory Stack eliminates the waste.</p>
     <div class="features">
       <div class="feature-card">
-        <div class="feature-icon">&#x1F517;</div>
-        <h3>Knowledge Graph</h3>
-        <p>Native memory does flat text search — so your agent re-reads everything to find connections. Memory Stack builds a knowledge graph locally. Ask "what depends on service X?" and get the answer instantly, without burning tokens on irrelevant context.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F9E0;</div>
-        <h3>Self-Evolving Memory</h3>
-        <p>Messy memory = wasted tokens. When 5 scattered notes say the same thing, your AI reads all 5 and you pay for all 5. Memory Stack merges them into one clear entry. Cleaner memory, lower cost, better answers.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F6E1;</div>
-        <h3>Compaction Rescue</h3>
-        <p>When your agent forgets a decision, you explain it again. That costs tokens. Memory Stack saves key facts before compression and brings them back automatically — so you never pay to re-explain the same thing twice.</p>
+        <div class="feature-icon">&#x1F4A1;</div>
+        <h3>3-Tier Token Control</h3>
+        <p>Native memory dumps full text every time. Memory Stack gives you three tiers: L0 auto-recall at ~100 tokens, L1 summaries at ~800, L2 full content on demand. 90% fewer tokens per search — your agent gets exactly what it needs, nothing more.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F50D;</div>
-        <h3>6-Engine Search</h3>
-        <p>Native memory searches one way and hopes for the best. Memory Stack runs 6 engines and picks the best results across all of them. Finds the right memory on the first try — instead of your agent guessing and wasting tokens on wrong context.</p>
+        <h3>5-Engine Rank Fusion</h3>
+        <p>One search fires 5 engines in parallel — FTS5, QMD semantic search, markdown, rescue database, and lossless DAG. Results merge via Reciprocal Rank Fusion + MMR diversity reranking. Right answer on the first try. No wasted tokens chasing wrong context.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F6E1;</div>
+        <h3>Never Forget a Decision</h3>
+        <p>When conversations get long, compression eats old messages. Memory Stack extracts key facts — decisions, deadlines, requirements — into a dedicated SQLite store before they disappear. Your agent recalls them instantly instead of you re-explaining. Zero wasted tokens.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F517;</div>
+        <h3>Knowledge Graph</h3>
+        <p>Flat text search forces your agent to re-read everything to find connections. Memory Stack builds a local knowledge graph — multi-hop BFS, evolution chains, PageRank, community detection. "What depends on X?" answered in one hop, not ten re-reads.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
-        <h3>Memory Health</h3>
-        <p>Duplicates and junk in your memory cost real money every time your AI reads them. Memory Health scores your memory 0-100, shows exactly what's wasting tokens, and helps you clean it up. Think of it as a bill audit for your AI.</p>
+        <h3>Self-Cleaning Memory</h3>
+        <p>Duplicates and junk cost real money every time your agent reads them. 4-level deduplication (exact, normalized, substring, cosine) runs automatically. Health score 0-100 shows exactly what's wasting tokens. Your memory stays lean, your bill stays flat.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x26A1;</div>
-        <h3>Zero Config, Zero API Keys</h3>
-        <p>No paid embedding providers. No API keys. Three local AI models handle everything on your machine. The $49 you pay is the last dollar you spend — no recurring costs, no per-query charges, no surprises on your bill.</p>
+        <h3>Bring Your Key. Unlock Full Power.</h3>
+        <p>Core search runs offline out of the box. Add any LLM API key — OpenAI, Anthropic, Ollama, MLX, or any OpenAI-compatible endpoint — and Memory Stack auto-detects it. LLM-powered fact extraction kicks in: every conversation produces structured decisions, deadlines, and entities stored permanently. A few cents per session saves dollars of wasted tokens. Your key, your choice of provider.</p>
       </div>
     </div>
   </div>
 
   <div class="section" id="how">
     <div class="section-label">// how it works</div>
-    <h2>Install once. Save on every conversation.</h2>
-    <p class="section-desc">Memory Stack plugs into OpenClaw as a native memory provider. Starts saving tokens immediately.</p>
+    <h2>Install once. Every conversation gets cheaper.</h2>
+    <p class="section-desc">One command installs it as OpenClaw's memory provider. Token savings start immediately.</p>
     <div class="routing-grid">
       <div class="route-item">
         <div>
@@ -663,17 +663,17 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="section" id="compare">
     <div class="section-label">// vs native memory</div>
-    <h2>Side by side. Plain and simple.</h2>
-    <p class="section-desc">Same agent, same conversations. One remembers more, uses fewer tokens, and finds things faster.</p>
+    <h2>Same agent. Fewer tokens. Better recall.</h2>
+    <p class="section-desc">Same conversations. One remembers everything at 10% of the token cost.</p>
 
     <div class="compare-header-cards">
       <div class="compare-stat">
-        <div class="compare-stat-number">6</div>
+        <div class="compare-stat-number">5</div>
         <div class="compare-stat-label">search engines<br/><span>vs native's 2</span></div>
       </div>
       <div class="compare-stat">
         <div class="compare-stat-number">3</div>
-        <div class="compare-stat-label">local AI models<br/><span>vs native's 0</span></div>
+        <div class="compare-stat-label">output tiers<br/><span>L0 ~100 / L1 ~800 / L2 full</span></div>
       </div>
       <div class="compare-stat">
         <div class="compare-stat-number">90%</div>
@@ -705,7 +705,7 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>Does it understand how things connect?</td>
             <td class="no">No. It searches text, not relationships.</td>
-            <td class="yes">Yes. A knowledge graph tracks who, what, and how they relate.</td>
+            <td class="yes">Yes. A SQLite-backed knowledge graph links people, tools, and decisions — with instant lookups.</td>
           </tr>
           <tr>
             <td>Can it trace how a decision evolved?</td>
@@ -734,17 +734,17 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>How many search methods run per query?</td>
             <td class="partial">2 (keyword + vector)</td>
-            <td class="yes">6 engines, results merged by rank fusion (RRF).</td>
+            <td class="yes">5 engines, merged by Reciprocal Rank Fusion with per-engine weights.</td>
           </tr>
           <tr>
             <td>Does it understand what you meant, not just what you typed?</td>
             <td class="no">Basic keyword matching.</td>
-            <td class="yes">AI query expansion rewrites your question using a local 1.7B model before searching.</td>
+            <td class="yes">QMD query mode expands your question locally before searching — no API call needed.</td>
           </tr>
           <tr>
             <td>Can it search across past conversations?</td>
             <td class="partial">Limited.</td>
-            <td class="yes">Full session search across all past conversations.</td>
+            <td class="yes">SQLite-backed graph and rescue stores — finds facts across all conversations instantly.</td>
           </tr>
           <tr>
             <td>Can you check if your memory is healthy?</td>
@@ -752,9 +752,14 @@ import Layout from "../layouts/Layout.astro";
             <td class="yes">Quality score 0-100. Shows duplicates, stale entries, noise.</td>
           </tr>
           <tr>
+            <td>How much context does each recall use?</td>
+            <td class="no">Full text every time. No control over token usage.</td>
+            <td class="yes">Tiered output: L0 auto-recall uses ~100 tokens. L1 summaries ~800. Full text only on demand.</td>
+          </tr>
+          <tr>
             <td>Does it need API keys or cloud services?</td>
             <td class="no">Vector search needs an embedding provider.</td>
-            <td class="yes">Nothing. Three local AI models handle everything offline.</td>
+            <td class="yes">Core search runs offline. Bring your own LLM key (OpenAI, Anthropic, Ollama, MLX — any provider) to unlock structured fact extraction from every conversation. Full experience with your key.</td>
           </tr>
         </tbody>
       </table>
@@ -780,11 +785,11 @@ import Layout from "../layouts/Layout.astro";
     <div class="faq-list">
       <details class="faq-item">
         <summary>What is OpenClaw Memory Stack?</summary>
-        <p>Memory Stack is a plugin for <strong>OpenClaw</strong> that replaces the built-in memory system with a smarter one. It runs 6 search engines on every query, builds a knowledge graph from your conversations, and rescues important decisions before they get lost to context compression. It runs 100% locally — no API keys, no cloud services.</p>
+        <p>A drop-in <strong>OpenClaw</strong> plugin that replaces built-in memory. 5 search engines with rank fusion, a knowledge graph with PageRank, and 3-tier token control (L0 ~100 tokens, L1 ~800, L2 full). Your agent recalls more while using 90% fewer tokens. Runs fully offline — no setup, no API key, no cloud.</p>
       </details>
       <details class="faq-item">
         <summary>How does it improve OpenClaw's memory?</summary>
-        <p>OpenClaw's native memory uses 2 search engines (keyword + vector). Memory Stack uses 6, merged with rank fusion. It adds a 1.7B AI model that rewrites your questions before searching, and a 0.6B model that reranks results. It also saves key facts before context compression happens — so hour-long conversations don't lose early decisions.</p>
+        <p>5 engines fire in parallel with automatic fallback. Results merge via Reciprocal Rank Fusion + MMR diversity reranking. Decisions and relationships live in a SQLite-backed knowledge graph with multi-hop traversal. Tiered output (L0/L1/L2) controls exactly how many tokens each recall costs. Add your own LLM key (OpenAI, Anthropic, Ollama, MLX, or any compatible provider) and every conversation gets structured fact extraction — the complete Memory Stack experience.</p>
       </details>
       <details class="faq-item">
         <summary>Does it work with OpenClaw's Telegram integration?</summary>
@@ -792,15 +797,15 @@ import Layout from "../layouts/Layout.astro";
       </details>
       <details class="faq-item">
         <summary>Does it need an internet connection?</summary>
-        <p>No. All 3 AI models (query expansion, reranking, embeddings) run locally on your machine. No data ever leaves your computer. No API keys to manage. Works completely offline after installation.</p>
+        <p>All 5 engines, rank fusion, 4-level dedup, and the knowledge graph run locally. No data leaves your machine. For the complete experience, add your own LLM key — supports OpenAI, Anthropic, Ollama, MLX, and any OpenAI-compatible endpoint. Memory Stack auto-detects your provider at startup. Without a key, core search and graph still work fully offline.</p>
       </details>
       <details class="faq-item">
         <summary>How does it save money on API costs?</summary>
-        <p>Every token your AI reads costs money. Memory Stack cuts that three ways: (1) It loads a short summary first and only fetches the full text when needed — up to 90% fewer tokens per search. (2) It removes duplicate results so you don't pay for the same information twice. (3) It automatically merges similar memories over time, so your memory stays lean instead of growing into an expensive mess.</p>
+        <p>Every token your AI reads costs money. Memory Stack cuts that three ways: (1) Tiered output — auto-recall uses L0 at ~100 tokens, tool searches use L1 at ~800 tokens, full text only loads on demand. Up to 90% fewer tokens per search. (2) It removes duplicate results so you don't pay for the same information twice. (3) Lossless DAG summarization compresses memory hierarchically — your agent drills down only when it needs detail.</p>
       </details>
       <details class="faq-item">
         <summary>What is compaction rescue?</summary>
-        <p>When OpenClaw conversations get long, the system compresses old messages to fit the context window. Important decisions can get lost in this process. Memory Stack's rescue engine extracts key facts (decisions, deadlines, architecture choices) before compression happens, and automatically brings them back when relevant.</p>
+        <p>When OpenClaw conversations get long, the system compresses old messages to fit the context window. Important decisions can get lost in this process. Memory Stack's rescue engine stores key facts (decisions, deadlines, architecture choices) in a dedicated database before compression happens, and retrieves them instantly when relevant — zero wasted tokens re-explaining things.</p>
       </details>
       <details class="faq-item">
         <summary>Is it a subscription?</summary>
@@ -816,7 +821,7 @@ import Layout from "../layouts/Layout.astro";
   <div class="disclaimers-section">
     <ul class="disclaimers">
       <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
-      <li><strong>No embedding setup.</strong> 3 local AI models (1.7B + 0.6B + 300M) handle search, ranking, and embeddings — no API key needed.</li>
+      <li><strong>Bring your own LLM.</strong> Supports OpenAI, Anthropic, Ollama, MLX — any provider. Auto-detected. Core search works offline; add a key for complete fact extraction.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
       <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
       <li><strong>Free updates.</strong> Bug fixes within your version are automatic. Just run one command when prompted.</li>
