@@ -472,11 +472,24 @@ if [ "$RULE_ID" = "hybrid_search" ] || [ "$HINT" = "hybrid" ]; then
   ROUTER_DURATION=$(( ROUTER_END - ROUTER_START ))
 
   # Extract fields from fusion result
-  fusion_status=$(echo "$FUSION_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','error'))" 2>/dev/null || echo "error")
-  fusion_results=$(echo "$FUSION_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get('results',[])))" 2>/dev/null || echo "[]")
-  fusion_count=$(echo "$FUSION_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result_count',0))" 2>/dev/null || echo "0")
-  fusion_relevance=$(echo "$FUSION_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('normalized_relevance',0.0))" 2>/dev/null || echo "0.0")
-  fusion_duration=$(echo "$FUSION_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('backend_duration_ms',0))" 2>/dev/null || echo "0")
+  # Extract all fusion fields in one python3 call
+  _fusion_parsed=$(echo "$FUSION_RESULT" | python3 -c "
+import json,sys
+try:
+  d=json.load(sys.stdin)
+  print(d.get('status','error'))
+  print(json.dumps(d.get('results',[])))
+  print(d.get('result_count',0))
+  print(d.get('normalized_relevance',0.0))
+  print(d.get('backend_duration_ms',0))
+except:
+  print('error'); print('[]'); print('0'); print('0.0'); print('0')
+" 2>/dev/null || printf 'error\n[]\n0\n0.0\n0')
+  fusion_status=$(echo "$_fusion_parsed" | sed -n '1p')
+  fusion_results=$(echo "$_fusion_parsed" | sed -n '2p')
+  fusion_count=$(echo "$_fusion_parsed" | sed -n '3p')
+  fusion_relevance=$(echo "$_fusion_parsed" | sed -n '4p')
+  fusion_duration=$(echo "$_fusion_parsed" | sed -n '5p')
 
   escaped_query=$(json_escape "$QUERY")
   log_event "SUCCESS" "rule=hybrid_search backend=qmd(rrf) relevance=$fusion_relevance"
@@ -555,11 +568,22 @@ for i in "${!BACKEND_LIST[@]}"; do
   dispatch_end_ms=$(now_ms)
   dispatch_latency=$(( dispatch_end_ms - dispatch_start_ms ))
 
-  # Extract status and relevance
-  status=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','error'))" 2>/dev/null || echo "error")
-  relevance=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('normalized_relevance',0.0))" 2>/dev/null || echo "0.0")
-  duration=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('backend_duration_ms',0))" 2>/dev/null || echo "0")
-  result_count=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result_count',0))" 2>/dev/null || echo "0")
+  # Extract status, relevance, duration, count in one python3 call
+  _parsed=$(echo "$result" | python3 -c "
+import json,sys
+try:
+  d=json.load(sys.stdin)
+  print(d.get('status','error'))
+  print(d.get('normalized_relevance',0.0))
+  print(d.get('backend_duration_ms',0))
+  print(d.get('result_count',0))
+except:
+  print('error'); print('0.0'); print('0'); print('0')
+" 2>/dev/null || printf 'error\n0.0\n0\n0')
+  status=$(echo "$_parsed" | sed -n '1p')
+  relevance=$(echo "$_parsed" | sed -n '2p')
+  duration=$(echo "$_parsed" | sed -n '3p')
+  result_count=$(echo "$_parsed" | sed -n '4p')
 
   # Record dispatch/fallback step in trajectory
   if $TRAJECTORY_ENABLED; then
@@ -573,17 +597,20 @@ for i in "${!BACKEND_LIST[@]}"; do
     fi
   fi
 
-  # Track best result
-  is_better=$(python3 -c "print('yes' if float('$relevance') > float('$BEST_RELEVANCE') else 'no')" 2>/dev/null || echo "no")
+  # Track best result + check if good enough (single python3 call)
+  _cmp=$(python3 -c "
+r,br,ft,st=float('$relevance'),float('$BEST_RELEVANCE'),float('$FALLBACK_THRESHOLD'),'$status'
+print('yes' if r>br else 'no')
+print('yes' if r>=ft and st=='success' else 'no')
+" 2>/dev/null || printf 'no\nno')
+  is_better=$(echo "$_cmp" | sed -n '1p')
+  is_good=$(echo "$_cmp" | sed -n '2p')
   if [ "$is_better" = "yes" ]; then
     BEST_RESULT="$result"
     BEST_RELEVANCE="$relevance"
     BEST_BACKEND="$backend"
     BEST_DURATION="$duration"
   fi
-
-  # Check if good enough
-  is_good=$(python3 -c "print('yes' if float('$relevance') >= float('$FALLBACK_THRESHOLD') and '$status' == 'success' else 'no')" 2>/dev/null || echo "no")
 
   if [ "$is_good" = "yes" ]; then
     break
@@ -608,15 +635,13 @@ escaped_query=$(json_escape "$QUERY")
 chain_json=$(printf '"%s",' "${BACKEND_LIST[@]}" | sed 's/,$//')
 
 # Determine final status
-FINAL_STATUS="success"
 if [ -z "$BEST_RESULT" ]; then
   FINAL_STATUS="error"
-elif python3 -c "exit(0 if float('$BEST_RELEVANCE') >= float('$FALLBACK_THRESHOLD') else 1)" 2>/dev/null; then
-  FINAL_STATUS="success"
-elif python3 -c "exit(0 if float('$BEST_RELEVANCE') > 0 else 1)" 2>/dev/null; then
-  FINAL_STATUS="partial"
 else
-  FINAL_STATUS="empty"
+  FINAL_STATUS=$(python3 -c "
+r,t=float('$BEST_RELEVANCE'),float('$FALLBACK_THRESHOLD')
+print('success' if r>=t else 'partial' if r>0 else 'empty')
+" 2>/dev/null || echo "error")
 fi
 
 # Extract results from best backend response
