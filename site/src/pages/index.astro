@@ -590,7 +590,7 @@ import Layout from "../layouts/Layout.astro";
         <div>&nbsp;</div>
         <div><span class="comment"># Done. Just talk — memory works in the background</span></div>
         <div><span class="output">  You: What did we decide about the API design?</span></div>
-        <div><span class="success">  [memory] 6 engines searched → RRF fusion → L0 tier (~98 tokens)</span></div>
+        <div><span class="success">  [memory] 5 engines searched → fused → T1 tier (~98 tokens)</span></div>
         <div><span class="output">  Agent: We decided to use REST with /api/v2/...</span></div>
         <div>&nbsp;</div>
         <div><span class="comment"># Updates are automatic — no action needed</span></div>
@@ -611,18 +611,18 @@ import Layout from "../layouts/Layout.astro";
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F50D;</div>
-        <h3>5-Engine Rank Fusion</h3>
-        <p>One search fires 5 engines in parallel — FTS5, QMD semantic search, markdown, rescue database, and lossless DAG. Results merge via Reciprocal Rank Fusion + MMR diversity reranking. Right answer on the first try. No wasted tokens chasing wrong context.</p>
+        <h3>5-Engine Search Fusion</h3>
+        <p>One search fires 5 engines in parallel — full-text, semantic, markdown, fact store, and compressed history. Results merge with rank fusion and diversity reranking. Right answer on the first try. No wasted tokens chasing wrong context.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F6E1;</div>
         <h3>Never Forget a Decision</h3>
-        <p>When conversations get long, compression eats old messages. Memory Stack extracts key facts — decisions, deadlines, requirements — into a dedicated SQLite store before they disappear. Your agent recalls them instantly instead of you re-explaining. Zero wasted tokens.</p>
+        <p>When conversations get long, compression eats old messages. Memory Stack extracts key facts — decisions, deadlines, requirements — into a dedicated store before they disappear. Your agent recalls them instantly instead of you re-explaining. Zero wasted tokens.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F517;</div>
-        <h3>Knowledge Graph</h3>
-        <p>Flat text search forces your agent to re-read everything to find connections. Memory Stack builds a local knowledge graph — multi-hop BFS, evolution chains, PageRank, community detection. "What depends on X?" answered in one hop, not ten re-reads.</p>
+        <h3>Entity Tracking</h3>
+        <p>Flat text search forces your agent to re-read everything to find connections. Memory Stack automatically tracks entities and their relationships — who changed what, what depends on what, how things evolved. Queryable on demand, not buried in old conversations.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
@@ -657,7 +657,7 @@ import Layout from "../layouts/Layout.astro";
       <div class="route-item">
         <div>
           <div class="route-label">Agent responds</div>
-          <div class="route-arrow">&rarr; <span class="route-target">key facts saved to rescue</span></div>
+          <div class="route-arrow">&rarr; <span class="route-target">key facts extracted and saved</span></div>
         </div>
       </div>
       <div class="route-item">
@@ -669,7 +669,7 @@ import Layout from "../layouts/Layout.astro";
       <div class="route-item">
         <div>
           <div class="route-label">You ask about old decisions</div>
-          <div class="route-arrow">&rarr; <span class="route-target">rescue store has them</span></div>
+          <div class="route-arrow">&rarr; <span class="route-target">fact store has them</span></div>
         </div>
       </div>
     </div>
@@ -719,7 +719,7 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>Does it understand how things connect?</td>
             <td class="no">No. It searches text, not relationships.</td>
-            <td class="yes">Yes. A SQLite-backed knowledge graph links people, tools, and decisions — with instant lookups.</td>
+            <td class="yes">Yes. Entity tracking links people, tools, and decisions — queryable on demand.</td>
           </tr>
           <tr>
             <td>Can it trace how a decision evolved?</td>
@@ -748,17 +748,17 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>How many search methods run per query?</td>
             <td class="partial">2 (keyword + vector)</td>
-            <td class="yes">5 engines, merged by Reciprocal Rank Fusion with per-engine weights.</td>
+            <td class="yes">5 engines, merged with rank fusion and per-engine weights.</td>
           </tr>
           <tr>
             <td>Does it understand what you meant, not just what you typed?</td>
             <td class="no">Basic keyword matching.</td>
-            <td class="yes">QMD query mode expands your question locally before searching — no API call needed.</td>
+            <td class="yes">Query expansion rewrites your question locally before searching — no API call needed.</td>
           </tr>
           <tr>
             <td>Can it search across past conversations?</td>
             <td class="partial">Limited.</td>
-            <td class="yes">SQLite-backed graph and rescue stores — finds facts across all conversations instantly.</td>
+            <td class="yes">Dedicated fact store and entity tracking — finds facts across all conversations instantly.</td>
           </tr>
           <tr>
             <td>Can you check if your memory is healthy?</td>
@@ -797,17 +797,17 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>Find a function name</td>
             <td class="no">Vector search misses exact names</td>
-            <td class="yes">FTS5 keyword search finds it instantly</td>
+            <td class="yes">Full-text keyword search finds it instantly</td>
           </tr>
           <tr>
             <td>Find "how does auth work"</td>
             <td class="partial">Vector search works</td>
-            <td class="yes">QMD semantic search + HyDE expansion</td>
+            <td class="yes">Semantic search with query expansion</td>
           </tr>
           <tr>
             <td>Search across 5 conversations</td>
             <td class="no">Limited to current context</td>
-            <td class="yes">Rescue store + knowledge graph</td>
+            <td class="yes">Fact store + entity tracking</td>
           </tr>
           <tr>
             <td>Control token spend</td>
@@ -822,7 +822,7 @@ import Layout from "../layouts/Layout.astro";
           <tr>
             <td>Track decision evolution</td>
             <td class="no">No history</td>
-            <td class="yes">Evolution chains in knowledge graph</td>
+            <td class="yes">Evolution tracking across conversations</td>
           </tr>
           <tr>
             <td>Check memory quality</td>
@@ -866,11 +866,11 @@ import Layout from "../layouts/Layout.astro";
     <div class="faq-list">
       <details class="faq-item">
         <summary>What is OpenClaw Memory Stack?</summary>
-        <p>A drop-in <strong>OpenClaw</strong> plugin that replaces built-in memory. 5 search engines with rank fusion, a knowledge graph with PageRank, and 3-tier token control (L0 ~100 tokens, L1 ~800, L2 full). Your agent recalls more while using 90% fewer tokens. Runs fully offline — no setup, no API key, no cloud.</p>
+        <p>A drop-in <strong>OpenClaw</strong> plugin that replaces built-in memory. 5 search engines with rank fusion, entity tracking, and 3-tier token control. Your agent recalls more while using up to 90% fewer tokens. Core search and memory run locally — add your own LLM key for enhanced fact extraction.</p>
       </details>
       <details class="faq-item">
         <summary>How does it improve OpenClaw's memory?</summary>
-        <p>5 engines fire in parallel with automatic fallback. Results merge via Reciprocal Rank Fusion + MMR diversity reranking. Decisions and relationships live in a SQLite-backed knowledge graph with multi-hop traversal. Tiered output (L0/L1/L2) controls exactly how many tokens each recall costs. Add your own LLM key (OpenAI, Anthropic, Ollama, MLX, or any compatible provider) and every conversation gets structured fact extraction — the complete Memory Stack experience.</p>
+        <p>5 engines fire in parallel with automatic fallback. Results merge with rank fusion and diversity reranking. Entities and relationships are tracked automatically and queryable on demand. Tiered output controls exactly how many tokens each recall costs. Add your own LLM key (OpenAI, Anthropic, Ollama, MLX, or any compatible provider) for structured fact extraction — the complete Memory Stack experience.</p>
       </details>
       <details class="faq-item">
         <summary>Does it work with OpenClaw's Telegram integration?</summary>
@@ -878,15 +878,15 @@ import Layout from "../layouts/Layout.astro";
       </details>
       <details class="faq-item">
         <summary>Does it need an internet connection?</summary>
-        <p>All 5 engines, rank fusion, 4-level dedup, and the knowledge graph run locally. No data leaves your machine. For the complete experience, add your own LLM key — supports OpenAI, Anthropic, Ollama, MLX, and any OpenAI-compatible endpoint. Memory Stack auto-detects your provider at startup. Without a key, core search and graph still work fully offline.</p>
+        <p>Core search, rank fusion, deduplication, and entity tracking all run locally. No data leaves your machine. For enhanced fact extraction, add your own LLM key — supports OpenAI, Anthropic, Ollama, MLX, and any compatible endpoint. Auto-detected at startup. Without a key, core search still works fully offline. Update checks run in the background and fail silently.</p>
       </details>
       <details class="faq-item">
         <summary>How does it save money on API costs?</summary>
-        <p>Every token your AI reads costs money. Memory Stack cuts that three ways: (1) Tiered output — auto-recall uses L0 at ~100 tokens, tool searches use L1 at ~800 tokens, full text only loads on demand. Up to 90% fewer tokens per search. (2) It removes duplicate results so you don't pay for the same information twice. (3) Lossless DAG summarization compresses memory hierarchically — your agent drills down only when it needs detail.</p>
+        <p>Every token your AI reads costs money. Memory Stack cuts that three ways: (1) Tiered output — auto-recall uses ~100 tokens, on-demand search uses ~800 tokens, full text only loads when requested. Up to 90% fewer tokens per search. (2) Duplicate removal so you don't pay for the same information twice. (3) Compressed history — your agent drills down only when it needs detail.</p>
       </details>
       <details class="faq-item">
-        <summary>What is compaction rescue?</summary>
-        <p>When OpenClaw conversations get long, the system compresses old messages to fit the context window. Important decisions can get lost in this process. Memory Stack's rescue engine stores key facts (decisions, deadlines, architecture choices) in a dedicated database before compression happens, and retrieves them instantly when relevant — zero wasted tokens re-explaining things.</p>
+        <summary>What happens when conversations get compressed?</summary>
+        <p>When OpenClaw conversations get long, the system compresses old messages to fit the context window. Important decisions can get lost in this process. Memory Stack extracts key facts (decisions, deadlines, architecture choices) into a dedicated store before compression happens, and retrieves them instantly when relevant — zero wasted tokens re-explaining things.</p>
       </details>
       <details class="faq-item">
         <summary>Is it a subscription?</summary>
