@@ -499,7 +499,7 @@ NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # version.json
 cat > "$INSTALL_ROOT/version.json" <<JSONEOF
 {
-  "version": "0.1.0",
+  "version": "$VERSION",
   "installed_at": "$NOW"
 }
 JSONEOF

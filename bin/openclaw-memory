@@ -10,7 +10,7 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 ROUTER="$INSTALL_ROOT/skills/memory-router/router.sh"
 
 # Version
-VERSION="0.1.0"
+VERSION="0.1.4"
 
 # Source libraries
 source "$INSTALL_ROOT/lib/platform.sh"
@@ -142,7 +142,7 @@ if [ "${1:-}" = "init" ]; then
 
     echo ""
     echo "Setting up QMD collection: $QMD_COLLECTION"
-    if qmd collection add "$QMD_COLLECTION" --pattern "**/*.{ts,tsx,js,py,swift,rs,go,md}" --path "$GIT_ROOT" 2>/dev/null; then
+    if qmd collection add "$QMD_COLLECTION" --pattern "**/*.{ts,tsx,js,jsx,mjs,py,swift,rs,go,md,sh,json}" --path "$GIT_ROOT" 2>/dev/null; then
       QMD_STATUS="bm25_ready"
       echo "QMD collection created. BM25 search ready."
       echo "Run 'openclaw-memory embed' for vector search (may take a few minutes)."
