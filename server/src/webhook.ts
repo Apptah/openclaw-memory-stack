@@ -89,21 +89,8 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     expirationTtl: 86400,
   });
 
-  // Generate download token
-  const downloadToken = nanoid(32);
-  await env.KV.put(`dl:${downloadToken}`, JSON.stringify({ version }), {
-    expirationTtl: 86400,
-  });
-  const workerUrl = new URL(request.url).origin;
-  const downloadUrl = `${workerUrl}/api/download/${downloadToken}`;
-
-  // Update session KV with download URL
-  await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl }), {
-    expirationTtl: 86400,
-  });
-
   // Send email via Resend (retry once on failure)
-  const siteUrl = "https://openclaw.apptah.com";
+  const siteUrl = "https://openclaw-memory.apptah.com";
   const emailBody = JSON.stringify({
     from: "OpenClaw Memory Stack <noreply@apptah.com>",
     to: [email],
@@ -140,17 +127,13 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
             </td></tr>
           </table>
 
-          <!-- Download Button -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px">
-            <tr><td align="center">
-              <a href="${downloadUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:600;letter-spacing:-0.2px">
-                ⬇️ Download Now
-              </a>
+          <!-- Install Command -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#1a1a2e;border-radius:8px;overflow:hidden">
+            <tr><td style="padding:16px 20px">
+              <p style="margin:0 0 8px;font-size:12px;color:#a0aec0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">📋 Install Command (copy & paste into terminal)</p>
+              <code style="font-size:13px;color:#00e676;word-break:break-all;line-height:1.6">curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=${key}</code>
             </td></tr>
           </table>
-          <p style="margin:0 0 28px;text-align:center;font-size:13px;color:#a0aec0">
-            ⏳ This link expires in <strong style="color:#718096">24 hours</strong>
-          </p>
 
           <!-- Divider -->
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 24px">
@@ -167,7 +150,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
                 <span style="display:inline-block;width:24px;height:24px;background:#ebf5ff;color:#2563eb;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700">1</span>
               </td>
               <td style="padding:10px 0 10px 12px;font-size:14px;color:#4a5568;line-height:1.5">
-                Download and unzip the file
+                Open your terminal and paste the install command above
               </td>
             </tr>
             <tr>
@@ -175,25 +158,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
                 <span style="display:inline-block;width:24px;height:24px;background:#ebf5ff;color:#2563eb;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700">2</span>
               </td>
               <td style="padding:10px 0 10px 12px;font-size:14px;color:#4a5568;line-height:1.5">
-                Run the installer:<br>
-                <code style="display:inline-block;margin-top:4px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:4px;padding:4px 10px;font-size:13px;color:#2d3748">./install.sh --key=${key}</code>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;vertical-align:top;width:32px">
-                <span style="display:inline-block;width:24px;height:24px;background:#ebf5ff;color:#2563eb;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700">3</span>
-              </td>
-              <td style="padding:10px 0 10px 12px;font-size:14px;color:#4a5568;line-height:1.5">
-                Restart OpenClaw:<br>
-                <code style="display:inline-block;margin-top:4px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:4px;padding:4px 10px;font-size:13px;color:#2d3748">openclaw gateway restart</code>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;vertical-align:top;width:32px">
-                <span style="display:inline-block;width:24px;height:24px;background:#ebf5ff;color:#2563eb;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700">4</span>
-              </td>
-              <td style="padding:10px 0 10px 12px;font-size:14px;color:#4a5568;line-height:1.5">
-                That's it — just chat with OpenClaw as usual. Memory Stack works behind the scenes automatically. ✨
+                That's it — OpenClaw restarts automatically. Memory Stack works behind the scenes. ✨
               </td>
             </tr>
           </table>
