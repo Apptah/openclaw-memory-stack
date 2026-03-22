@@ -179,6 +179,10 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
       cp -R "$SCRIPT_DIR/$dir/" "$INSTALL_ROOT/$dir/"
     fi
   done
+  # Ensure qmd-compat shim is executable
+  [[ -f "$INSTALL_ROOT/bin/openclaw-memory-qmd" ]] && chmod +x "$INSTALL_ROOT/bin/openclaw-memory-qmd"
+  # Ensure symlink exists
+  ln -sf "$INSTALL_ROOT/bin/openclaw-memory-qmd" "$BIN_DIR/openclaw-memory-qmd" 2>/dev/null || true
   ok "Files updated"
 
   # Copy plugin
@@ -432,6 +436,7 @@ done
 
 # Make CLI executable
 chmod +x "$INSTALL_ROOT/bin/openclaw-memory"
+chmod +x "$INSTALL_ROOT/bin/openclaw-memory-qmd"
 
 ok "Files installed to $INSTALL_ROOT"
 
@@ -473,7 +478,9 @@ fi
 header "Step 5/6 — Setting up PATH"
 
 ln -sf "$INSTALL_ROOT/bin/openclaw-memory" "$BIN_DIR/openclaw-memory"
+ln -sf "$INSTALL_ROOT/bin/openclaw-memory-qmd" "$BIN_DIR/openclaw-memory-qmd"
 ok "Symlinked: $BIN_DIR/openclaw-memory"
+ok "Symlinked: $BIN_DIR/openclaw-memory-qmd (OpenClaw qmd-compat shim)"
 
 # Check if ~/.openclaw/bin is in PATH
 if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
@@ -598,6 +605,14 @@ entries['openclaw-memory-stack'] = {
         'maxRecallTokens': 1500
     }
 }
+
+# Configure OpenClaw to use memory-stack as the qmd backend
+memory_cfg = config.setdefault('memory', {})
+memory_cfg['backend'] = 'qmd'
+qmd_cfg = memory_cfg.setdefault('qmd', {})
+qmd_cfg['command'] = 'openclaw-memory-qmd'
+qmd_cfg.setdefault('searchMode', 'query')
+qmd_cfg.setdefault('includeDefaultMemory', True)
 
 # installs — required by OpenClaw plugin validator
 installs = plugins.setdefault('installs', {})
