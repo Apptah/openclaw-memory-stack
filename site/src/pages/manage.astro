@@ -133,6 +133,9 @@ import Layout from "../layouts/Layout.astro";
       border: 1px solid rgba(0, 230, 118, 0.3);
       color: var(--green);
       display: block;
+      word-break: break-all;
+      user-select: all;
+      cursor: text;
     }
     footer {
       text-align: center;
@@ -227,7 +230,23 @@ import Layout from "../layouts/Layout.astro";
         });
         const data = await res.json();
         if (data.download_url) {
-          window.location.href = `${API}${data.download_url}`;
+          const installCmd = `curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=${currentKey}`;
+          showStatus(installCmd, "success");
+          // Auto-copy to clipboard (with fallback)
+          try {
+            await navigator.clipboard.writeText(installCmd);
+          } catch {
+            const ta = document.createElement("textarea");
+            ta.value = installCmd;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+          }
+          downloadBtn.textContent = "Copied to clipboard!";
+          setTimeout(() => { downloadBtn.textContent = "Request New Download Link"; }, 3000);
         } else {
           showStatus("Could not generate download link.", "error");
         }
