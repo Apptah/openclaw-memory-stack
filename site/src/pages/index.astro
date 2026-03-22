@@ -553,11 +553,24 @@ import Layout from "../layouts/Layout.astro";
       Memory Stack runs 5 search engines locally, returns only what matters, and never loses a fact.
       Bring your own API key to unlock LLM-powered fact extraction for the complete experience.
     </p>
-    <button class="hero-cta" id="buy-btn">
-      Get Memory Stack
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <span class="hero-price">$49 &mdash; one-time purchase, no subscription</span>
+    <div id="promo-hero" style="display:none">
+      <div style="margin-bottom:1rem">
+        <input type="email" id="promo-email" placeholder="your@email.com" style="padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--fg-bright);font-size:1rem;width:280px;max-width:100%;font-family:var(--font-mono)">
+      </div>
+      <button class="hero-cta" id="claim-btn" style="background:linear-gradient(135deg,#00e676,#00bfa5)">
+        🎁 Get Free — Early Bird
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="hero-price" style="color:#00e676">Free for a limited time — <span id="promo-countdown"></span> left</span>
+      <span class="hero-price" style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem"><s>$49</s> — full Starter license, yours forever</span>
+    </div>
+    <div id="paid-hero">
+      <button class="hero-cta" id="buy-btn">
+        Get Memory Stack
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="hero-price">$49 &mdash; one-time purchase, no subscription</span>
+    </div>
   </div>
 
   <div class="terminal-wrap">
@@ -828,10 +841,18 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="cta-section">
     <div class="cta-box">
-      <div class="price">$49</div>
-      <div class="price-note">One-time. No subscription. Pays for itself in the first week of saved API costs.</div>
+      <div class="price" id="cta-price">$49</div>
+      <div class="price-note" id="cta-note">One-time. No subscription. Pays for itself in the first week of saved API costs.</div>
       <div class="cta-btn-wrap">
-        <button class="hero-cta" id="buy-btn-2">
+        <div id="promo-cta" style="display:none">
+          <input type="email" id="promo-email-2" placeholder="your@email.com" style="padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--fg-bright);font-size:1rem;width:280px;max-width:100%;font-family:var(--font-mono);margin-bottom:0.75rem">
+          <br>
+          <button class="hero-cta" id="claim-btn-2" style="background:linear-gradient(135deg,#00e676,#00bfa5)">
+            🎁 Get Free — Early Bird
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <button class="hero-cta" id="buy-btn-2" style="display:none">
           Get Memory Stack
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -899,6 +920,79 @@ import Layout from "../layouts/Layout.astro";
 
   <script>
     const PAYMENT_LINK = "https://buy.stripe.com/4gM9AT5Qv8go7ni8NueUU00";
+    const API = "https://openclaw-license.busihoward.workers.dev";
+    const PROMO_END = new Date("2026-03-29T23:59:59Z");
+
+    // Check if promo is active
+    const now = new Date();
+    const promoActive = now < PROMO_END;
+
+    if (promoActive) {
+      // Show promo UI, hide paid UI
+      document.getElementById("promo-hero")!.style.display = "block";
+      document.getElementById("paid-hero")!.style.display = "none";
+      document.getElementById("promo-cta")!.style.display = "block";
+      document.getElementById("buy-btn-2")!.style.display = "none";
+      document.getElementById("cta-price")!.innerHTML = '<span style="color:#00e676">Free</span> <s style="font-size:1.5rem;color:var(--muted)">$49</s>';
+      document.getElementById("cta-note")!.textContent = "Early bird — full Starter license, yours forever. No credit card needed.";
+
+      // Countdown
+      function updateCountdown() {
+        const diff = PROMO_END.getTime() - Date.now();
+        if (diff <= 0) { location.reload(); return; }
+        const days = Math.floor(diff / 86400000);
+        const hrs = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const text = days > 0 ? `${days}d ${hrs}h` : `${hrs}h ${mins}m`;
+        document.querySelectorAll("#promo-countdown").forEach(el => el.textContent = text);
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 60000);
+
+      // Claim handler
+      async function handleClaim(emailInputId: string, btn: HTMLElement) {
+        const input = document.getElementById(emailInputId) as HTMLInputElement;
+        const email = input?.value?.trim();
+        if (!email || !email.includes("@")) {
+          alert("Please enter a valid email address.");
+          return;
+        }
+        btn.textContent = "Sending...";
+        (btn as HTMLButtonElement).disabled = true;
+        try {
+          const res = await fetch(`${API}/api/claim-free`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (data.success || data.already_claimed) {
+            btn.textContent = "✅ Check your email!";
+            btn.style.background = "#15803d";
+          } else {
+            btn.textContent = data.error || "Something went wrong";
+            (btn as HTMLButtonElement).disabled = false;
+          }
+        } catch {
+          btn.textContent = "Connection error — try again";
+          (btn as HTMLButtonElement).disabled = false;
+        }
+      }
+
+      document.getElementById("claim-btn")?.addEventListener("click", () => {
+        handleClaim("promo-email", document.getElementById("claim-btn")!);
+      });
+      document.getElementById("claim-btn-2")?.addEventListener("click", () => {
+        handleClaim("promo-email-2", document.getElementById("claim-btn-2")!);
+      });
+    } else {
+      // Promo ended — show paid UI
+      document.getElementById("promo-hero")!.style.display = "none";
+      document.getElementById("paid-hero")!.style.display = "block";
+      document.getElementById("promo-cta")!.style.display = "none";
+      document.getElementById("buy-btn-2")!.style.display = "inline-flex";
+    }
+
     function handleBuy(e: Event) {
       e.preventDefault();
       window.location.href = PAYMENT_LINK;
