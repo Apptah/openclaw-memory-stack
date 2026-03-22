@@ -9,6 +9,7 @@
  */
 
 import { existsSync, readFileSync, writeFileSync, renameSync } from "node:fs";
+import { execFile } from "node:child_process";
 import { resolve } from "node:path";
 
 import { HOME, MEMORY_DB, DEFAULT_CONFIG, findQmdBin } from "./lib/constants.mjs";
@@ -24,6 +25,12 @@ import {
 import { configureLLM } from "./lib/llm.mjs";
 
 // ─── Background update check ─────────────────────────────────────
+
+function atomicWrite(filePath, data) {
+  const tmp = filePath + ".tmp";
+  writeFileSync(tmp, JSON.stringify(data));
+  renameSync(tmp, filePath);
+}
 
 /**
  * Fire-and-forget, never blocks startup. Checks at most once every 24 hours.
@@ -52,32 +59,40 @@ function checkForUpdates(api) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(
-        `https://api.openclaw.apptah.com/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
+        `https://openclaw-license.busihoward.workers.dev/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
         { signal: controller.signal }
       );
       clearTimeout(timer);
 
       if (!res.ok) {
-        const tmp = statePath + ".tmp";
-        writeFileSync(tmp, JSON.stringify({ last_check: Date.now(), latest: null }));
-        renameSync(tmp, statePath);
+        atomicWrite(statePath, { last_check: Date.now(), latest: null });
         return;
       }
 
       const data = await res.json();
 
-      // Atomic write update-state.json
-      const newState = { last_check: Date.now(), latest: data.latest || null };
-      const tmp = statePath + ".tmp";
-      writeFileSync(tmp, JSON.stringify(newState));
-      renameSync(tmp, statePath);
-
-      // Notify if update available
       if (data.update_available) {
-        api.logger.info(
-          `\u{1F504} Memory Stack v${data.latest} available (you have v${version.version})\n` +
-          `   Run: ~/.openclaw/memory-stack/install.sh --upgrade`
-        );
+        // Auto-update: run install.sh --upgrade in background
+        const installSh = resolve(stateDir, "install.sh");
+        if (existsSync(installSh)) {
+          execFile("bash", [installSh, "--upgrade"], {
+            detached: true,
+            stdio: "ignore",
+          }, (err) => {
+            const result = {
+              last_check: Date.now(),
+              latest: data.latest,
+              auto_updated: !err,
+              updated_at: new Date().toISOString(),
+              error: err ? err.message : null,
+            };
+            atomicWrite(statePath, result);
+          }).unref();
+        } else {
+          atomicWrite(statePath, { last_check: Date.now(), latest: data.latest });
+        }
+      } else {
+        atomicWrite(statePath, { last_check: Date.now(), latest: data.latest || null });
       }
     } catch {
       // Silent — never block normal startup
@@ -171,6 +186,19 @@ export default {
 
     // Background update check (fire-and-forget)
     checkForUpdates(api);
+
+    // Post-update notification
+    try {
+      const updateState = resolve(HOME, ".openclaw/memory-stack/update-state.json");
+      if (existsSync(updateState)) {
+        const us = JSON.parse(readFileSync(updateState, "utf8"));
+        if (us.auto_updated === true) {
+          api.logger.info(`\u{2705} Memory Stack auto-updated to v${us.latest}`);
+          us.auto_updated = false;
+          atomicWrite(updateState, us);
+        }
+      }
+    } catch {}
 
     // ─── Tool: memory_search with command dispatch ──────────
 
