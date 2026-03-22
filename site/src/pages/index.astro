@@ -540,12 +540,13 @@ import Layout from "../layouts/Layout.astro";
       <a href="#features">Features</a>
       <a href="#compare">vs Native</a>
       <a href="#faq">FAQ</a>
+      <a href="https://clawhub.ai/Apptah/openclaw-memory-stack" target="_blank" rel="noopener">ClawHub</a>
       <a href="/manage">Manage License</a>
     </div>
   </nav>
 
   <div class="hero">
-    <div class="badge">v0.1.3 — Official OpenClaw Plugin</div>
+    <div class="badge">v0.1.5 — Official OpenClaw Plugin</div>
     <h1>Total recall.<br/><span class="glow">90% fewer tokens.</span></h1>
     <p class="subtitle">
       Your agent forgets past decisions and burns tokens re-reading the same context.
@@ -568,19 +569,19 @@ import Layout from "../layouts/Layout.astro";
         <div class="terminal-title">openclaw-memory</div>
       </div>
       <div class="terminal-body">
-        <div><span class="comment"># Install — one command, done</span></div>
-        <div><span class="prompt">$</span> <span class="cmd">./install.sh --key=oc-starter-xxxxxxxxxxxx</span></div>
+        <div><span class="comment"># Install — paste this, everything else is automatic</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">curl -fsSL .../api/install.sh | bash -s -- --key=oc-starter-xxx</span></div>
         <div><span class="success">  [OK]  License verified</span></div>
         <div><span class="success">  [OK]  Registered as OpenClaw memory plugin</span></div>
+        <div><span class="success">  [OK]  OpenClaw gateway restarting</span></div>
         <div>&nbsp;</div>
-        <div><span class="comment"># Restart OpenClaw — memory is now active</span></div>
-        <div><span class="prompt">$</span> <span class="cmd">openclaw gateway restart</span></div>
-        <div><span class="success">  [OK]  Memory Stack v2 registered (engines: fts5+qmd+memorymd+rescue+lossless)</span></div>
-        <div>&nbsp;</div>
-        <div><span class="comment"># Just talk — memory works in the background</span></div>
+        <div><span class="comment"># Done. Just talk — memory works in the background</span></div>
         <div><span class="output">  You: What did we decide about the API design?</span></div>
-        <div><span class="success">  [memory] 5 engines searched → RRF fusion → L0 tier (~98 tokens)</span></div>
+        <div><span class="success">  [memory] 6 engines searched → RRF fusion → L0 tier (~98 tokens)</span></div>
         <div><span class="output">  Agent: We decided to use REST with /api/v2/...</span></div>
+        <div>&nbsp;</div>
+        <div><span class="comment"># Updates are automatic — no action needed</span></div>
+        <div><span class="success">  [gateway] Memory Stack auto-updated to v0.1.5</span></div>
       </div>
     </div>
   </div>
@@ -625,8 +626,8 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="section" id="how">
     <div class="section-label">// how it works</div>
-    <h2>Install once. Every conversation gets cheaper.</h2>
-    <p class="section-desc">One command installs it as OpenClaw's memory provider. Token savings start immediately.</p>
+    <h2>Paste one command. Everything else is automatic.</h2>
+    <p class="section-desc">One curl command installs, registers, and restarts OpenClaw. Updates happen automatically in the background.</p>
     <div class="routing-grid">
       <div class="route-item">
         <div>
@@ -766,6 +767,65 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
+  <div class="section" id="vs-others">
+    <div class="section-label">// vs other memory skills</div>
+    <h2>One install replaces 4 skills.</h2>
+    <p class="section-desc">Most memory skills do one thing. You end up installing 3-4 and hoping they work together.</p>
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>What you need</th>
+            <th>Other skills</th>
+            <th>Memory Stack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Find a function name</td>
+            <td class="no">Vector search misses exact names</td>
+            <td class="yes">FTS5 keyword search finds it instantly</td>
+          </tr>
+          <tr>
+            <td>Find "how does auth work"</td>
+            <td class="partial">Vector search works</td>
+            <td class="yes">QMD semantic search + HyDE expansion</td>
+          </tr>
+          <tr>
+            <td>Search across 5 conversations</td>
+            <td class="no">Limited to current context</td>
+            <td class="yes">Rescue store + knowledge graph</td>
+          </tr>
+          <tr>
+            <td>Control token spend</td>
+            <td class="no">Full text every time</td>
+            <td class="yes">3 tiers: ~100 / ~800 / full</td>
+          </tr>
+          <tr>
+            <td>Remove duplicates</td>
+            <td class="no">Manual cleanup</td>
+            <td class="yes">4-level auto-dedup</td>
+          </tr>
+          <tr>
+            <td>Track decision evolution</td>
+            <td class="no">No history</td>
+            <td class="yes">Evolution chains in knowledge graph</td>
+          </tr>
+          <tr>
+            <td>Check memory quality</td>
+            <td class="no">No tooling</td>
+            <td class="yes">Health score 0-100</td>
+          </tr>
+          <tr>
+            <td>Work offline</td>
+            <td class="no">Needs OpenAI key</td>
+            <td class="yes">Core search runs offline</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="cta-section">
     <div class="cta-box">
       <div class="price">$49</div>
@@ -793,7 +853,7 @@ import Layout from "../layouts/Layout.astro";
       </details>
       <details class="faq-item">
         <summary>Does it work with OpenClaw's Telegram integration?</summary>
-        <p>Yes. Memory Stack plugs into OpenClaw as a native memory provider. It works with Telegram, CLI, and any other OpenClaw channel. No extra configuration needed — install, restart, done.</p>
+        <p>Yes. Memory Stack plugs into OpenClaw as a native memory provider. It works with Telegram, CLI, and any other OpenClaw channel. No extra configuration needed — one command and it's live.</p>
       </details>
       <details class="faq-item">
         <summary>Does it need an internet connection?</summary>
@@ -820,7 +880,7 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="disclaimers-section">
     <ul class="disclaimers">
-      <li><strong>OpenClaw plugin.</strong> Installs as a native memory provider. Requires OpenClaw 2026.3.2 or later.</li>
+      <li><strong>OpenClaw plugin.</strong> One command installs and auto-updates. Requires OpenClaw 2026.3.2 or later.</li>
       <li><strong>Bring your own LLM.</strong> Supports OpenAI, Anthropic, Ollama, MLX — any provider. Auto-detected. Core search works offline; add a key for complete fact extraction.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
       <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
@@ -831,35 +891,17 @@ import Layout from "../layouts/Layout.astro";
   <footer>
     <div>openclaw/memory-stack &copy; 2026</div>
     <div class="links">
+      <a href="https://clawhub.ai/Apptah/openclaw-memory-stack" target="_blank" rel="noopener">ClawHub</a>
       <a href="/manage">Manage License</a>
       <a href="/thanks">Post-Purchase</a>
     </div>
   </footer>
 
   <script>
-    const API = (window as any).__API_BASE__;
-    async function handleBuy(e: Event) {
+    const PAYMENT_LINK = "https://buy.stripe.com/4gM9AT5Qv8go7ni8NueUU00";
+    function handleBuy(e: Event) {
       e.preventDefault();
-      const btn = e.currentTarget as HTMLButtonElement;
-      const orig = btn.innerHTML;
-      btn.textContent = "Connecting to Stripe...";
-      btn.disabled = true;
-      try {
-        const res = await fetch(`${API}/api/checkout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            success_url: window.location.origin + "/thanks?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url: window.location.origin + "/",
-          }),
-        });
-        const data = await res.json();
-        if (data.checkout_url) window.location.href = data.checkout_url;
-      } catch {
-        btn.innerHTML = orig;
-        btn.disabled = false;
-        alert("Connection failed. Please try again.");
-      }
+      window.location.href = PAYMENT_LINK;
     }
     document.getElementById("buy-btn")?.addEventListener("click", handleBuy);
     document.getElementById("buy-btn-2")?.addEventListener("click", handleBuy);
