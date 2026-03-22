@@ -8,6 +8,7 @@ import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./dow
 import { handleCheckUpdate } from "./check-update";
 import { handleRevoke } from "./revoke";
 import { handleSessionStatus } from "./session-status";
+import { handleInstallScript } from "./install-script";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -51,6 +52,8 @@ export default {
         response = await handleCheckUpdate(request, env);
       } else if (method === "POST" && path === "/api/revoke") {
         response = await handleRevoke(request, env);
+      } else if (method === "GET" && path === "/api/install.sh") {
+        response = handleInstallScript(request, env);
       } else {
         response = errorResponse("Not found", 404);
       }
