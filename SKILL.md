@@ -1,7 +1,7 @@
 ---
 name: openclaw-memory-stack
-description: "Multi-backend memory system for OpenClaw — 5 search engines with RRF rank fusion, knowledge graph, 3-tier token control. 90% token reduction. Free early bird until 2026-03-29."
-version: 0.1.7
+description: "Drop-in OpenClaw memory replacement. Multi-engine search with result fusion, automatic context recall, and entity tracking. Core functions run locally."
+version: 0.1.9
 license: free
 metadata:
   openclaw:
@@ -27,40 +27,93 @@ metadata:
 
 # OpenClaw Memory Stack
 
-> **🎁 Early bird — free until March 29, 2026.** Full Starter license, yours forever.
+**Drop-in memory replacement for OpenClaw.** Multi-engine search with result fusion, automatic recall, and entity tracking.
 
-A drop-in OpenClaw plugin that replaces built-in memory with 5 local search engines.
+> **Free until March 29, 2026.** Full Starter license, yours forever.
+> Get it at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com)
 
-## Features
+## Architecture
 
-- **5 search engines** — BM25 full-text, vector semantic, knowledge graph (PageRank), DAG compression, fact extraction
-- **RRF rank fusion** — merges results from all engines into one ranked list
-- **3-tier token control** — L0 ~100 tokens, L1 ~800, L2 full content
-- **Auto-recall** — relevant memories injected before every conversation turn
-- **Auto-capture** — facts extracted and stored after every turn
-- **Knowledge graph** — entity relationships with PageRank scoring
-- **Runs locally** — all engines run on your machine, data stays in `~/.openclaw/`
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  OPENCLAW MEMORY STACK                        │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  SEARCH PIPELINE (runs on every conversation turn)           │
+│                                                              │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐               │
+│  │  E1  │ │  E2  │ │  E3  │ │  E4  │ │  E5  │               │
+│  │ Full │ │Vector│ │ DAG  │ │ Fact │ │  MD  │               │
+│  │ Text │ │Search│ │Compr.│ │Store │ │Files │               │
+│  └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘               │
+│     └────────┴────────┴────────┴────────┘                    │
+│                        │                                     │
+│                        ▼                                     │
+│               ┌──────────────┐                               │
+│               │ Result Fusion│                               │
+│               │ + Reranking  │                               │
+│               └──────────────┘                               │
+│                        │                                     │
+│              ┌─────────┼─────────┐                           │
+│              ▼         ▼         ▼                           │
+│          ┌──────┐  ┌──────┐  ┌──────┐                        │
+│          │  T1  │  │  T2  │  │  T3  │  Token Budget           │
+│          │~100t │  │~800t │  │ full │  Control                │
+│          └──────┘  └──────┘  └──────┘                        │
+│                                                              │
+│  CAPTURE (runs after every conversation turn)                │
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐                        │
+│  │    Fact       │    │   Entity     │                        │
+│  │  Extraction   │    │  Tracking    │                        │
+│  └──────────────┘    └──────────────┘                        │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
 
-## How It Works
+## Search Pipeline
 
-Every conversation, the plugin:
+5 engines search in parallel on every conversation turn:
 
-1. Searches 5 engines for relevant memories
-2. Merges results with Reciprocal Rank Fusion
-3. Injects the best matches at your chosen token tier
-4. Extracts new facts from the conversation and stores them
+| Engine | What it does |
+|--------|-------------|
+| Full-text | Keyword matching with relevance ranking |
+| Vector | Semantic search — understands meaning, not just words |
+| DAG | Compressed conversation history with drill-down |
+| Fact store | Searches previously extracted facts and decisions |
+| Markdown | Scans memory files directly |
 
-## Requirements
+Results from all engines are merged with rank fusion, deduplicated, reranked for diversity, and scored with time decay (recent memories rank higher).
 
-| Dependency | Required | Notes |
-|------------|----------|-------|
-| bash | Yes | macOS/Linux shell |
-| Bun | Recommended | Required for vector search |
-| Python 3 | Optional | Used by some backends |
+## Token Budget Control
+
+| Tier | Tokens | When used |
+|------|--------|-----------|
+| T1 | ~100 | Auto-recall (every turn, minimal cost) |
+| T2 | ~800 | On-demand search response |
+| T3 | ~2000 | Full content on request |
+
+## Automatic Capture
+
+After every conversation, the plugin extracts:
+- **Facts** — decisions, preferences, requirements, deadlines (works offline; optional API key improves quality)
+- **Entities** — names, relationships, changes over time (queryable on demand)
+
+## What Changes vs OpenClaw Native
+
+| | Native | Memory Stack |
+|---|--------|-------------|
+| Search engines | 1 | 5 (parallel, fused) |
+| Result fusion | — | Rank fusion + diversity reranking |
+| Token control | All or nothing | 3 tiers |
+| Fact extraction | — | Automatic every turn |
+| Entity tracking | — | Automatic, queryable |
+| Auto-recall | Basic | Multi-engine fused |
+| Core execution | Local | Local (update checks are background, fail-silent) |
 
 ## Get Started
 
-Visit [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com) for setup instructions.
+Visit [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com) for setup.
 
 ## License
 
