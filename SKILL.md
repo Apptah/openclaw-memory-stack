@@ -42,6 +42,18 @@ A multi-backend memory system that replaces OpenClaw's built-in memory. 5 search
 
 No credit card. No account. Just your email.
 
+## Installation Details
+
+The install command downloads a tarball from our Cloudflare R2 bucket, extracts it to `~/.openclaw/memory-stack/`, and registers as an OpenClaw plugin. Source files are bash scripts and JavaScript (ESM) — fully inspectable.
+
+**What gets installed:**
+- `~/.openclaw/memory-stack/` — search engines, router, libraries
+- `~/.openclaw/extensions/openclaw-memory-stack/` — OpenClaw plugin entry point
+- `~/.openclaw/bin/openclaw-memory` — CLI tool (optional, for manual queries)
+- `~/.openclaw/state/backends.json` — backend status registry
+
+**No system files modified.** No root/sudo required. Uninstall by deleting these directories.
+
 ## What It Does
 
 - **5 search engines** — BM25 full-text, vector semantic, knowledge graph (PageRank), DAG compression, fact extraction
@@ -50,8 +62,8 @@ No credit card. No account. Just your email.
 - **Auto-recall** — relevant memories injected before every conversation turn
 - **Auto-capture** — facts extracted and stored after every turn
 - **Knowledge graph** — entity relationships with PageRank scoring
-- **Fully offline** — your data never leaves your machine
-- **Auto-updates** — new versions install in the background
+- **Fully offline** — all search engines run locally, no external API calls during search. Data stored in `~/.openclaw/` only
+- **Auto-updates** — plugin checks for new versions every 24h via HTTPS to our license server. If available, runs `install.sh --upgrade` in background (same script as initial install, downloads from Cloudflare R2). Gateway restarts to load the new version. No silent or unsigned code execution
 
 ## Requirements
 
