@@ -251,7 +251,13 @@ with open(config_path, 'w') as f:
   echo -e "${GREEN}  ✅ Updated to v$NEW_VERSION${NC}"
   echo -e "${BOLD}=========================================${NC}"
   echo ""
-  echo "  Run: openclaw gateway restart"
+  if command -v openclaw &>/dev/null; then
+    openclaw gateway restart 2>/dev/null &
+    disown
+    echo "  OpenClaw gateway restarting."
+  else
+    echo "  Start OpenClaw when ready."
+  fi
   echo ""
   exit 0
 fi
@@ -673,6 +679,14 @@ done
 
 echo ""
 echo -e "  ${GREEN}Memory Stack is now active.${NC}"
-echo -e "  OpenClaw will use it automatically — no extra setup needed."
-echo -e "  Restart OpenClaw to apply: ${BOLD}openclaw restart${NC}"
+
+# Auto-restart OpenClaw gateway
+if command -v openclaw &>/dev/null; then
+  echo -e "  Restarting OpenClaw gateway..."
+  openclaw gateway restart 2>/dev/null &
+  disown
+  echo -e "  ${GREEN}OpenClaw gateway restarting.${NC}"
+else
+  echo -e "  ${YELLOW}OpenClaw not found — start it manually when ready.${NC}"
+fi
 echo ""
