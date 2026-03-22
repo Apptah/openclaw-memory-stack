@@ -336,10 +336,17 @@ fi
 
 require_licensed
 
-# Repo context discovery
-REPO_CONFIG=$(find_repo_config)
-EFFECTIVE_JSON=$(merge_backends "$REPO_CONFIG")
-set_repo_context "$REPO_CONFIG"
+# Repo context discovery — fall back to global backends if no per-repo config
+GLOBAL_BACKENDS="$HOME/.openclaw/state/backends.json"
+REPO_CONFIG=$(find_repo_config 2>/dev/null) || REPO_CONFIG=""
+
+if [ -n "$REPO_CONFIG" ]; then
+  EFFECTIVE_JSON=$(merge_backends "$REPO_CONFIG")
+  set_repo_context "$REPO_CONFIG"
+else
+  # Global mode: use global backends directly
+  EFFECTIVE_JSON="$GLOBAL_BACKENDS"
+fi
 
 ROUTER_ARGS=("$QUERY")
 [ -n "$HINT" ] && ROUTER_ARGS+=(--hint "$HINT")

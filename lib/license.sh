@@ -218,16 +218,12 @@ with open('$LICENSE_FILE', 'w') as f: json.dump(d, f, indent=2); f.write('\n')
 find_repo_config() {
   local git_root
   git_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
-    echo "Not in a git repository." >&2
-    echo "Run this command from within your project directory." >&2
-    exit 1
+    return 1
   }
 
   local config_file="$git_root/.openclaw-memory.json"
   if [[ ! -f "$config_file" ]]; then
-    echo "This repo hasn't been initialized." >&2
-    echo "Run: openclaw-memory init" >&2
-    exit 1
+    return 1
   fi
 
   echo "$config_file"
