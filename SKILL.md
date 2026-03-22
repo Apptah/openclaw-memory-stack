@@ -1,8 +1,8 @@
 ---
 name: openclaw-memory-stack
-description: "Multi-backend memory system for Claude Code — BM25, vector search, HyDE query expansion, RRF rank fusion, bi-temporal filtering, and intelligent routing across 6 engines."
-version: 0.1.3
-license: commercial
+description: "Multi-backend memory system for OpenClaw — 5 search engines with RRF rank fusion, knowledge graph, 3-tier token control. 90% token reduction. Free early bird until 2026-03-29."
+version: 0.1.5
+license: free
 metadata:
   openclaw:
     requires:
@@ -22,10 +22,11 @@ metadata:
       - code-search
       - knowledge-management
     pricing:
-      model: license-key
-      amount: 49
+      model: free
+      amount: 0
       currency: usd
       url: https://openclaw-memory.apptah.com
+      note: "Early bird — free until 2026-03-29. $49 after."
 ---
 
 # OpenClaw Memory Stack
