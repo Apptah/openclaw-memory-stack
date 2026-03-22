@@ -6,12 +6,9 @@ license: free
 metadata:
   openclaw:
     requires:
-      env:
-        - OPENCLAW_LICENSE_KEY
       bins:
         - bash
         - curl
-      primaryEnv: OPENCLAW_LICENSE_KEY
     emoji: "\U0001F9E0"
     homepage: https://openclaw-memory.apptah.com
     tags:
@@ -31,52 +28,53 @@ metadata:
 
 # OpenClaw Memory Stack
 
-A multi-backend memory system that gives Claude Code persistent, searchable memory across conversations.
+> **🎁 Early bird — free until March 29, 2026.** Full Starter license, yours forever.
+> Get it now at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com)
+
+A multi-backend memory system that replaces OpenClaw's built-in memory. 5 search engines, knowledge graph, 90% token reduction. One command to install.
+
+## Get It (Free)
+
+1. Go to [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com)
+2. Enter your email and click **Get Free — Early Bird**
+3. Check your email for the install command
+4. Paste it into your terminal — done. OpenClaw restarts automatically.
+
+No credit card. No account. Just your email.
 
 ## What It Does
 
-- **6 search backends** — QMD (BM25 + vector), Lossless (DAG summarization), TotalRecall (full history), Nowledge (bi-temporal graph), OpenViking (tiered loading), Vertex (fact extraction)
-- **Intelligent router** — automatically picks the best backend based on your query type
-- **HyDE query expansion** — generates hypothetical documents to improve semantic search
-- **RRF rank fusion** — merges results from multiple backends into one ranked list
-- **Bi-temporal filtering** — search by both "when it happened" and "when you learned it"
-- **Multi-provider LLM** — works with OpenAI, Anthropic, and local models for embeddings
-
-## Quick Start
-
-1. **Purchase a license** at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com) ($49 one-time)
-2. **Install (one command — installs, registers, restarts OpenClaw):**
-   ```bash
-   curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=oc-starter-YOUR_KEY
-   ```
-3. **Done.** Memory Stack works globally — no per-project setup needed. Updates are automatic.
+- **5 search engines** — BM25 full-text, vector semantic, knowledge graph (PageRank), DAG compression, fact extraction
+- **RRF rank fusion** — merges results from all engines into one ranked list
+- **3-tier token control** — L0 ~100 tokens, L1 ~800, L2 full content
+- **Auto-recall** — relevant memories injected before every conversation turn
+- **Auto-capture** — facts extracted and stored after every turn
+- **Knowledge graph** — entity relationships with PageRank scoring
+- **Fully offline** — your data never leaves your machine
+- **Auto-updates** — new versions install in the background
 
 ## Requirements
 
 | Dependency | Required | Notes |
 |------------|----------|-------|
 | bash | Yes | macOS/Linux shell |
-| curl | Yes | For license activation and install |
-| Bun | Recommended | Required for QMD backend (vector search) |
-| Python 3 | Optional | Used by some backends for JSON processing |
-
-## Backends
-
-| Backend | Type | Best For |
-|---------|------|----------|
-| QMD | BM25 + vector | Code search, symbol lookup, concept queries |
-| Lossless | DAG summarization | Hierarchical drill-down into large codebases |
-| TotalRecall | Full history | Complete conversation and edit history |
-| Nowledge | Bi-temporal graph | Time-aware queries, expertise tracking |
-| OpenViking | Tiered loading | Token-efficient retrieval (91% reduction) |
-| Vertex | Fact extraction | Distilled facts, deduplication |
+| curl | Yes | For install |
+| Bun | Recommended | Required for vector search |
+| Python 3 | Optional | Used by some backends |
 
 ## How It Works
 
-The router receives your query and selects the best backend based on the hint you provide (or auto-detects). If the first backend returns low-relevance results, it falls back to the next one. All results are normalized to a 0-1 relevance scale and merged via Reciprocal Rank Fusion when multiple backends respond.
+One command installs it as OpenClaw's memory provider. Every conversation, the plugin automatically:
+
+1. Searches 5 engines for relevant memories
+2. Merges results with Reciprocal Rank Fusion
+3. Injects the best matches at your chosen token tier
+4. Extracts new facts from the conversation and stores them
+
+No per-project setup. No manual commands. It just works.
 
 ## License
 
-Commercial license. One-time purchase of $49 includes activation on up to 3 devices. See [LICENSE](LICENSE) for full terms.
+**Currently free** (early bird until 2026-03-29). After that, $49 one-time purchase.
 
-Purchase at: https://openclaw-memory.apptah.com
+Get it now: [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com)
