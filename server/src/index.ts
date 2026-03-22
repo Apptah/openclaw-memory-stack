@@ -9,6 +9,7 @@ import { handleCheckUpdate } from "./check-update";
 import { handleRevoke } from "./revoke";
 import { handleSessionStatus } from "./session-status";
 import { handleInstallScript } from "./install-script";
+import { handleClaimFree } from "./claim-free";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -54,6 +55,8 @@ export default {
         response = await handleRevoke(request, env);
       } else if (method === "GET" && path === "/api/install.sh") {
         response = handleInstallScript(request, env);
+      } else if (method === "POST" && path === "/api/claim-free") {
+        response = await handleClaimFree(request, env);
       } else {
         response = errorResponse("Not found", 404);
       }
