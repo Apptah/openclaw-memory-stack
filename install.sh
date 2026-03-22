@@ -188,7 +188,12 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
   # Copy plugin
   EXT_DIR="$HOME/.openclaw/extensions/openclaw-memory-stack"
   mkdir -p "$EXT_DIR"
-  cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  if [[ -f "$SCRIPT_DIR/plugin/dist/index.mjs" ]]; then
+    mkdir -p "$EXT_DIR/dist"
+    cp "$SCRIPT_DIR/plugin/dist/index.mjs" "$EXT_DIR/dist/"
+  else
+    cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  fi
   cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
@@ -563,7 +568,13 @@ EXT_DIR="$HOME/.openclaw/extensions/openclaw-memory-stack"
 if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
   # 1. Install plugin files to extensions dir
   mkdir -p "$EXT_DIR"
-  cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  # Copy bundled plugin (minified)
+  if [[ -f "$SCRIPT_DIR/plugin/dist/index.mjs" ]]; then
+    mkdir -p "$EXT_DIR/dist"
+    cp "$SCRIPT_DIR/plugin/dist/index.mjs" "$EXT_DIR/dist/"
+  else
+    cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
+  fi
   cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
   if [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]]; then
     cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"

@@ -21,6 +21,8 @@ venv/
 dist/
 build/
 *.egg-info/
+# Allow plugin/dist (bundled output for distribution)
+!plugin/dist/
 
 # Env
 .env
