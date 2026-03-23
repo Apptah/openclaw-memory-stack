@@ -105,11 +105,18 @@ Prompt specialization: optimized for developer memory scenarios — code decisio
 - Without API key: our enhanced regex still extracts more than nothing (Vertex requires GCP = no fallback).
 
 ### Acceptance Tests
-1. **LLM path**: Feed a conversation containing "We decided to use PostgreSQL" then "Actually, let's switch to MySQL" → extract two facts, second has `supersedes` pointing to first
-2. **LLM path**: Feed a conversation with "I prefer small PRs over large ones" → extracts a `preference` type fact
+
+**D2a (core — must pass before D2a is done):**
+1. **LLM path**: Feed a conversation containing "We decided to use PostgreSQL" then "Actually, let's switch to MySQL" → extract two facts with `key/value` fields, second has `supersedes` pointing to first
+2. **LLM path**: Feed a conversation with "I prefer small PRs over large ones" → extracts a `preference` type fact with `key="pr_size"`, `value="small"`
 3. **Regex path**: Feed "We will NOT use MongoDB" → extracts a `decision` fact with negation preserved
-4. **Regex path**: Feed a conversation with no explicit decision keywords but heavy discussion of Redis → TF-IDF identifies "Redis" as key term, extracts an `entity` fact
+4. **Regex path**: Feed "I always use Vim for quick edits" → extracts a `workflow` type fact (new pattern)
 5. **Both paths**: Run same 10 real conversation samples through both → LLM path extracts ≥ 2x more facts with ≥ 80% precision (manually verified)
+6. **Schema**: Verify `facts` table has `key/value/scope/confidence/evidence/supersedes/entities` columns; old rows have NULL in new columns and still searchable
+
+**D2b (stretch — separate acceptance gate):**
+7. **TF-IDF**: Feed a conversation with no explicit decision keywords but heavy discussion of Redis → TF-IDF identifies "Redis" as key term, extracts an `entity` fact
+8. **Co-reference**: Feed "We use PostgreSQL. It handles our workload well." → resolves "It" to PostgreSQL
 
 ---
 
@@ -141,21 +148,40 @@ New fact arrives
   → No match → INSERT normally
 ```
 
-**Schema changes:**
+**Schema changes (in facts.sqlite / RESCUE_DB):**
+
+The current `facts` table only has `type/content/source/timestamp`. D2's structured facts and D3's supersede logic require new columns. We use `ALTER TABLE ADD COLUMN` (SQLite supports this without rewrite) for backward compatibility — old rows keep NULL in new columns.
 
 ```sql
--- New archive table (in facts.db / RESCUE_DB)
+-- Upgrade facts table with structured fields (D2)
+ALTER TABLE facts ADD COLUMN key TEXT;           -- e.g. "database_choice"
+ALTER TABLE facts ADD COLUMN value TEXT;         -- e.g. "PostgreSQL"
+ALTER TABLE facts ADD COLUMN scope TEXT;         -- e.g. "new-service"
+ALTER TABLE facts ADD COLUMN confidence REAL DEFAULT 0.5;
+ALTER TABLE facts ADD COLUMN evidence TEXT;      -- source line reference
+ALTER TABLE facts ADD COLUMN supersedes INTEGER; -- FK to facts.id this replaces
+ALTER TABLE facts ADD COLUMN entities TEXT;      -- JSON array of entity names
+
+-- Rebuild FTS to include new columns
+DROP TABLE IF EXISTS facts_fts;
+CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value);
+
+-- New archive table (D3)
 CREATE TABLE IF NOT EXISTS facts_archive (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   original_id INTEGER,
   type TEXT NOT NULL,
   content TEXT NOT NULL,
+  key TEXT,
+  value TEXT,
   source TEXT,
   timestamp TEXT,
   archived_at TEXT DEFAULT (datetime('now')),
   archived_reason TEXT  -- 'superseded' | 'duplicate' | 'stale'
 );
 ```
+
+**Migration strategy:** Run `ALTER TABLE` idempotently on startup (check if column exists first via `PRAGMA table_info(facts)`). Old facts with `key=NULL` use the flat `content` field for dedup matching (Level 1-3); new facts use `key/value` for conflict detection. `saveRescueFacts()` must be updated to write all new columns when available.
 
 **Conflict detection logic:**
 1. Extract entity names from the new fact (reuse `extractEntitiesFromLine`)
@@ -194,14 +220,20 @@ Memory Stack stores data in `~/.openclaw/memory-stack/` private paths. Other Ope
 | `~/.openclaw/memory-stack/graph.json` | Legacy graph (GRAPH_PATH) | N/A | Already migrated to SQLite, delete |
 | `~/.openclaw/memory-stack/rescue/*.json` | Legacy rescue files | N/A | Already migrated to SQLite, delete |
 | `~/.openclaw/workspace/MEMORY.md` | Human-readable index | `~/.openclaw/memory/MEMORY.md` | **Move** into unified dir |
+| (new) | External tool drop zone | `~/.openclaw/memory/external/` | **NEW** — watcher scans only this dir |
 
 `main.sqlite` already lives in `~/.openclaw/memory/` — no change needed. Only `facts.sqlite`, `graph.sqlite`, and `MEMORY.md` move from their current scattered locations into the unified directory.
+
+**Behavior change: MEMORY.md scope.** Currently `MEMORY.md` is workspace-scoped (read from `WORKSPACE` constant by `memorymd.mjs` engine and `quality.mjs`). Moving it to `~/.openclaw/memory/` makes it **global** — shared across all workspaces. This is intentional for cross-agent memory (D4), but requires updating:
+- `memorymd.mjs`: change path from `resolve(WORKSPACE, "MEMORY.md")` to `resolve(HOME, ".openclaw/memory/MEMORY.md")`
+- `quality.mjs`: same path update for `analyzeMemoryHealth()` and `consolidateMemories()`
+- `constants.mjs`: add `MEMORY_MD` export pointing to the new global path
 
 **Migration:** On first run after upgrade, detect old paths → move files → leave symlinks at old locations for backward compatibility. Symlinks removed after 30 days.
 
 **CLI interface: `openclaw-memory` (EXTEND existing)**
 
-The CLI already exists at `bin/openclaw-memory-qmd` and is installed by `install.sh`. Extend it with new subcommands:
+The user-facing CLI is `bin/openclaw-memory` (installed to PATH by `install.sh`). Note: `bin/openclaw-memory-qmd` is a separate qmd-compatible shim used internally by the router — do NOT add subcommands there. Extend `bin/openclaw-memory` with new subcommands:
 
 ```bash
 # Query memories
@@ -225,8 +257,9 @@ Already works via `before_agent_start` hook + SQLite. Unifying the storage path 
 
 **File watcher for external writes:**
 
-When plugin starts, scan `~/.openclaw/memory/` for `.md` files not yet indexed in `facts.sqlite` → auto-ingest.
+When plugin starts, scan `~/.openclaw/memory/external/` (a dedicated subdirectory, NOT the root) for `.md` files not yet indexed in `facts.sqlite` → auto-ingest.
 
+- **Scan scope**: ONLY `~/.openclaw/memory/external/`. System files (`MEMORY.md`, `*.sqlite`, `maintenance-state.json`) live in the parent directory and are **never** scanned by the watcher. This avoids feedback loops where the watcher ingests `MEMORY.md` back into the facts store, and avoids overlap with the existing `memorymd` engine which already searches `MEMORY.md` directly.
 - **Expected format**: any Markdown file. Each heading or bullet point is treated as one fact candidate, processed through the same extraction pipeline (LLM or regex).
 - **Re-ingestion guard**: track ingested files in a `ingested_files` table (`path TEXT, sha256 TEXT, ingested_at TEXT`). Only re-ingest if file hash changes.
 - **Invalid content**: files that produce zero facts are marked as ingested but not flagged as errors.
@@ -239,7 +272,7 @@ When plugin starts, scan `~/.openclaw/memory/` for `.md` files not yet indexed i
 ### Acceptance Tests
 1. OpenClaw session A writes a fact → OpenClaw session B auto-recalls it (cross-session)
 2. Run `openclaw-memory add --type preference --key pr_size --value small` from terminal → OpenClaw session auto-recalls it (cross-tool write via CLI)
-3. Drop a file `~/.openclaw/memory/cursor-notes.md` with content → OpenClaw session finds it via `memory_search` (cross-tool write via file)
+3. Drop a file `~/.openclaw/memory/external/cursor-notes.md` with content → OpenClaw session finds it via `memory_search` (cross-tool write via file)
 4. Run `openclaw-memory query "PostgreSQL" --format json` → returns structured JSON with fact details (CLI read interface)
 
 ---
@@ -315,8 +348,10 @@ register() startup
 | `plugin/lib/rescue.mjs` | Rewrite extraction prompt, add 8 fact types, D2a regex enhancements |
 | `plugin/lib/dedup-gate.mjs` | **NEW** — write-time dedup + conflict resolution (dual old/new format) |
 | `plugin/lib/quality.mjs` | Add `facts_archive` + `ingested_files` schema, integrate dedup-gate |
+| `plugin/lib/engines/memorymd.mjs` | Update MEMORY.md path from workspace-scoped to global `~/.openclaw/memory/MEMORY.md` |
 | `plugin/lib/graph/store.mjs` | Update GRAPH_DB path to unified location |
-| `bin/openclaw-memory-qmd` | **EXTEND** — add `query`, `add`, `health`, `recent` subcommands |
+| `bin/openclaw-memory` | **EXTEND** — add `query`, `add`, `recent` subcommands (already has `health`) |
+| `bin/openclaw-memory-qmd` | No change — internal qmd shim, not user-facing |
 | `tests/integration/test-dedup.sh` | **NEW** — dedup acceptance tests |
 | `tests/integration/test-cross-agent.sh` | **NEW** — cross-agent acceptance tests |
 | `tests/integration/test-maintenance.sh` | **NEW** — zero-maintenance acceptance tests |
