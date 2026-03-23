@@ -162,9 +162,11 @@ ALTER TABLE facts ADD COLUMN evidence TEXT;      -- source line reference
 ALTER TABLE facts ADD COLUMN supersedes INTEGER; -- FK to facts.id this replaces
 ALTER TABLE facts ADD COLUMN entities TEXT;      -- JSON array of entity names
 
--- Rebuild FTS to include new columns
+-- Rebuild FTS to include new columns + rehydrate existing data
 DROP TABLE IF EXISTS facts_fts;
-CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value);
+CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value, scope, entities);
+INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities)
+  SELECT id, content, type, key, value, scope, entities FROM facts;
 
 -- New archive table (D3)
 CREATE TABLE IF NOT EXISTS facts_archive (
@@ -185,10 +187,11 @@ CREATE TABLE IF NOT EXISTS facts_archive (
 
 **Conflict detection logic:**
 1. Extract entity names from the new fact (reuse `extractEntitiesFromLine`)
-2. Query existing facts with same entity + same type (FTS5 query on `facts_fts`)
-3. If new format: compare `key` + `value` fields directly
-4. If old format: compare entity overlap ratio (>60% of entity names match)
-5. If value differs → supersede; if value same → skip (duplicate)
+2. Find candidate matches — two strategies depending on fact format:
+   - **New format (has key/scope/entities):** direct SQL query `SELECT * FROM facts WHERE type = ? AND key = ?`, then filter by `scope` or `entities` JSON overlap in application code. FTS is not needed here — exact column match is faster and more precise.
+   - **Old format (flat content only):** FTS5 query on `facts_fts` matching `content` + `type` columns, then verify entity overlap in application code (>60% of entity names match).
+3. If candidate found and value differs → supersede
+4. If candidate found and value same → skip (duplicate)
 
 ### Why this beats Vertex
 - Vertex dedup is async (post-session). Ours is synchronous at write time — duplicates never enter the store.
