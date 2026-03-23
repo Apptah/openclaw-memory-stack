@@ -27,11 +27,9 @@ Users must manually run `qmd collection add` + `qmd embed` after installation. V
 ### Design
 
 **install.sh changes:**
-- After downloading and placing files, automatically run:
-  1. `qmd collection add` for the user's project
-  2. `qmd embed` to index existing files
-  3. Verify with `qmd status`
-- On failure: print clear error, don't block install
+- Verify qmd binary is installed, print hint if missing
+- Do NOT run `qmd collection add` or `qmd embed` — installer has no workspace context
+- All indexing deferred to plugin register() which runs inside a workspace
 
 **plugin register() changes:**
 - On startup, check if qmd collection exists for current workspace
@@ -45,7 +43,7 @@ Users must manually run `qmd collection add` + `qmd embed` after installation. V
 - One command vs four steps. Zero external accounts needed.
 
 ### Acceptance Tests
-1. Fresh machine: run `install.sh` → start OpenClaw → `memory_search test` returns results without any manual setup
+1. Fresh machine: run `install.sh` → start OpenClaw → `memory_search test` returns no error and reports engines ready (no data yet = empty result, not an error)
 2. Existing install with no collection: restart OpenClaw → plugin auto-creates collection, next search works
 3. Install with no qmd binary: plugin falls back to FTS5-only mode, still functional
 
@@ -90,13 +88,16 @@ Prompt specialization: optimized for developer memory scenarios — code decisio
 
 **Free path (no API key):**
 
-Enhance `extractKeyFacts()` with:
+**Phase D2a (core — ship with D2):**
 
-1. **TF-IDF keyword extraction**: compute term frequency across the conversation, identify high-weight terms that indicate important topics even without pattern matches
-2. **Sentence boundary detection**: split on actual sentence boundaries (not just newlines) for cleaner fact extraction
-3. **Negation handling**: detect "we decided NOT to use X" as a decision, not skip it
-4. **Extended patterns**: add regex patterns for the 4 new fact types (preference, workflow, relationship, correction)
-5. **Co-reference lite**: track "it/this/that" referring to recently mentioned entities within same paragraph
+1. **Extended patterns**: add regex patterns for the 4 new fact types (preference, workflow, relationship, correction)
+2. **Negation handling**: detect "we decided NOT to use X" as a decision, not skip it
+3. **Sentence boundary detection**: split on actual sentence boundaries (not just newlines) for cleaner fact extraction
+
+**Phase D2b (stretch — ship after D2a proves stable):**
+
+4. **TF-IDF keyword extraction**: compute term frequency across the conversation, identify high-weight terms that indicate important topics even without pattern matches
+5. **Co-reference lite**: track "it/this/that" referring to recently mentioned entities within same paragraph — this is a known NLP hard problem, keep scope minimal (same-paragraph only, pronoun→nearest-noun heuristic)
 
 ### Why this beats Vertex
 - Vertex prompt is generic (pets, shopping, general assistant). Our prompt is developer-domain-specific.
@@ -123,16 +124,18 @@ Vertex handles dedup and conflict resolution automatically at write time.
 
 **New module: `lib/dedup-gate.mjs`**
 
-Called from `saveRescueFacts()` before INSERT:
+Called from `saveRescueFacts()` before INSERT. Must work with **both** old format (`{ type, fact, confidence, entities }`) and new D2 format (`{ type, key, value, scope, supersedes }`).
 
 ```
 New fact arrives
   → Level 1-3 check against existing facts in SQLite
-    → Exact/normalized/substring match → SKIP (don't write)
-  → Level 4 cosine check (if embedding available)
+    → Exact/normalized/substring match → SKIP (silently not written, not archived)
+  → Level 4 cosine check — ONLY on Level 1-3 near-misses (same entity/type but different wording)
+    → Max 10 comparisons per new fact (cap embedding API cost)
     → similarity > 0.9 → KEEP NEWER, archive older
-  → Conflict detection
-    → Same entity + same fact type + different value → SUPERSEDE
+  → Conflict detection (two modes):
+    → New format (has key/value): same entity + same key + different value → SUPERSEDE
+    → Old format (flat fact string): same entity + same type + entity-name overlap > 60% → SUPERSEDE
     → Old fact moves to facts_archive table
     → New fact written with supersedes reference
   → No match → INSERT normally
@@ -141,7 +144,7 @@ New fact arrives
 **Schema changes:**
 
 ```sql
--- New archive table
+-- New archive table (in facts.db / RESCUE_DB)
 CREATE TABLE IF NOT EXISTS facts_archive (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   original_id INTEGER,
@@ -156,9 +159,10 @@ CREATE TABLE IF NOT EXISTS facts_archive (
 
 **Conflict detection logic:**
 1. Extract entity names from the new fact (reuse `extractEntitiesFromLine`)
-2. Query existing facts with same entity + same type
-3. If found and value differs → supersede
-4. If found and value same → skip (duplicate)
+2. Query existing facts with same entity + same type (FTS5 query on `facts_fts`)
+3. If new format: compare `key` + `value` fields directly
+4. If old format: compare entity overlap ratio (>60% of entity names match)
+5. If value differs → supersede; if value same → skip (duplicate)
 
 ### Why this beats Vertex
 - Vertex dedup is async (post-session). Ours is synchronous at write time — duplicates never enter the store.
@@ -166,7 +170,7 @@ CREATE TABLE IF NOT EXISTS facts_archive (
 - The `facts_archive` table provides an audit trail that Vertex doesn't offer.
 
 ### Acceptance Tests
-1. Insert "database_choice: PostgreSQL" twice in two sessions → only one fact in `facts` table, zero in archive
+1. Insert "database_choice: PostgreSQL" twice in two sessions → only one fact in `facts` table, zero in archive (second insert is silently skipped, not archived)
 2. Insert "database_choice: PostgreSQL" then "database_choice: MySQL" → one fact (MySQL) in `facts`, one (PostgreSQL) in `facts_archive` with reason "superseded"
 3. Insert 100 random facts with 30% duplicates → run `memory_search health` → duplicate count = 0
 4. Insert a fact, then insert a semantically identical but differently worded fact (with API key for cosine) → Level 4 catches it, only one fact stored
@@ -180,19 +184,24 @@ Memory Stack stores data in `~/.openclaw/memory-stack/` private paths. Other Ope
 
 ### Design
 
-**Unified storage path: `~/.openclaw/memory/`**
+**Current vs. Proposed Storage:**
 
-All memory artifacts move to the OpenClaw standard location:
-- `~/.openclaw/memory/facts.db` — fact store (SQLite)
-- `~/.openclaw/memory/graph.db` — knowledge graph (SQLite)
-- `~/.openclaw/memory/MEMORY.md` — human-readable index
-- `~/.openclaw/memory/rescue/` — rescue fact files (legacy compat)
+| Current path | Current purpose | Proposed path | Action |
+|---|---|---|---|
+| `~/.openclaw/memory/main.sqlite` | FTS5 search index (MEMORY_DB) | `~/.openclaw/memory/main.sqlite` | **No change** — stays in place |
+| `~/.openclaw/memory-stack/rescue/facts.sqlite` | Extracted facts (RESCUE_DB) | `~/.openclaw/memory/facts.sqlite` | **Move** into unified dir |
+| `~/.openclaw/memory-stack/graph.sqlite` | Knowledge graph (GRAPH_DB) | `~/.openclaw/memory/graph.sqlite` | **Move** into unified dir |
+| `~/.openclaw/memory-stack/graph.json` | Legacy graph (GRAPH_PATH) | N/A | Already migrated to SQLite, delete |
+| `~/.openclaw/memory-stack/rescue/*.json` | Legacy rescue files | N/A | Already migrated to SQLite, delete |
+| `~/.openclaw/workspace/MEMORY.md` | Human-readable index | `~/.openclaw/memory/MEMORY.md` | **Move** into unified dir |
 
-Migration: on first run, detect old paths → move files → leave a symlink for backward compatibility.
+`main.sqlite` already lives in `~/.openclaw/memory/` — no change needed. Only `facts.sqlite`, `graph.sqlite`, and `MEMORY.md` move from their current scattered locations into the unified directory.
 
-**CLI interface: `openclaw-memory`**
+**Migration:** On first run after upgrade, detect old paths → move files → leave symlinks at old locations for backward compatibility. Symlinks removed after 30 days.
 
-A standalone CLI that any tool can shell-out to:
+**CLI interface: `openclaw-memory` (EXTEND existing)**
+
+The CLI already exists at `bin/openclaw-memory-qmd` and is installed by `install.sh`. Extend it with new subcommands:
 
 ```bash
 # Query memories
@@ -216,7 +225,11 @@ Already works via `before_agent_start` hook + SQLite. Unifying the storage path 
 
 **File watcher for external writes:**
 
-When plugin starts, scan `~/.openclaw/memory/` for `.md` files not yet indexed in `facts.db` → auto-ingest. This allows other tools to drop memory files without needing the CLI.
+When plugin starts, scan `~/.openclaw/memory/` for `.md` files not yet indexed in `facts.sqlite` → auto-ingest.
+
+- **Expected format**: any Markdown file. Each heading or bullet point is treated as one fact candidate, processed through the same extraction pipeline (LLM or regex).
+- **Re-ingestion guard**: track ingested files in a `ingested_files` table (`path TEXT, sha256 TEXT, ingested_at TEXT`). Only re-ingest if file hash changes.
+- **Invalid content**: files that produce zero facts are marked as ingested but not flagged as errors.
 
 ### Why this beats Vertex
 - Vertex: locked to GCP project, only works with agents using Vertex AI Agent Development Kit
@@ -244,14 +257,16 @@ On every plugin startup, run a maintenance check (throttled to once per 24 hours
 
 ```
 register() startup
-  → Read last_maintenance timestamp
+  → Read last_maintenance timestamp from ~/.openclaw/memory/maintenance-state.json
   → If < 24hr ago → skip
   → Else run (all background, non-blocking):
     1. Auto-embed: qmd embed (timeout: 30s)
-    2. Auto-cleanup: DELETE facts WHERE created_at < 90 days ago → archive
-    3. Auto-dedup sweep: scan facts table with Level 1-3, remove accumulated duplicates
-    4. Auto-FTS rebuild: compare facts rowcount vs FTS rowcount, rebuild if mismatched
-    5. Auto-graph prune: remove entities with 0 edges and mentions = 1 (noise)
+    2. Auto-archive: IF config.maxFactAgeDays is set (default: null = never),
+       move facts older than maxFactAgeDays to facts_archive with reason 'stale'.
+       Never delete — only archive. User must explicitly opt in via config.
+    3. Auto-dedup sweep: scan facts table in facts.sqlite with Level 1-3, archive accumulated duplicates
+    4. Auto-FTS rebuild: compare `facts` rowcount vs `facts_fts` rowcount in facts.sqlite, rebuild if mismatched
+    5. Auto-graph prune: remove entities with 0 edges and mentions = 1 from graph.sqlite (noise)
     6. Update last_maintenance timestamp
 ```
 
@@ -284,23 +299,24 @@ register() startup
 | Order | Dimension | Effort | Impact |
 |-------|-----------|--------|--------|
 | 1 | Out-of-box (D1) | Small | Unblocks everything — users need working setup first |
-| 2 | Dedup/conflict (D3) | Medium | Prevents garbage accumulation before we improve extraction |
-| 3 | Fact extraction (D2) | Medium | Better facts + dedup gate = clean, high-quality memory |
+| 2 | Fact extraction D2a (D2) | Medium | New fact schema must exist before dedup gate can use key/value fields |
+| 3 | Dedup/conflict (D3) | Medium | Now has both old-format and new-format paths to work with |
 | 4 | Cross-agent (D4) | Medium | Path migration + CLI, depends on D3 schema changes |
 | 5 | Zero maintenance (D5) | Small | Wires together D1-D4 into self-sustaining system |
+| 6 | Fact extraction D2b (D2) | Small | Stretch: TF-IDF + co-reference, only after D2a proves stable |
 
 ## Files to Change
 
 | File | Changes |
 |------|---------|
-| `install.sh` | Add auto qmd init + collection + embed |
+| `install.sh` | Verify qmd binary, remove auto-init (deferred to plugin) |
 | `plugin/index.mjs` | Auto-init on startup, maintenance cycle, unified paths |
-| `plugin/lib/constants.mjs` | New paths under `~/.openclaw/memory/` |
-| `plugin/lib/rescue.mjs` | Rewrite extraction prompt, add 8 fact types, TF-IDF fallback |
-| `plugin/lib/dedup-gate.mjs` | **NEW** — write-time dedup + conflict resolution |
-| `plugin/lib/quality.mjs` | Add `facts_archive` schema, integrate dedup-gate |
-| `plugin/lib/graph/store.mjs` | Update paths to unified location |
-| `bin/openclaw-memory` | **NEW** — standalone CLI for cross-tool access |
+| `plugin/lib/constants.mjs` | Consolidate RESCUE_DB + GRAPH_DB paths to `~/.openclaw/memory/`, add `maxFactAgeDays` config |
+| `plugin/lib/rescue.mjs` | Rewrite extraction prompt, add 8 fact types, D2a regex enhancements |
+| `plugin/lib/dedup-gate.mjs` | **NEW** — write-time dedup + conflict resolution (dual old/new format) |
+| `plugin/lib/quality.mjs` | Add `facts_archive` + `ingested_files` schema, integrate dedup-gate |
+| `plugin/lib/graph/store.mjs` | Update GRAPH_DB path to unified location |
+| `bin/openclaw-memory-qmd` | **EXTEND** — add `query`, `add`, `health`, `recent` subcommands |
 | `tests/integration/test-dedup.sh` | **NEW** — dedup acceptance tests |
 | `tests/integration/test-cross-agent.sh` | **NEW** — cross-agent acceptance tests |
 | `tests/integration/test-maintenance.sh` | **NEW** — zero-maintenance acceptance tests |
