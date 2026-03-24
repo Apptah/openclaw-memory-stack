@@ -2,8 +2,9 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
 import { grepChunks, grepFacts, grepAll, formatGrepResults } from "../lib/grep.mjs";
-import { rebuildTrigramIndex } from "../lib/ngram.mjs";
+import { rebuildTrigramIndex, buildPostingFiles } from "../lib/ngram.mjs";
 import { execSync } from "node:child_process";
+import { writeFileSync, utimesSync } from "node:fs";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -225,5 +226,53 @@ describe("pruned query (Phase 2)", () => {
     const results = grepChunks(db, "ab", { useIndex: true });
     // "ab" has no trigrams → SCAN fallback → still works
     assert.ok(Array.isArray(results));
+  });
+});
+
+describe("Phase 3 binary posting integration", () => {
+  it("uses binary postings when fresh", () => {
+    const db = createTestChunksDb();
+    rebuildTrigramIndex(db);
+    // Build postings in same dir as db
+    const dir = join(db, "..");
+    buildPostingFiles(db, dir);
+    const results = grepChunks(db, "viewDidLoad", { useIndex: true });
+    assert.equal(results.length, 2);
+  });
+
+  it("falls back to SQLite when binary postings are stale", () => {
+    const db = createTestChunksDb();
+    rebuildTrigramIndex(db);
+    const dir = join(db, "..");
+    buildPostingFiles(db, dir);
+
+    // Update a chunk so DB is newer than postings
+    execSync(`sqlite3 "${db}" "UPDATE chunks SET text = 'betaFunction() called here', hash = 'h_new' WHERE id = 'c3'"`, { encoding: "utf-8" });
+    // Rebuild SQLite trigram index (hot path would do this)
+    rebuildTrigramIndex(db);
+    // Touch DB to ensure mtime > postings mtime
+    const future = new Date(Date.now() + 2000);
+    utimesSync(db, future, future);
+
+    // Binary postings are stale (don't know about "betaFunction"),
+    // but SQLite trigrams are fresh — should still find the match
+    const results = grepChunks(db, "betaFunction", { useIndex: true });
+    assert.equal(results.length, 1);
+  });
+
+  it("does not cross-contaminate with a different dbPath", () => {
+    // Create two separate DBs
+    const db1 = createTestChunksDb();
+    const db2 = createTestChunksDb();
+    rebuildTrigramIndex(db1);
+    rebuildTrigramIndex(db2);
+
+    // Build postings only for db1
+    const dir1 = join(db1, "..");
+    buildPostingFiles(db1, dir1);
+
+    // db2 has no postings in its directory — should use SQLite path, not db1's postings
+    const results = grepChunks(db2, "viewDidLoad", { useIndex: true });
+    assert.equal(results.length, 2);
   });
 });
