@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_ROOT="$HOME/.openclaw/memory-stack"
 STATE_DIR="$HOME/.openclaw/state"
 BIN_DIR="$HOME/.openclaw/bin"
-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-license.busihoward.workers.dev/api/activate}"
+ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-api.apptah.com/api/activate}"
 
 # ── Color helpers (disabled when not a terminal) ────────────────────
 if [[ -t 1 ]]; then
@@ -197,6 +197,11 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
   cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
+  # Copy lib/ modules (engines, grep, pipeline, etc.) — needed by CLI shim
+  if [[ -d "$SCRIPT_DIR/plugin/lib" ]]; then
+    rm -rf "$EXT_DIR/lib"
+    cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/lib"
+  fi
   ok "Plugin updated"
 
   # Update version.json

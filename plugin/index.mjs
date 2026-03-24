@@ -220,7 +220,8 @@ export default {
           label: "Memory Search",
           description:
             "Search memories using local BM25 + semantic search. " +
-            "Commands: health, graph, graph:Entity depth:N, evolution:Entity, " +
+            "Commands: grep:<pattern> [-s chunks|facts] [--case-sensitive], " +
+            "health, graph, graph:Entity depth:N, evolution:Entity, " +
             "expertise, consolidate, organize [--apply]. " +
             "No API keys needed.",
           parameters: {
@@ -232,6 +233,33 @@ export default {
           },
           async execute(_toolCallId, params) {
             const q = (params.query || "").trim();
+
+            // grep:<pattern> [-s chunks|facts] [--case-sensitive]
+            const grepMatch = q.match(/^grep:(.+)/i);
+            if (grepMatch) {
+              const { grepAll, formatGrepResults } = await import("./lib/grep.mjs");
+
+              let grepPattern = grepMatch[1].trim();
+              let scope;
+              let caseSensitive = false;
+
+              const scopeFlag = grepPattern.match(/\s+-s\s+(chunks|facts)\b/i);
+              if (scopeFlag) {
+                scope = scopeFlag[1].toLowerCase();
+                grepPattern = grepPattern.replace(scopeFlag[0], "").trim();
+              }
+
+              const caseFlag = grepPattern.match(/\s+--case-sensitive\b/i);
+              if (caseFlag) {
+                caseSensitive = true;
+                grepPattern = grepPattern.replace(caseFlag[0], "").trim();
+              }
+
+              if (!grepPattern) return textResult("Usage: grep:<pattern> [-s chunks|facts] [--case-sensitive]");
+
+              const results = grepAll(grepPattern, { scope, caseSensitive, useIndex: true });
+              return textResult(formatGrepResults(results));
+            }
 
             // health
             if (/^health\b/i.test(q)) {
@@ -362,6 +390,13 @@ export default {
       if (facts.length > 0) {
         await saveRescueFacts(facts, event.sessionKey);
       }
+
+      // Incremental trigram index update (Phase 1+)
+      // Keeps grep index fresh on every conversation turn.
+      try {
+        const { incrementalIndexUpdate } = await import("./lib/ngram.mjs");
+        incrementalIndexUpdate(MEMORY_DB);
+      } catch { /* ngram.mjs may not exist yet — silent */ }
 
       // Extract entities and merge into knowledge graph
       if (cfg.graphEnabled !== false) {

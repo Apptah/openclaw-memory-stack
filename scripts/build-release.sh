@@ -22,6 +22,22 @@ cp "$PROJECT_ROOT/install.sh" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/LICENSE" "$BUILD_DIR/"
 cp "$PROJECT_ROOT/openclaw.plugin.json" "$BUILD_DIR/"
+
+# Rebuild plugin dist before copying — ensures shipped bundle matches source
+echo "Rebuilding plugin dist..."
+(cd "$PROJECT_ROOT/plugin" && node build.mjs)
+if [ ! -f "$PROJECT_ROOT/plugin/dist/index.mjs" ]; then
+  echo "ERROR: plugin/dist/index.mjs not found after build" >&2
+  exit 1
+fi
+# Verify dist is not stale (must be newer than all plugin source files)
+STALE_SOURCE=$(find "$PROJECT_ROOT/plugin" -name '*.mjs' -not -path '*/dist/*' -not -path '*/node_modules/*' -not -path '*/test/*' -newer "$PROJECT_ROOT/plugin/dist/index.mjs" 2>/dev/null | head -1)
+if [ -n "$STALE_SOURCE" ]; then
+  echo "ERROR: plugin/dist/index.mjs is older than $(basename "$STALE_SOURCE") — build may have failed" >&2
+  exit 1
+fi
+echo "  plugin/dist/index.mjs rebuilt"
+
 cp -r "$PROJECT_ROOT/plugin" "$BUILD_DIR/"
 
 # Copy all backend skills dynamically

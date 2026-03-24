@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { MAINTENANCE_STATE, RESCUE_DB, findQmdBin } from "./constants.mjs";
+import { MAINTENANCE_STATE, MEMORY_DB, RESCUE_DB, findQmdBin } from "./constants.mjs";
 import { initRescueDB, rebuildFactsFTS } from "./rescue.mjs";
 import { analyzeMemoryHealth } from "./quality.mjs";
 
@@ -143,6 +143,13 @@ export async function runMaintenanceIfDue(cfg = {}, logger = null) {
         rebuildFactsFTS();
       }
     } catch {}
+
+    // Task 3b: Trigram index full rebuild (safety net for missed updates)
+    try {
+      const { rebuildTrigramIndex } = await import("./ngram.mjs");
+      rebuildTrigramIndex(MEMORY_DB);
+      log("Trigram index rebuilt");
+    } catch { /* ngram.mjs may not exist in Phase 0 */ }
 
     // Task 3: Health score check
     try {
