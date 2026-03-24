@@ -153,6 +153,22 @@ describe("lib module imports (smoke)", () => {
   });
 });
 
+describe("maintenance.mjs", () => {
+  it("exports ensureWorkspaceQmdReady", async () => {
+    const mod = await import("../lib/maintenance.mjs");
+    assert.equal(typeof mod.ensureWorkspaceQmdReady, "function");
+  });
+
+  it("ensureWorkspaceQmdReady returns valid result when qmd unavailable", async () => {
+    const { ensureWorkspaceQmdReady } = await import("../lib/maintenance.mjs");
+    // This test runs in CI/dev where QMD may or may not be available
+    const result = await ensureWorkspaceQmdReady({}, null);
+    assert.ok(result.engineSummary, "must return engineSummary");
+    assert.ok(typeof result.engineSummary === "string");
+    assert.ok(result.healthNote === null || typeof result.healthNote === "string");
+  });
+});
+
 describe("command dispatch (unit)", () => {
   let execute;
 

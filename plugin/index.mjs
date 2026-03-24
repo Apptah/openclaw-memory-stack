@@ -24,6 +24,7 @@ import {
   detectCommunities, rankByPageRank, invalidateGraphCache,
 } from "./lib/graph/algorithms.mjs";
 import { configureLLM } from "./lib/llm.mjs";
+import { ensureWorkspaceQmdReady } from "./lib/maintenance.mjs";
 
 // ─── Background update check ─────────────────────────────────────
 
@@ -187,6 +188,9 @@ export default {
 
     // Ingest external markdown drop-zone files (fire-and-forget)
     ingestExternalMarkdown(cfg).catch(() => {});
+
+    // Workspace QMD auto-init (fire-and-forget, non-blocking)
+    ensureWorkspaceQmdReady(cfg, api.logger).catch(() => {});
 
     // Background update check (fire-and-forget)
     checkForUpdates(api);
