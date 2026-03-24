@@ -346,6 +346,7 @@ export function saveRescueFacts(facts, sessionKey) {
       const content = f.text || f.fact || "";
       if (!content) continue;
       const type = f.type || "unknown";
+      // TODO(Task 3): persist structured columns (key, value, scope, evidence, supersedes, entities) via dedup-gate
       sql += `INSERT INTO facts (type, content, source, timestamp) VALUES (${sqlEscape(type)}, ${sqlEscape(content)}, ${sqlEscape(source)}, ${sqlEscape(now)});\n`;
     }
 

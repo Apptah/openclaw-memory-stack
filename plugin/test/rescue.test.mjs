@@ -26,7 +26,7 @@ describe("rescue", () => {
   it("returns ExtractedFact schema", () => {
     const facts = extractKeyFacts("We decided to use Redis for caching.");
     for (const f of facts) {
-      assert.ok(["decision", "deadline", "requirement", "entity", "insight"].includes(f.type));
+      assert.ok(["decision", "deadline", "requirement", "entity", "preference", "workflow", "relationship", "correction"].includes(f.type));
       assert.equal(typeof f.fact, "string");
       assert.equal(typeof f.confidence, "number");
       assert.ok(Array.isArray(f.entities));
