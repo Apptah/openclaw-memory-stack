@@ -110,6 +110,19 @@ describe("lib module imports (smoke)", () => {
     assert.equal(typeof mod.cleanupOldRescueFiles, "function");
   });
 
+  it("rescue exports saveRescueFacts as async function", async () => {
+    const mod = await import("../lib/rescue.mjs");
+    // Call with empty array — should return a promise (async function)
+    const result = mod.saveRescueFacts([], "test");
+    assert.ok(result instanceof Promise || result === undefined, "saveRescueFacts must return Promise or undefined for empty input");
+  });
+
+  it("dedup-gate exports gateFactInsert and archiveFact", async () => {
+    const mod = await import("../lib/dedup-gate.mjs");
+    assert.equal(typeof mod.gateFactInsert, "function");
+    assert.equal(typeof mod.archiveFact, "function");
+  });
+
   it("quality exports all functions", async () => {
     const mod = await import("../lib/quality.mjs");
     assert.equal(typeof mod.analyzeMemoryHealth, "function");

@@ -59,7 +59,7 @@ function checkForUpdates(api) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(
-        `https://openclaw-license.busihoward.workers.dev/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
+        `https://openclaw-api.apptah.com/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
         { signal: controller.signal }
       );
       clearTimeout(timer);
@@ -349,7 +349,7 @@ export default {
       // Extract and save rescue facts (LLM if API key configured, regex fallback)
       const facts = await extractFacts(content);
       if (facts.length > 0) {
-        saveRescueFacts(facts, event.sessionKey);
+        await saveRescueFacts(facts, event.sessionKey);
       }
 
       // Extract entities and merge into knowledge graph

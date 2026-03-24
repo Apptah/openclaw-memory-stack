@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync, mkdirSync, readdirSync, renameSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { HOME, RESCUE_DIR, RESCUE_DB } from "./constants.mjs";
+import { gateFactInsert, archiveFact } from "./dedup-gate.mjs";
 
 // Old location before path consolidation (Task 1 migration)
 const OLD_RESCUE_DB = resolve(HOME, ".openclaw/memory-stack/rescue/facts.sqlite");
@@ -333,8 +334,10 @@ export async function extractFacts(text, cfg = {}) {
 
 /**
  * Save extracted facts to rescue SQLite store.
+ * Routes each fact through the dedup gate before inserting.
+ * Persists all structured columns (key, value, scope, confidence, evidence, supersedes, entities).
  */
-export function saveRescueFacts(facts, sessionKey) {
+export async function saveRescueFacts(facts, sessionKey) {
   if (facts.length === 0) return;
   try {
     initRescueDB();
@@ -343,11 +346,23 @@ export function saveRescueFacts(facts, sessionKey) {
 
     let sql = "";
     for (const f of facts) {
-      const content = f.text || f.fact || "";
+      const content = f.text || f.fact || f.value || "";
       if (!content) continue;
+
+      const gate = gateFactInsert(f);
+      if (gate.action === "skip") continue;
+      if (gate.action === "archive") archiveFact(gate.archivedId);
+
       const type = f.type || "unknown";
-      // TODO(Task 3): persist structured columns (key, value, scope, evidence, supersedes, entities) via dedup-gate
-      sql += `INSERT INTO facts (type, content, source, timestamp) VALUES (${sqlEscape(type)}, ${sqlEscape(content)}, ${sqlEscape(source)}, ${sqlEscape(now)});\n`;
+      const key = f.key || null;
+      const value = f.value || null;
+      const scope = f.scope || "global";
+      const confidence = typeof f.confidence === "number" ? f.confidence : 0.5;
+      const evidence = f.evidence || null;
+      const supersedes = gate.archivedId || null;
+      const entities = Array.isArray(f.entities) ? JSON.stringify(f.entities) : null;
+
+      sql += `INSERT INTO facts (type, content, source, timestamp, key, value, scope, confidence, evidence, supersedes, entities) VALUES (${sqlEscape(type)}, ${sqlEscape(content)}, ${sqlEscape(source)}, ${sqlEscape(now)}, ${sqlEscape(key)}, ${sqlEscape(value)}, ${sqlEscape(scope)}, ${confidence}, ${sqlEscape(evidence)}, ${supersedes !== null ? supersedes : "NULL"}, ${sqlEscape(entities)});\n`;
     }
 
     if (sql) {

@@ -1,7 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
-import { extractKeyFacts, initRescueDB } from "../lib/rescue.mjs";
+import { extractKeyFacts, initRescueDB, saveRescueFacts } from "../lib/rescue.mjs";
+import { gateFactInsert, archiveFact } from "../lib/dedup-gate.mjs";
 import { RESCUE_DB } from "../lib/constants.mjs";
 
 describe("rescue", () => {
@@ -78,6 +79,79 @@ describe("rescue", () => {
     const text = "We decided to use Redis.\nWe decided to use Redis.\nWe decided to use Redis.";
     const facts = extractKeyFacts(text);
     assert.ok(facts.length <= 2);
+  });
+});
+
+describe("dedup gate", () => {
+  it("skips exact structured duplicates", async () => {
+    initRescueDB();
+    // Seed a known fact into the DB
+    const seedContent = "dedup-gate-exact-test-unique-" + Date.now();
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "INSERT INTO facts (type, content, source, timestamp) VALUES ('decision', '${seedContent}', 'test', datetime('now'));"`,
+      { timeout: 5000 }
+    );
+    // gateFactInsert with same type + content should return skip
+    const result = gateFactInsert({ type: "decision", fact: seedContent });
+    assert.equal(result.action, "skip");
+  });
+
+  it("archives older fact when key/value changes", async () => {
+    initRescueDB();
+    // Insert a preference fact with key=db, value=PostgreSQL
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "INSERT INTO facts (type, content, source, timestamp, key, value) VALUES ('preference', 'I prefer PostgreSQL', 'test', datetime('now'), 'db', 'PostgreSQL');"`,
+      { timeout: 5000 }
+    );
+    // gateFactInsert with same type+key but different value should return archive
+    const result = gateFactInsert({ type: "preference", fact: "I prefer MySQL", key: "db", value: "MySQL" });
+    assert.equal(result.action, "archive");
+    assert.ok(typeof result.archivedId === "number");
+  });
+
+  it("handles old flat facts and new structured facts in same table", async () => {
+    initRescueDB();
+    const uniqueTag = "coexist-test-" + Date.now();
+    // Seed old flat fact (no structured columns)
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "INSERT INTO facts (type, content, source, timestamp) VALUES ('decision', 'old flat fact ${uniqueTag}', 'test', datetime('now'));"`,
+      { timeout: 5000 }
+    );
+    // Save a new structured fact via saveRescueFacts
+    await saveRescueFacts([
+      { type: "decision", fact: "new structured fact " + uniqueTag, key: "arch", value: "microservices", scope: "project", confidence: 0.9, entities: ["arch"] }
+    ], "test-session");
+    // Both should exist
+    const flat = execSync(
+      `sqlite3 "${RESCUE_DB}" "SELECT COUNT(*) FROM facts WHERE content LIKE 'old flat fact ${uniqueTag}';"`,
+      { encoding: "utf-8", timeout: 5000 }
+    ).trim();
+    assert.equal(flat, "1", "old flat fact should still exist");
+    const structured = execSync(
+      `sqlite3 "${RESCUE_DB}" "SELECT COUNT(*) FROM facts WHERE key = 'arch' AND content LIKE 'new structured fact %';"`,
+      { encoding: "utf-8", timeout: 5000 }
+    ).trim();
+    assert.equal(structured, "1", "new structured fact should exist with key column");
+    // FTS should find both
+    const ftsSql = "DELETE FROM facts_fts; INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities) SELECT id, content, type, key, value, scope, entities FROM facts;";
+    execSync(`sqlite3 "${RESCUE_DB}" "${ftsSql}"`, { timeout: 5000 });
+    const ftsResult = execSync(
+      `sqlite3 "${RESCUE_DB}" "SELECT COUNT(*) FROM facts_fts WHERE facts_fts MATCH 'flat';"`,
+      { encoding: "utf-8", timeout: 5000 }
+    ).trim();
+    assert.ok(parseInt(ftsResult) >= 1, "FTS should find old flat fact");
+  });
+
+  it("inserts new fact (no prior duplicate)", () => {
+    initRescueDB();
+    const unique = { type: "decision", fact: "brand-new-unique-fact-" + Date.now() };
+    const result = gateFactInsert(unique);
+    assert.equal(result.action, "insert");
+  });
+
+  it("returns skip for empty content", () => {
+    const result = gateFactInsert({ type: "decision", fact: "" });
+    assert.equal(result.action, "skip");
   });
 });
 
