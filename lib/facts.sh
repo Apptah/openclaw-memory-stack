@@ -30,7 +30,14 @@ facts_insert_structured() {
     local existing
     existing=$(sqlite3 "$FACTS_DB" "SELECT id FROM facts WHERE type = '${type//\'/\'\'}' AND key = '${key//\'/\'\'}' LIMIT 1;" 2>/dev/null)
     if [ -n "$existing" ]; then
-      # Archive old fact and remove from FTS
+      # Check if value is identical — if so, skip (exact duplicate)
+      local existing_value
+      existing_value=$(sqlite3 "$FACTS_DB" "SELECT value FROM facts WHERE id = $existing;" 2>/dev/null)
+      if [ "$existing_value" = "$value" ]; then
+        echo '{"status":"ok"}'
+        return 0
+      fi
+      # Different value — archive old fact (supersede) and remove from FTS
       sqlite3 "$FACTS_DB" "
         INSERT INTO facts_archive SELECT id, type, content, source, timestamp, created_at, key, value, scope, confidence, evidence, supersedes, entities, datetime('now'), 'superseded' FROM facts WHERE id = $existing;
         DELETE FROM facts_fts WHERE rowid = $existing;

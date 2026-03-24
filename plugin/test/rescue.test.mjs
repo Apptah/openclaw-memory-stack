@@ -112,6 +112,11 @@ describe("dedup gate", () => {
   it("handles old flat facts and new structured facts in same table", async () => {
     initRescueDB();
     const uniqueTag = "coexist-test-" + Date.now();
+    // Clean up any prior 'arch' key rows to avoid count accumulation across runs
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "DELETE FROM facts WHERE key = 'arch';"`,
+      { timeout: 5000 }
+    );
     // Seed old flat fact (no structured columns)
     execSync(
       `sqlite3 "${RESCUE_DB}" "INSERT INTO facts (type, content, source, timestamp) VALUES ('decision', 'old flat fact ${uniqueTag}', 'test', datetime('now'));"`,
