@@ -64,16 +64,12 @@ export function gateFactInsert(fact) {
  * Archive a fact by moving it to facts_archive table.
  */
 export function archiveFact(factId) {
+  const id = parseInt(factId, 10);
+  if (!Number.isFinite(id)) return;
   try {
     const sql = [
-      "CREATE TABLE IF NOT EXISTS facts_archive (",
-      "  id INTEGER PRIMARY KEY,",
-      "  type TEXT, content TEXT, source TEXT, timestamp TEXT, created_at TEXT,",
-      "  key TEXT, value TEXT, scope TEXT, confidence REAL, evidence TEXT, supersedes INTEGER, entities TEXT,",
-      "  archived_at TEXT DEFAULT (datetime('now')), archived_reason TEXT DEFAULT 'superseded'",
-      ");",
-      `INSERT INTO facts_archive SELECT id, type, content, source, timestamp, created_at, key, value, scope, confidence, evidence, supersedes, entities, datetime('now'), 'superseded' FROM facts WHERE id = ${factId};`,
-      `DELETE FROM facts WHERE id = ${factId};`,
+      `INSERT INTO facts_archive SELECT id, type, content, source, timestamp, created_at, key, value, scope, confidence, evidence, supersedes, entities, datetime('now'), 'superseded' FROM facts WHERE id = ${id};`,
+      `DELETE FROM facts WHERE id = ${id};`,
     ].join(" ");
     execSync(`sqlite3 "${RESCUE_DB}" "${sql.replace(/"/g, '\\"')}"`, { timeout: 5000 });
   } catch { /* best-effort archive */ }

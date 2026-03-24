@@ -39,8 +39,14 @@ function ensureRescueDB() {
     try { copyFileSync(OLD_RESCUE_DB, RESCUE_DB); } catch { /* best-effort */ }
   }
 
-  // Create base table (original schema, idempotent)
+  // Create base tables (original schema + archive, idempotent)
   const baseSchema = `
+CREATE TABLE IF NOT EXISTS facts_archive (
+  id INTEGER PRIMARY KEY,
+  type TEXT, content TEXT, source TEXT, timestamp TEXT, created_at TEXT,
+  key TEXT, value TEXT, scope TEXT, confidence REAL, evidence TEXT, supersedes INTEGER, entities TEXT,
+  archived_at TEXT DEFAULT (datetime('now')), archived_reason TEXT DEFAULT 'superseded'
+);
 CREATE TABLE IF NOT EXISTS facts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT NOT NULL,
