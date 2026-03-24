@@ -1,6 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { execSync } from "node:child_process";
 import { extractKeyFacts, initRescueDB } from "../lib/rescue.mjs";
+import { RESCUE_DB } from "../lib/constants.mjs";
 
 describe("rescue", () => {
   it("extracts decision facts", () => {
@@ -43,7 +45,43 @@ describe("facts schema migration", () => {
     assert.doesNotThrow(() => initRescueDB());
   });
 
-  it("migrates facts table in place and rehydrates facts_fts", () => {
+  it("facts table has all 7 required v2 columns", () => {
+    initRescueDB();
+    const raw = execSync(`sqlite3 "${RESCUE_DB}" "PRAGMA table_info(facts);"`, {
+      encoding: "utf-8",
+      timeout: 5000,
+    }).trim();
+    const columns = new Set(
+      raw.split("\n").filter(Boolean).map(row => row.split("|")[1])
+    );
+    const required = ["key", "value", "scope", "confidence", "evidence", "supersedes", "entities"];
+    for (const col of required) {
+      assert.ok(columns.has(col), `Missing column: ${col}`);
+    }
+  });
+
+  it("facts_fts returns seeded legacy row after FTS rebuild", () => {
+    initRescueDB();
+    // Seed a legacy row (base-schema columns only, no v2 columns)
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "INSERT INTO facts (type, content, source, timestamp) VALUES ('decision', 'legacy test fact for fts verification', 'test', datetime('now'));"`,
+      { timeout: 5000 }
+    );
+    // Manually rebuild FTS (same SQL as ensureFactsFTS / rebuildFactsFTS)
+    const ftsSql = [
+      "DELETE FROM facts_fts;",
+      "INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities) SELECT id, content, type, key, value, scope, entities FROM facts;",
+    ].join(" ");
+    execSync(`sqlite3 "${RESCUE_DB}" "${ftsSql}"`, { timeout: 5000 });
+    // Verify FTS search finds the seeded row
+    const result = execSync(
+      `sqlite3 "${RESCUE_DB}" "SELECT content FROM facts_fts WHERE facts_fts MATCH 'legacy';"`,
+      { encoding: "utf-8", timeout: 5000 }
+    ).trim();
+    assert.ok(result.includes("legacy test fact for fts verification"), `FTS did not return seeded row; got: ${result}`);
+  });
+
+  it("migrates facts table in place and rehydrates facts_fts (idempotent)", () => {
     // Run twice to verify idempotency (migration safe to call multiple times)
     assert.doesNotThrow(() => {
       initRescueDB();

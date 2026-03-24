@@ -1,7 +1,10 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, mkdirSync, readdirSync, renameSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, readdirSync, renameSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { RESCUE_DIR, RESCUE_DB } from "./constants.mjs";
+import { HOME, RESCUE_DIR, RESCUE_DB } from "./constants.mjs";
+
+// Old location before path consolidation (Task 1 migration)
+const OLD_RESCUE_DB = resolve(HOME, ".openclaw/memory-stack/rescue/facts.sqlite");
 import { llmGenerate } from "./llm.mjs";
 import { extractEntities as extractEntitiesUnified } from "./extract.mjs";
 
@@ -29,6 +32,11 @@ function ensureRescueDB() {
   if (rescueDBReady) return;
   const dir = resolve(RESCUE_DB, "..");
   mkdirSync(dir, { recursive: true });
+
+  // One-time file-level migration: copy old DB path to new consolidated location
+  if (!existsSync(RESCUE_DB) && existsSync(OLD_RESCUE_DB)) {
+    try { copyFileSync(OLD_RESCUE_DB, RESCUE_DB); } catch { /* best-effort */ }
+  }
 
   // Create base table (original schema, idempotent)
   const baseSchema = `
@@ -86,16 +94,13 @@ function migrateFactsSchema() {
  */
 function ensureFactsFTS() {
   try {
-    // Drop existing FTS (may have fewer columns than desired)
-    execSync(`sqlite3 "${RESCUE_DB}" "DROP TABLE IF EXISTS facts_fts;"`, { timeout: 5000 });
-    execSync(
-      `sqlite3 "${RESCUE_DB}" "CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value, scope, entities);"`,
-      { timeout: 5000 }
-    );
-    // Rehydrate from existing rows
-    const rehydrate = `INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities)
-      SELECT id, content, type, key, value, scope, entities FROM facts;`;
-    execSync(`sqlite3 "${RESCUE_DB}" "${rehydrate.replace(/\n/g, " ")}"`, { timeout: 5000 });
+    // Drop, recreate, and rehydrate in one spawn to reduce process overhead
+    const ftsSql = [
+      "DROP TABLE IF EXISTS facts_fts;",
+      "CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value, scope, entities);",
+      "INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities) SELECT id, content, type, key, value, scope, entities FROM facts;",
+    ].join(" ");
+    execSync(`sqlite3 "${RESCUE_DB}" "${ftsSql}"`, { timeout: 5000 });
   } catch { /* best-effort FTS setup */ }
 }
 
