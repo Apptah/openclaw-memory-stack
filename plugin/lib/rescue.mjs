@@ -176,7 +176,7 @@ function extractEntitiesFromLine(line) {
  */
 async function extractFactsWithLLM(text, cfg) {
   const prompt = `Extract key facts from the following conversation text. Return a JSON array of objects with this schema:
-{ "type": "decision"|"deadline"|"requirement"|"entity"|"insight", "fact": "the fact text", "confidence": 0.0-1.0, "entities": ["referenced entity names"] }
+{ "type": "decision"|"deadline"|"requirement"|"entity"|"preference"|"workflow"|"relationship"|"correction", "key": "short label", "value": "the fact text", "scope": "global"|"project"|"session", "confidence": 0.0-1.0, "evidence": "the source text", "supersedes": null, "entities": ["referenced entity names"] }
 
 Only include facts that are explicitly stated. Be concise.
 
@@ -195,15 +195,22 @@ Return ONLY a JSON array, no other text:`;
     const facts = JSON.parse(jsonMatch[0]);
     if (!Array.isArray(facts)) return null;
 
-    const validTypes = ["decision", "deadline", "requirement", "entity", "insight"];
+    const validTypes = ["decision", "deadline", "requirement", "entity", "preference", "workflow", "relationship", "correction"];
     const validated = [];
     for (const f of facts) {
       if (!f.type || !validTypes.includes(f.type)) continue;
-      if (!f.fact || typeof f.fact !== "string") continue;
+      // Accept both old format (fact field) and new format (key+value fields)
+      const factText = f.fact || f.value;
+      if (!factText || typeof factText !== "string") continue;
       validated.push({
         type: f.type,
-        fact: f.fact,
+        fact: factText,
+        key: typeof f.key === "string" ? f.key : null,
+        value: typeof f.value === "string" ? f.value : factText,
+        scope: ["global", "project", "session"].includes(f.scope) ? f.scope : "global",
         confidence: typeof f.confidence === "number" ? Math.min(1, Math.max(0, f.confidence)) : 0.5,
+        evidence: typeof f.evidence === "string" ? f.evidence : null,
+        supersedes: f.supersedes != null ? f.supersedes : null,
         entities: Array.isArray(f.entities) ? f.entities.filter(e => typeof e === "string") : [],
       });
     }
@@ -216,6 +223,68 @@ Return ONLY a JSON array, no other text:`;
 // ─── Regex-based fact extraction ────────────────────────────────
 
 /**
+ * Classify and push a single sentence into facts array.
+ * Returns true if a fact was matched.
+ */
+function classifySentence(sentence, facts) {
+  const s = sentence.trim();
+  if (!s) return false;
+
+  const entities = extractEntitiesFromLine(s);
+  const isNegated = /\b(NOT|don't|shouldn't|never|no longer)\b/.test(s);
+
+  // Correction: lines that explicitly correct or negate something
+  if (/\bactually\b/i.test(s) || (isNegated && /\b(NOT|don't|shouldn't)\b/.test(s) && !/\b(decided|agreed|confirmed|chose|selected|approved|will)\b/i.test(s))) {
+    facts.push({ type: "correction", fact: s, confidence: 0.85, entities });
+    return true;
+  }
+
+  // Decision: includes negated decisions (e.g. "We will NOT use MongoDB")
+  if (/\b(decided|agreed|confirmed|chose|selected|approved|will)\b/i.test(s)) {
+    facts.push({ type: "decision", fact: s, confidence: 0.9, entities });
+    return true;
+  }
+
+  // Deadline
+  if (/\b(deadline|due|by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d)/i.test(s)) {
+    facts.push({ type: "deadline", fact: s, confidence: 0.95, entities });
+    return true;
+  }
+
+  // Requirement
+  if (/\b(must|shall|require|need to|important)\b/i.test(s) && s.length > 30) {
+    facts.push({ type: "requirement", fact: s, confidence: 0.7, entities });
+    return true;
+  }
+
+  // Workflow: habitual patterns
+  if (/\b(always|typically|usually|our process|we tend to|I always|we always)\b/i.test(s)) {
+    facts.push({ type: "workflow", fact: s, confidence: 0.75, entities });
+    return true;
+  }
+
+  // Preference
+  if (/\b(prefer|like to|favor|rather|instead of)\b/i.test(s)) {
+    facts.push({ type: "preference", fact: s, confidence: 0.75, entities });
+    return true;
+  }
+
+  // Relationship
+  if (/\b(works with|reports to|depends on|integrates with|owned by|part of)\b/i.test(s)) {
+    facts.push({ type: "relationship", fact: s, confidence: 0.8, entities });
+    return true;
+  }
+
+  // Entity
+  if (/\b(project|client|team|api|endpoint|database|service)\s+[A-Z]/i.test(s)) {
+    facts.push({ type: "entity", fact: s, confidence: 0.6, entities });
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Extract key facts using regex patterns (fallback path).
  */
 export function extractKeyFacts(text) {
@@ -223,19 +292,18 @@ export function extractKeyFacts(text) {
   const lines = text.split("\n").filter(l => l.trim());
 
   for (const line of lines) {
-    const entities = extractEntitiesFromLine(line);
+    // Split each line into sentences and process each independently
+    const sentences = line.split(/(?<=\. )|(?<=; )/).flatMap(s => s.split(/\. |; /));
+    const unique = [...new Set(sentences.map(s => s.trim()).filter(Boolean))];
 
-    if (/\b(decided|agreed|confirmed|chose|selected|approved)\b/i.test(line)) {
-      facts.push({ type: "decision", fact: line.trim(), confidence: 0.9, entities });
-    }
-    else if (/\b(deadline|due|by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d)/i.test(line)) {
-      facts.push({ type: "deadline", fact: line.trim(), confidence: 0.95, entities });
-    }
-    else if (/\b(must|shall|require|need to|should|important)\b/i.test(line) && line.length > 30) {
-      facts.push({ type: "requirement", fact: line.trim(), confidence: 0.7, entities });
-    }
-    else if (/\b(project|client|team|api|endpoint|database|service)\s+[A-Z]/i.test(line)) {
-      facts.push({ type: "entity", fact: line.trim(), confidence: 0.6, entities });
+    if (unique.length > 1) {
+      // Multi-sentence line: process each sentence independently
+      for (const sentence of unique) {
+        classifySentence(sentence, facts);
+      }
+    } else {
+      // Single sentence: process the whole line
+      classifySentence(line, facts);
     }
   }
 

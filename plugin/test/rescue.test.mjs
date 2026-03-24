@@ -33,6 +33,47 @@ describe("rescue", () => {
     }
   });
 
+  it("extracts workflow facts from regex fallback", () => {
+    const facts = extractKeyFacts("I always use Vim for quick edits.");
+    assert.ok(facts.some(f => f.type === "workflow"));
+  });
+
+  it("extracts preference facts", () => {
+    const facts = extractKeyFacts("I prefer TypeScript over JavaScript for large projects.");
+    assert.ok(facts.some(f => f.type === "preference"));
+  });
+
+  it("extracts relationship facts", () => {
+    const facts = extractKeyFacts("The auth service depends on the user database.");
+    assert.ok(facts.some(f => f.type === "relationship"));
+  });
+
+  it("extracts correction facts", () => {
+    const facts = extractKeyFacts("Actually, we should NOT use MongoDB for this.");
+    assert.ok(facts.some(f => f.type === "correction" || f.type === "decision"));
+  });
+
+  it("preserves negated decisions", () => {
+    const facts = extractKeyFacts("We will NOT use MongoDB.");
+    assert.ok(facts.some(f => f.type === "decision" && /NOT use MongoDB/.test(f.fact || f.value)));
+  });
+
+  it("handles sentence splitting", () => {
+    const facts = extractKeyFacts("We decided on PostgreSQL. The deadline is Friday.");
+    assert.ok(facts.some(f => f.type === "decision"));
+    assert.ok(facts.some(f => f.type === "deadline"));
+  });
+
+  it("validates structured LLM facts format", () => {
+    const facts = extractKeyFacts("We decided to use PostgreSQL for the backend.");
+    for (const f of facts) {
+      assert.ok(["decision", "deadline", "requirement", "entity", "preference", "workflow", "relationship", "correction"].includes(f.type));
+      assert.ok(f.fact || f.value, "must have fact or value");
+      assert.equal(typeof f.confidence, "number");
+      assert.ok(Array.isArray(f.entities));
+    }
+  });
+
   it("deduplicates facts", () => {
     const text = "We decided to use Redis.\nWe decided to use Redis.\nWe decided to use Redis.";
     const facts = extractKeyFacts(text);
