@@ -2,7 +2,8 @@ import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { writeFileSync, unlinkSync, mkdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { tmpdir } from "node:os";
+import { tmpdir, homedir } from "node:os";
+import { MEMORY_MD, MEMORY_ROOT } from "../lib/constants.mjs";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -250,6 +251,33 @@ describe("qmd: detectCollection config shapes", () => {
 
   it("completely unrelated keys return null", () => {
     assert.equal(parseCollection({ name: "my-project", version: 1 }), null);
+  });
+});
+
+// ─── 5b. memorymd engine uses global MEMORY.md path ─────────────
+
+describe("memorymd: global MEMORY.md path", () => {
+  it("MEMORY_MD points to ~/.openclaw/memory/MEMORY.md", () => {
+    const expected = resolve(homedir(), ".openclaw/memory/MEMORY.md");
+    assert.equal(MEMORY_MD, expected, "MEMORY_MD must be at global path");
+  });
+
+  it("memorymd engine reads from MEMORY_MD global path", async () => {
+    // Write a unique marker to the global MEMORY.md path
+    mkdirSync(MEMORY_ROOT, { recursive: true });
+    const hadFile = existsSync(MEMORY_MD);
+    writeFileSync(MEMORY_MD, "- memorymd-engine-global-path-unique-term-xyz\n", { flag: "w" });
+
+    const { default: memorymd } = await import("../lib/engines/memorymd.mjs");
+    const results = await memorymd.search("memorymd-engine-global-path-unique-term-xyz", { maxResults: 5 });
+
+    assert.ok(Array.isArray(results), "should return array");
+    assert.ok(results.length >= 1, "should find the entry written to global MEMORY.md");
+    assert.ok(results[0].content.includes("memorymd-engine-global-path-unique-term-xyz"), "content should match the marker");
+
+    if (!hadFile) {
+      unlinkSync(MEMORY_MD);
+    }
   });
 });
 

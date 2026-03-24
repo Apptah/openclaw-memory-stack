@@ -14,7 +14,7 @@ export const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
 export const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
 export const RESCUE_DB = resolve(MEMORY_ROOT, "facts.sqlite");
 export const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
-export const GRAPH_DB = resolve(HOME, ".openclaw/memory-stack/graph.sqlite");
+export const GRAPH_DB = resolve(MEMORY_ROOT, "graph.sqlite");
 
 export const DEFAULT_CONFIG = {
   llmEndpoint: "https://api.openai.com/v1",

@@ -1,7 +1,11 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, renameSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, mkdirSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { homedir } from "node:os";
 import { GRAPH_PATH, GRAPH_DB } from "../constants.mjs";
+
+const HOME = homedir();
+const OLD_GRAPH_DB = resolve(HOME, ".openclaw/memory-stack/graph.sqlite");
 import { extractEntities } from "../extract.mjs";
 import { invalidateGraphCache as invalidateAlgorithmsCache } from "./algorithms.mjs";
 
@@ -13,6 +17,11 @@ export { extractEntities };
 function ensureDB() {
   const dir = resolve(GRAPH_DB, "..");
   mkdirSync(dir, { recursive: true });
+
+  // One-time migration: copy graph.sqlite from old memory-stack location
+  if (!existsSync(GRAPH_DB) && existsSync(OLD_GRAPH_DB)) {
+    try { copyFileSync(OLD_GRAPH_DB, GRAPH_DB); } catch { /* best-effort */ }
+  }
 
   const schema = `
 CREATE TABLE IF NOT EXISTS entities (

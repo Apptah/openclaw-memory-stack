@@ -1,17 +1,16 @@
 import { existsSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { WORKSPACE } from "./constants.mjs";
+import { MEMORY_MD } from "./constants.mjs";
 
 // ─── Memory Health Analysis ──────────────────────────────────────
 
 export function analyzeMemoryHealth() {
   const issues = { duplicates: [], stale: [], noise: [], total: 0, score: 100 };
 
-  if (!existsSync(resolve(WORKSPACE, "MEMORY.md"))) return issues;
+  if (!existsSync(MEMORY_MD)) return issues;
 
   try {
-    const content = readFileSync(resolve(WORKSPACE, "MEMORY.md"), "utf-8");
+    const content = readFileSync(MEMORY_MD, "utf-8");
     const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
     issues.total = lines.length;
 
@@ -229,10 +228,9 @@ export async function applyCosineDedup(results) {
 // ─── Consolidation ───────────────────────────────────────────────
 
 export function consolidateMemories() {
-  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
-  if (!existsSync(memoryMdPath)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
+  if (!existsSync(MEMORY_MD)) return { totalMemories: 0, clusters: [], consolidatable: { count: 0, entries: [], suggestion: "No MEMORY.md found." } };
 
-  const content = readFileSync(memoryMdPath, "utf-8");
+  const content = readFileSync(MEMORY_MD, "utf-8");
   const lines = content.split("\n").filter(l => l.trim() && !l.startsWith("#"));
   const totalMemories = lines.length;
 
@@ -284,9 +282,8 @@ export function consolidateMemories() {
 
 export function organizeMemories(options = {}) {
   const apply = options.apply === true;
-  const memoryMdPath = resolve(WORKSPACE, "MEMORY.md");
 
-  if (!existsSync(memoryMdPath)) {
+  if (!existsSync(MEMORY_MD)) {
     return { applied: false, dryRun: true, clusters: [], candidates: [], suggestions: [] };
   }
 
@@ -317,9 +314,9 @@ export function organizeMemories(options = {}) {
   if (apply) {
     // Mandatory backup
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const backupPath = `${memoryMdPath}.backup.${timestamp}`;
+    const backupPath = `${MEMORY_MD}.backup.${timestamp}`;
     try {
-      copyFileSync(memoryMdPath, backupPath);
+      copyFileSync(MEMORY_MD, backupPath);
     } catch (err) {
       return { applied: false, error: `Backup failed: ${err.message}`, backupPath: null };
     }
@@ -327,13 +324,13 @@ export function organizeMemories(options = {}) {
     try {
       // For now, A-MEM just writes a report comment at the top
       // Full LLM consolidation would rewrite content — keeping simple for safety
-      const content = readFileSync(memoryMdPath, "utf-8");
+      const content = readFileSync(MEMORY_MD, "utf-8");
       const report = `<!-- A-MEM organized: ${new Date().toISOString()}, ${candidates.length} candidates, ${suggestions.length} suggestions -->\n`;
-      writeFileSync(memoryMdPath, report + content);
+      writeFileSync(MEMORY_MD, report + content);
       return { applied: true, backupPath, changes: { candidates: candidates.length, suggestions: suggestions.length } };
     } catch (err) {
       // Restore from backup on failure
-      try { copyFileSync(backupPath, memoryMdPath); } catch { /* backup restore failed too */ }
+      try { copyFileSync(backupPath, MEMORY_MD); } catch { /* backup restore failed too */ }
       return { applied: false, error: `Write failed, restored backup: ${err.message}`, backupPath };
     }
   }
