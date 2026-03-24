@@ -25,6 +25,12 @@ OpenClaw Memory Stack v$VERSION
 Usage:
   openclaw-memory "<query>" [options]    Search across memory backends
   openclaw-memory health [--deep]        Check all backend health status
+  openclaw-memory query <terms> [--format json] [--limit N]
+                                         Search local facts database
+  openclaw-memory add --type <t> --value <v> [--key <k>] [--scope <s>] [--entities <e>]
+                                         Insert structured fact (no license required)
+  openclaw-memory recent [--days N] [--format json] [--limit N]
+                                         Show recently added facts
 
 Options:
   --hint <hint>       Routing hint: exact, semantic, timeline
@@ -62,6 +68,87 @@ if [ "${1:-}" = "health" ]; then
     printf "  %-15s %-12s %s\n" "$backend_name" "$bstatus" "$reason"
   done
   echo ""
+  exit 0
+fi
+
+# ── query: local facts search ────────────────────────────────────
+if [ "${1:-}" = "query" ]; then
+  shift
+  source "$INSTALL_ROOT/lib/facts.sh"
+  QUERY="" FORMAT="text" LIMIT=10
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --format) FORMAT="$2"; shift 2 ;;
+      --limit)  LIMIT="$2"; shift 2 ;;
+      *)        QUERY="$QUERY $1"; shift ;;
+    esac
+  done
+  QUERY="${QUERY# }"  # trim leading space
+  if [ -z "$QUERY" ]; then
+    echo "Error: no query provided" >&2; exit 1
+  fi
+  RESULT=$(facts_query_json "$QUERY" "$LIMIT")
+  if [ "$FORMAT" = "json" ]; then
+    echo "$RESULT"
+  else
+    echo "$RESULT" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for r in data:
+    print(f\"[{r.get('type','?')}] {r.get('key','')}: {r.get('value') or r.get('content','')}\")
+if not data: print('No facts found.')
+" 2>/dev/null || echo "$RESULT"
+  fi
+  exit 0
+fi
+
+# ── add: insert structured fact ──────────────────────────────────
+if [ "${1:-}" = "add" ]; then
+  shift
+  source "$INSTALL_ROOT/lib/facts.sh"
+  TYPE="" KEY="" VALUE="" SCOPE="global" ENTITIES=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --type)     TYPE="$2"; shift 2 ;;
+      --key)      KEY="$2"; shift 2 ;;
+      --value)    VALUE="$2"; shift 2 ;;
+      --scope)    SCOPE="$2"; shift 2 ;;
+      --entities) ENTITIES="$2"; shift 2 ;;
+      *)          shift ;;
+    esac
+  done
+  if [ -z "$TYPE" ] || [ -z "$VALUE" ]; then
+    echo '{"status":"error","reason":"--type and --value are required"}' >&2; exit 1
+  fi
+  facts_insert_structured "$TYPE" "$KEY" "$VALUE" "$SCOPE" "$ENTITIES"
+  exit $?
+fi
+
+# ── recent: show recent facts ───────────────────────────────────
+if [ "${1:-}" = "recent" ]; then
+  shift
+  source "$INSTALL_ROOT/lib/facts.sh"
+  DAYS=7 FORMAT="text" LIMIT=20
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --days)   DAYS="$2"; shift 2 ;;
+      --format) FORMAT="$2"; shift 2 ;;
+      --limit)  LIMIT="$2"; shift 2 ;;
+      *)        shift ;;
+    esac
+  done
+  RESULT=$(facts_recent_json "$DAYS" "$LIMIT")
+  if [ "$FORMAT" = "json" ]; then
+    echo "$RESULT"
+  else
+    echo "$RESULT" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for r in data:
+    print(f\"[{r.get('type','?')}] {r.get('created_at','')}: {r.get('key','')}: {r.get('value') or r.get('content','')}\")
+if not data: print('No recent facts.')
+" 2>/dev/null || echo "$RESULT"
+  fi
   exit 0
 fi
 
