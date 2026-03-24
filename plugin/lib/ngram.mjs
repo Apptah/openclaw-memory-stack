@@ -343,6 +343,112 @@ export function queryTrigramIndex(dbPath, tree) {
   return null;
 }
 
+// =============================================================================
+// Phase 2: Frequency-Weighted Query Pruning
+// =============================================================================
+
+// Pre-computed character pair frequency weights (0 = very common, 1 = very rare)
+// Based on English + code corpus analysis
+const CHAR_PAIR_FREQ = new Map([
+  // Very common (< 0.1)
+  ["th", 0.02], ["he", 0.03], ["in", 0.04], ["er", 0.04], ["an", 0.05],
+  ["re", 0.05], ["on", 0.06], ["at", 0.06], ["en", 0.06], ["nd", 0.07],
+  ["ti", 0.07], ["es", 0.07], ["or", 0.07], ["te", 0.08], ["of", 0.08],
+  ["ed", 0.08], ["is", 0.08], ["it", 0.08], ["al", 0.09], ["ar", 0.09],
+  ["st", 0.09], ["to", 0.09], ["nt", 0.09], ["ng", 0.09],
+  // Code-common (< 0.3)
+  ["fu", 0.15], ["nc", 0.16], ["ct", 0.17], ["io", 0.12], ["et", 0.18],
+  ["ur", 0.19], ["tu", 0.20], ["rn", 0.21], ["le", 0.12], ["se", 0.13],
+  ["if", 0.22], ["fo", 0.15], ["va", 0.20], ["cl", 0.22], ["as", 0.14],
+  ["ss", 0.25], ["im", 0.20], ["po", 0.18], ["rt", 0.16], ["ex", 0.25],
+]);
+
+export function getCharPairWeight(pair) {
+  const lower = pair.toLowerCase();
+  if (CHAR_PAIR_FREQ.has(lower)) return CHAR_PAIR_FREQ.get(lower);
+  return 0.9; // Unknown pair = rare
+}
+
+function trigramWeight(trigram) {
+  const w1 = getCharPairWeight(trigram.slice(0, 2));
+  const w2 = getCharPairWeight(trigram.slice(1, 3));
+  return (w1 + w2) / 2;
+}
+
+/**
+ * Select the K rarest trigrams from a set, by frequency weight.
+ * @param {Set<string>} trigrams
+ * @param {number} k
+ * @returns {string[]}
+ */
+export function selectRarestTrigrams(trigrams, k = 3) {
+  const weighted = [...trigrams].map(t => ({ trigram: t, weight: trigramWeight(t) }));
+  weighted.sort((a, b) => b.weight - a.weight); // Rarest first (highest weight)
+  return weighted.slice(0, k).map(w => w.trigram);
+}
+
+/**
+ * Pruned query: select K rarest trigrams per AND node instead of all.
+ * @param {string} dbPath
+ * @param {QueryNode} tree
+ * @param {number} [k=3]
+ * @returns {Set<string>|null}
+ */
+export function prunedQueryTrigramIndex(dbPath, tree, k = 3) {
+  if (tree.type === "SCAN") return null;
+
+  if (tree.type === "AND") {
+    let result = null;
+
+    const allTrigrams = new Set();
+    for (const literal of (tree.literals || [])) {
+      for (const t of extractTrigrams(literal.toLowerCase())) {
+        allTrigrams.add(t);
+      }
+    }
+
+    const selected = selectRarestTrigrams(allTrigrams, k);
+
+    for (const trigram of selected) {
+      const ids = lookupTrigram(dbPath, trigram);
+      if (result === null) {
+        result = ids;
+      } else {
+        result = new Set([...result].filter(id => ids.has(id)));
+      }
+      if (result.size === 0) return result;
+    }
+
+    for (const child of (tree.children || [])) {
+      const childIds = prunedQueryTrigramIndex(dbPath, child, k);
+      if (childIds === null) return null;
+      if (result === null) {
+        result = childIds;
+      } else {
+        result = new Set([...result].filter(id => childIds.has(id)));
+      }
+    }
+
+    return result || new Set();
+  }
+
+  if (tree.type === "OR") {
+    const result = new Set();
+    for (const child of tree.children) {
+      const childIds = prunedQueryTrigramIndex(dbPath, child, k);
+      if (childIds === null) return null;
+      for (const id of childIds) result.add(id);
+    }
+    return result;
+  }
+
+  return null;
+}
+
+// =============================================================================
+// Internal helpers
+// =============================================================================
+
 function lookupTrigram(dbPath, trigram) {
   const safeTrigram = trigram.replace(/'/g, "''");
   try {

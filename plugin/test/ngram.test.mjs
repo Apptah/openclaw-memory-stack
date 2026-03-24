@@ -1,7 +1,7 @@
 // plugin/test/ngram.test.mjs
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { extractTrigrams, decomposeRegex } from "../lib/ngram.mjs";
+import { extractTrigrams, decomposeRegex, getCharPairWeight, selectRarestTrigrams } from "../lib/ngram.mjs";
 
 describe("extractTrigrams", () => {
   it("extracts all 3-char substrings", () => {
@@ -80,5 +80,37 @@ describe("decomposeRegex", () => {
     const tree = decomposeRegex("view[A-Z]idLoad");
     assert.equal(tree.type, "AND");
     assert.ok(tree.literals.includes("view"));
+  });
+});
+
+describe("char pair frequency", () => {
+  it("common pairs have low weight", () => {
+    assert.ok(getCharPairWeight("th") < 0.1);
+    assert.ok(getCharPairWeight("in") < 0.1);
+    assert.ok(getCharPairWeight("er") < 0.1);
+  });
+
+  it("rare pairs have high weight", () => {
+    assert.ok(getCharPairWeight("qx") > 0.8);
+    assert.ok(getCharPairWeight("zj") > 0.8);
+  });
+
+  it("code-common pairs weighted appropriately", () => {
+    assert.ok(getCharPairWeight("fu") < 0.3);
+  });
+});
+
+describe("selectRarestTrigrams", () => {
+  it("selects K rarest from a set", () => {
+    const trigrams = new Set(["the", "ing", "qxz", "abc", "zzj"]);
+    const rarest = selectRarestTrigrams(trigrams, 2);
+    assert.equal(rarest.length, 2);
+    assert.ok(rarest.includes("qxz") || rarest.includes("zzj"));
+  });
+
+  it("returns all if fewer than K", () => {
+    const trigrams = new Set(["abc"]);
+    const rarest = selectRarestTrigrams(trigrams, 3);
+    assert.equal(rarest.length, 1);
   });
 });

@@ -209,3 +209,21 @@ describe("grepChunks with trigram index", () => {
     assert.ok(results[0].path.includes("2026-03-21"));
   });
 });
+
+describe("pruned query (Phase 2)", () => {
+  it("works with long patterns via frequency-weighted pruning", () => {
+    const db = createTestChunksDb();
+    rebuildTrigramIndex(db);
+    const results = grepChunks(db, "viewDidLoad", { useIndex: true });
+    // Pruned path selects rarest trigrams — results must match full path
+    assert.equal(results.length, 2);
+  });
+
+  it("handles patterns with no trigrams gracefully", () => {
+    const db = createTestChunksDb();
+    rebuildTrigramIndex(db);
+    const results = grepChunks(db, "ab", { useIndex: true });
+    // "ab" has no trigrams → SCAN fallback → still works
+    assert.ok(Array.isArray(results));
+  });
+});

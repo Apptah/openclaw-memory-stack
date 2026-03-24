@@ -8,7 +8,7 @@
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { MEMORY_DB, RESCUE_DB } from "./constants.mjs";
-import { decomposeRegex, queryTrigramIndex, rebuildTrigramIndex } from "./ngram.mjs";
+import { decomposeRegex, prunedQueryTrigramIndex, rebuildTrigramIndex } from "./ngram.mjs";
 
 // =============================================================================
 // Core: grep chunks (main.sqlite) — Phase 0 direct scan
@@ -57,7 +57,7 @@ export function grepChunks(dbPath, pattern, opts = {}) {
 
       const tree = decomposeRegex(pattern);
       if (tree.type !== "SCAN") {
-        candidateFilter = queryTrigramIndex(dbPath, tree);
+        candidateFilter = prunedQueryTrigramIndex(dbPath, tree);
       }
     } catch { /* fall through to full scan */ }
   }
