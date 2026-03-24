@@ -1,7 +1,32 @@
 // plugin/test/ngram.test.mjs
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
-import { extractTrigrams, decomposeRegex, getCharPairWeight, selectRarestTrigrams } from "../lib/ngram.mjs";
+import { extractTrigrams, decomposeRegex, getCharPairWeight, selectRarestTrigrams, rebuildTrigramIndex, buildPostingFiles } from "../lib/ngram.mjs";
+import { PostingReader } from "../lib/posting.mjs";
+import { execSync } from "node:child_process";
+import { mkdtempSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+function createTestChunksDb() {
+  const dir = mkdtempSync(join(tmpdir(), "ngram-test-"));
+  const db = join(dir, "main.sqlite");
+  execSync(`sqlite3 "${db}" "
+    CREATE TABLE chunks (
+      id TEXT PRIMARY KEY, path TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'memory',
+      start_line INTEGER NOT NULL, end_line INTEGER NOT NULL,
+      hash TEXT NOT NULL, model TEXT NOT NULL,
+      text TEXT NOT NULL, embedding TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    INSERT INTO chunks VALUES ('c1','sessions/2026-03-20.md','sessions',1,5,'h1','m1',
+      'func viewDidLoad() { let x = 1 }','[]',1);
+    INSERT INTO chunks VALUES ('c2','sessions/2026-03-21.md','sessions',1,3,'h2','m1',
+      'override func viewDidLoad() { super.viewDidLoad() }','[]',2);
+  "`, { encoding: "utf-8" });
+  return db;
+}
 
 describe("extractTrigrams", () => {
   it("extracts all 3-char substrings", () => {
@@ -112,5 +137,24 @@ describe("selectRarestTrigrams", () => {
     const trigrams = new Set(["abc"]);
     const rarest = selectRarestTrigrams(trigrams, 3);
     assert.equal(rarest.length, 1);
+  });
+});
+
+describe("buildPostingFiles", () => {
+  it("builds binary files from SQLite trigrams", () => {
+    const db = createTestChunksDb();
+    rebuildTrigramIndex(db);
+    const dir = mkdtempSync(join(tmpdir(), "posting-build-"));
+    buildPostingFiles(db, dir);
+    assert.ok(existsSync(join(dir, "grep-postings.bin")));
+    assert.ok(existsSync(join(dir, "grep-lookup.bin")));
+
+    const reader = new PostingReader(
+      join(dir, "grep-postings.bin"),
+      join(dir, "grep-lookup.bin")
+    );
+    // "vie" trigram should exist from "viewDidLoad"
+    const ids = reader.lookup("vie");
+    assert.ok(ids.length > 0);
   });
 });

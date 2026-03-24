@@ -2,13 +2,16 @@
  * grep.mjs — Indexed regex search engine for openclaw-memory-stack
  *
  * Phase 0: Direct regex scan of SQLite-stored content
- * Phase 1+: Trigram candidate filtering before regex (Phase 2: frequency-weighted query pruning)
+ * Phase 1-2: Trigram candidate filtering + frequency-weighted query pruning
+ * Phase 3: Binary posting file path for 80K+ chunks
  */
 
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { MEMORY_DB, RESCUE_DB } from "./constants.mjs";
-import { decomposeRegex, prunedQueryTrigramIndex, rebuildTrigramIndex } from "./ngram.mjs";
+import { resolve } from "node:path";
+import { MEMORY_DB, MEMORY_ROOT, RESCUE_DB } from "./constants.mjs";
+import { decomposeRegex, extractTrigrams, selectRarestTrigrams, prunedQueryTrigramIndex, rebuildTrigramIndex, buildPostingFiles } from "./ngram.mjs";
+import { PostingReader } from "./posting.mjs";
 
 // =============================================================================
 // Core: grep chunks (main.sqlite) — Phase 0 direct scan
@@ -47,16 +50,23 @@ export function grepChunks(dbPath, pattern, opts = {}) {
 
   if (useIndex) {
     try {
-      // Auto-build index on first use if tables don't exist
-      const checkSql = `SELECT name FROM sqlite_master WHERE type='table' AND name='trigrams'`;
-      const check = execSync(`sqlite3 -json "${dbPath}" "${checkSql}"`, { encoding: "utf-8", timeout: 2000 });
-      const tables = JSON.parse(check || "[]");
-      if (tables.length === 0) {
-        rebuildTrigramIndex(dbPath);
-      }
+      const postingsPath = resolve(MEMORY_ROOT, "grep-postings.bin");
+      const lookupPath = resolve(MEMORY_ROOT, "grep-lookup.bin");
 
       const tree = decomposeRegex(pattern);
-      if (tree.type !== "SCAN") {
+
+      if (tree.type !== "SCAN" && existsSync(postingsPath) && existsSync(lookupPath)) {
+        // Phase 3: binary posting path
+        const reader = new PostingReader(postingsPath, lookupPath);
+        candidateFilter = queryWithBinaryPostings(reader, tree);
+      } else if (tree.type !== "SCAN") {
+        // Phase 1-2: SQLite trigram path
+        const checkSql = `SELECT name FROM sqlite_master WHERE type='table' AND name='trigrams'`;
+        const check = execSync(`sqlite3 -json "${dbPath}" "${checkSql}"`, { encoding: "utf-8", timeout: 2000 });
+        const tables = JSON.parse(check || "[]");
+        if (tables.length === 0) {
+          rebuildTrigramIndex(dbPath);
+        }
         candidateFilter = prunedQueryTrigramIndex(dbPath, tree);
       }
     } catch { /* fall through to full scan */ }
@@ -112,6 +122,57 @@ export function grepChunks(dbPath, pattern, opts = {}) {
   }
 
   return results;
+}
+
+// =============================================================================
+// Phase 3: Binary posting query
+// =============================================================================
+
+function queryWithBinaryPostings(reader, tree, k = 3) {
+  if (tree.type === "SCAN") return null;
+
+  if (tree.type === "AND") {
+    const allTrigrams = new Set();
+    for (const literal of (tree.literals || [])) {
+      for (const t of extractTrigrams(literal.toLowerCase())) {
+        allTrigrams.add(t);
+      }
+    }
+
+    const selected = selectRarestTrigrams(allTrigrams, k);
+    let result = null;
+
+    for (const trigram of selected) {
+      const ids = new Set(reader.lookup(trigram));
+      if (result === null) {
+        result = ids;
+      } else {
+        result = new Set([...result].filter(id => ids.has(id)));
+      }
+      if (result.size === 0) return result;
+    }
+
+    for (const child of (tree.children || [])) {
+      const childIds = queryWithBinaryPostings(reader, child, k);
+      if (childIds === null) return null;
+      if (result === null) result = childIds;
+      else result = new Set([...result].filter(id => childIds.has(id)));
+    }
+
+    return result || new Set();
+  }
+
+  if (tree.type === "OR") {
+    const result = new Set();
+    for (const child of tree.children) {
+      const childIds = queryWithBinaryPostings(reader, child, k);
+      if (childIds === null) return null;
+      for (const id of childIds) result.add(id);
+    }
+    return result;
+  }
+
+  return null;
 }
 
 // =============================================================================

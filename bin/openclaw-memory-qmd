@@ -159,6 +159,19 @@ except:
     "
     ;;
 
+  # ── Index build: rebuild trigram + binary posting files ──
+  grep-index)
+    node --input-type=module -e "
+      import { rebuildTrigramIndex, buildPostingFiles } from '${PLUGIN_ROOT}/lib/ngram.mjs';
+      import { MEMORY_DB } from '${PLUGIN_ROOT}/lib/constants.mjs';
+      console.log('Rebuilding trigram index...');
+      rebuildTrigramIndex(MEMORY_DB);
+      console.log('Building binary posting files...');
+      buildPostingFiles(MEMORY_DB);
+      console.log('Done.');
+    "
+    ;;
+
   # ── Collection management: pass through to real qmd ─────
   collection)
     SUBCMD="${1:-}"

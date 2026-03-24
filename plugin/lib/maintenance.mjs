@@ -146,9 +146,10 @@ export async function runMaintenanceIfDue(cfg = {}, logger = null) {
 
     // Task 3b: Trigram index full rebuild (safety net for missed updates)
     try {
-      const { rebuildTrigramIndex } = await import("./ngram.mjs");
+      const { rebuildTrigramIndex, buildPostingFiles } = await import("./ngram.mjs");
       rebuildTrigramIndex(MEMORY_DB);
-      log("Trigram index rebuilt");
+      buildPostingFiles(MEMORY_DB);
+      log("Trigram index + posting files rebuilt");
     } catch { /* ngram.mjs may not exist in Phase 0 */ }
 
     // Task 3: Health score check

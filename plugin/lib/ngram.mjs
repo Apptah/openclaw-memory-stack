@@ -3,9 +3,13 @@
  *
  * Phase 1: Trigram (3-char) posting lists in SQLite
  * Phase 2: Frequency-weighted query pruning (select rarest trigrams)
+ * Phase 3: Binary posting file builder (from SQLite → flat files)
  */
 
 import { execSync } from "node:child_process";
+import { resolve } from "node:path";
+import { PostingWriter } from "./posting.mjs";
+import { MEMORY_ROOT } from "./constants.mjs";
 
 // =============================================================================
 // Trigram Extraction
@@ -443,6 +447,37 @@ export function prunedQueryTrigramIndex(dbPath, tree, k = 3) {
   }
 
   return null;
+}
+
+// =============================================================================
+// Phase 3: Binary Posting File Builder
+// =============================================================================
+
+/**
+ * Build binary posting files from SQLite trigram table.
+ * @param {string} dbPath
+ * @param {string} [postingsDir] - defaults to MEMORY_ROOT
+ */
+export function buildPostingFiles(dbPath, postingsDir) {
+  const dir = postingsDir || MEMORY_ROOT;
+  const postingsPath = resolve(dir, "grep-postings.bin");
+  const lookupPath = resolve(dir, "grep-lookup.bin");
+
+  const sql = `SELECT trigram, GROUP_CONCAT(chunk_id, '|') as ids FROM trigrams GROUP BY trigram`;
+  let rows;
+  try {
+    const result = execSync(`sqlite3 -json "${dbPath}" "${sql}"`, { encoding: "utf-8", timeout: 30000 });
+    rows = JSON.parse(result || "[]");
+  } catch { return; }
+
+  const writer = new PostingWriter(postingsPath, lookupPath);
+  for (const row of rows) {
+    const ids = (row.ids || "").split("|").filter(Boolean);
+    if (ids.length > 0) {
+      writer.addPosting(row.trigram, ids);
+    }
+  }
+  writer.flush();
 }
 
 // =============================================================================
