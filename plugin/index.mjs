@@ -16,6 +16,7 @@ import { HOME, MEMORY_DB, DEFAULT_CONFIG, findQmdBin } from "./lib/constants.mjs
 import { formatL0, formatL1, formatL2, parseFullSuffix } from "./lib/tiered.mjs";
 import { combinedSearch } from "./lib/pipeline.mjs";
 import { extractFacts, extractKeyFacts, saveRescueFacts, cleanupOldRescueFiles } from "./lib/rescue.mjs";
+import { ingestExternalMarkdown } from "./lib/external-ingest.mjs";
 import { analyzeMemoryHealth, consolidateMemories, organizeMemories } from "./lib/quality.mjs";
 import { loadGraph, saveGraph, extractEntities, mergeIntoGraph } from "./lib/graph/store.mjs";
 import {
@@ -183,6 +184,9 @@ export default {
 
     // Cleanup old rescue files (> 30 days)
     cleanupOldRescueFiles(30);
+
+    // Ingest external markdown drop-zone files (fire-and-forget)
+    ingestExternalMarkdown(cfg).catch(() => {});
 
     // Background update check (fire-and-forget)
     checkForUpdates(api);
