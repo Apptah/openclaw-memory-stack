@@ -4,11 +4,15 @@ import { resolve } from "node:path";
 import { homedir } from "node:os";
 
 export const HOME = homedir();
-export const MEMORY_DB = resolve(HOME, ".openclaw/memory/main.sqlite");
+export const MEMORY_ROOT = resolve(HOME, ".openclaw/memory");
+export const MEMORY_DB = resolve(MEMORY_ROOT, "main.sqlite");
+export const MEMORY_MD = resolve(MEMORY_ROOT, "MEMORY.md");
+export const EXTERNAL_MEMORY_DIR = resolve(MEMORY_ROOT, "external");
+export const MAINTENANCE_STATE = resolve(MEMORY_ROOT, "maintenance-state.json");
 export const WORKSPACE = resolve(HOME, ".openclaw/workspace");
 export const INSTALL_ROOT = resolve(HOME, ".openclaw/memory-stack");
 export const RESCUE_DIR = resolve(HOME, ".openclaw/memory-stack/rescue");
-export const RESCUE_DB = resolve(HOME, ".openclaw/memory-stack/rescue/facts.sqlite");
+export const RESCUE_DB = resolve(MEMORY_ROOT, "facts.sqlite");
 export const GRAPH_PATH = resolve(HOME, ".openclaw/memory-stack/graph.json");
 export const GRAPH_DB = resolve(HOME, ".openclaw/memory-stack/graph.sqlite");
 

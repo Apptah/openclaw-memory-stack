@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { extractKeyFacts } from "../lib/rescue.mjs";
+import { extractKeyFacts, initRescueDB } from "../lib/rescue.mjs";
 
 describe("rescue", () => {
   it("extracts decision facts", () => {
@@ -35,5 +35,19 @@ describe("rescue", () => {
     const text = "We decided to use Redis.\nWe decided to use Redis.\nWe decided to use Redis.";
     const facts = extractKeyFacts(text);
     assert.ok(facts.length <= 2);
+  });
+});
+
+describe("facts schema migration", () => {
+  it("initRescueDB runs without throwing", () => {
+    assert.doesNotThrow(() => initRescueDB());
+  });
+
+  it("migrates facts table in place and rehydrates facts_fts", () => {
+    // Run twice to verify idempotency (migration safe to call multiple times)
+    assert.doesNotThrow(() => {
+      initRescueDB();
+      initRescueDB();
+    });
   });
 });

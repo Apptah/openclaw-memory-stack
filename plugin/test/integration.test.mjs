@@ -78,6 +78,11 @@ describe("lib module imports (smoke)", () => {
     assert.equal(typeof mod.GRAPH_PATH, "string");
     assert.equal(typeof mod.DEFAULT_CONFIG, "object");
     assert.equal(typeof mod.findQmdBin, "function");
+    // New global memory path constants
+    assert.ok(mod.MEMORY_ROOT, "MEMORY_ROOT must be exported");
+    assert.ok(mod.MEMORY_MD, "MEMORY_MD must be exported");
+    assert.ok(mod.EXTERNAL_MEMORY_DIR, "EXTERNAL_MEMORY_DIR must be exported");
+    assert.ok(mod.MAINTENANCE_STATE, "MAINTENANCE_STATE must be exported");
   });
 
   it("engines exports array of 5", async () => {

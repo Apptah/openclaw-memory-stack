@@ -14,12 +14,24 @@ function sqlEscape(val) {
 
 let rescueDBReady = false;
 
+// Columns added in the structured facts schema upgrade
+const SCHEMA_V2_COLUMNS = [
+  { name: "key",        def: "TEXT" },
+  { name: "value",      def: "TEXT" },
+  { name: "scope",      def: "TEXT DEFAULT 'global'" },
+  { name: "confidence", def: "REAL DEFAULT 0.5" },
+  { name: "evidence",   def: "TEXT" },
+  { name: "supersedes", def: "INTEGER" },
+  { name: "entities",   def: "TEXT" },
+];
+
 function ensureRescueDB() {
   if (rescueDBReady) return;
   const dir = resolve(RESCUE_DB, "..");
   mkdirSync(dir, { recursive: true });
 
-  const schema = `
+  // Create base table (original schema, idempotent)
+  const baseSchema = `
 CREATE TABLE IF NOT EXISTS facts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT NOT NULL,
@@ -28,11 +40,63 @@ CREATE TABLE IF NOT EXISTS facts (
   timestamp TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
-CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(content, type);
 `;
-  const safeSql = schema.replace(/"/g, '\\"');
-  execSync(`sqlite3 "${RESCUE_DB}" "${safeSql}"`, { timeout: 5000 });
+  execSync(`sqlite3 "${RESCUE_DB}" "${baseSchema.replace(/"/g, '\\"')}"`, { timeout: 5000 });
+
+  // In-place migration: add any missing v2 columns
+  migrateFactsSchema();
+
+  // Ensure FTS virtual table exists with full column set
+  ensureFactsFTS();
+
   rescueDBReady = true;
+}
+
+/**
+ * Add any missing structured-facts columns to the facts table (idempotent).
+ */
+function migrateFactsSchema() {
+  let existingColumns;
+  try {
+    const raw = execSync(`sqlite3 "${RESCUE_DB}" "PRAGMA table_info(facts);"`, {
+      encoding: "utf-8",
+      timeout: 5000,
+    }).trim();
+    existingColumns = new Set(
+      raw.split("\n").filter(Boolean).map(row => row.split("|")[1])
+    );
+  } catch {
+    return; // Can't inspect schema — skip migration
+  }
+
+  for (const col of SCHEMA_V2_COLUMNS) {
+    if (existingColumns.has(col.name)) continue;
+    try {
+      execSync(
+        `sqlite3 "${RESCUE_DB}" "ALTER TABLE facts ADD COLUMN ${col.name} ${col.def};"`,
+        { timeout: 5000 }
+      );
+    } catch { /* best-effort column add */ }
+  }
+}
+
+/**
+ * Create or recreate facts_fts to include all structured columns.
+ * Drops the old narrow FTS if it exists, then recreates and rehydrates.
+ */
+function ensureFactsFTS() {
+  try {
+    // Drop existing FTS (may have fewer columns than desired)
+    execSync(`sqlite3 "${RESCUE_DB}" "DROP TABLE IF EXISTS facts_fts;"`, { timeout: 5000 });
+    execSync(
+      `sqlite3 "${RESCUE_DB}" "CREATE VIRTUAL TABLE facts_fts USING fts5(content, type, key, value, scope, entities);"`,
+      { timeout: 5000 }
+    );
+    // Rehydrate from existing rows
+    const rehydrate = `INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities)
+      SELECT id, content, type, key, value, scope, entities FROM facts;`;
+    execSync(`sqlite3 "${RESCUE_DB}" "${rehydrate.replace(/\n/g, " ")}"`, { timeout: 5000 });
+  } catch { /* best-effort FTS setup */ }
 }
 
 /**
@@ -79,7 +143,7 @@ function migrateJsonFactsIfNeeded() {
 
 function rebuildFactsFTS() {
   try {
-    const sql = "DELETE FROM facts_fts; INSERT INTO facts_fts (rowid, content, type) SELECT id, content, type FROM facts;";
+    const sql = "DELETE FROM facts_fts; INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities) SELECT id, content, type, key, value, scope, entities FROM facts;";
     execSync(`sqlite3 "${RESCUE_DB}" "${sql}"`, { timeout: 5000 });
   } catch { /* FTS rebuild is best-effort */ }
 }
