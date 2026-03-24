@@ -7,9 +7,9 @@
  */
 
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-import { MEMORY_DB, MEMORY_ROOT, RESCUE_DB } from "./constants.mjs";
+import { existsSync, statSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { MEMORY_DB, RESCUE_DB } from "./constants.mjs";
 import { decomposeRegex, extractTrigrams, selectRarestTrigrams, prunedQueryTrigramIndex, rebuildTrigramIndex, buildPostingFiles } from "./ngram.mjs";
 import { PostingReader } from "./posting.mjs";
 
@@ -50,24 +50,36 @@ export function grepChunks(dbPath, pattern, opts = {}) {
 
   if (useIndex) {
     try {
-      const postingsPath = resolve(MEMORY_ROOT, "grep-postings.bin");
-      const lookupPath = resolve(MEMORY_ROOT, "grep-lookup.bin");
-
       const tree = decomposeRegex(pattern);
 
-      if (tree.type !== "SCAN" && existsSync(postingsPath) && existsSync(lookupPath)) {
-        // Phase 3: binary posting path
-        const reader = new PostingReader(postingsPath, lookupPath);
-        candidateFilter = queryWithBinaryPostings(reader, tree);
-      } else if (tree.type !== "SCAN") {
-        // Phase 1-2: SQLite trigram path
-        const checkSql = `SELECT name FROM sqlite_master WHERE type='table' AND name='trigrams'`;
-        const check = execSync(`sqlite3 -json "${dbPath}" "${checkSql}"`, { encoding: "utf-8", timeout: 2000 });
-        const tables = JSON.parse(check || "[]");
-        if (tables.length === 0) {
-          rebuildTrigramIndex(dbPath);
+      if (tree.type !== "SCAN") {
+        // Derive posting paths from dbPath's directory (not global MEMORY_ROOT)
+        const dbDir = dirname(dbPath);
+        const postingsPath = resolve(dbDir, "grep-postings.bin");
+        const lookupPath = resolve(dbDir, "grep-lookup.bin");
+
+        // Use binary postings only if they exist AND are not stale (older than the DB)
+        let useBinaryPostings = false;
+        if (existsSync(postingsPath) && existsSync(lookupPath)) {
+          const dbMtime = statSync(dbPath).mtimeMs;
+          const postingsMtime = statSync(postingsPath).mtimeMs;
+          useBinaryPostings = postingsMtime >= dbMtime;
         }
-        candidateFilter = prunedQueryTrigramIndex(dbPath, tree);
+
+        if (useBinaryPostings) {
+          // Phase 3: binary posting path
+          const reader = new PostingReader(postingsPath, lookupPath);
+          candidateFilter = queryWithBinaryPostings(reader, tree);
+        } else {
+          // Phase 1-2: SQLite trigram path
+          const checkSql = `SELECT name FROM sqlite_master WHERE type='table' AND name='trigrams'`;
+          const check = execSync(`sqlite3 -json "${dbPath}" "${checkSql}"`, { encoding: "utf-8", timeout: 2000 });
+          const tables = JSON.parse(check || "[]");
+          if (tables.length === 0) {
+            rebuildTrigramIndex(dbPath);
+          }
+          candidateFilter = prunedQueryTrigramIndex(dbPath, tree);
+        }
       }
     } catch { /* fall through to full scan */ }
   }
