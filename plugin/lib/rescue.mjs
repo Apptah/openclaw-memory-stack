@@ -153,7 +153,7 @@ function migrateJsonFactsIfNeeded() {
   }
 }
 
-function rebuildFactsFTS() {
+export function rebuildFactsFTS() {
   try {
     const sql = "DELETE FROM facts_fts; INSERT INTO facts_fts (rowid, content, type, key, value, scope, entities) SELECT id, content, type, key, value, scope, entities FROM facts;";
     execSync(`sqlite3 "${RESCUE_DB}" "${sql}"`, { timeout: 5000 });

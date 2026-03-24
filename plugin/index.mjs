@@ -24,7 +24,7 @@ import {
   detectCommunities, rankByPageRank, invalidateGraphCache,
 } from "./lib/graph/algorithms.mjs";
 import { configureLLM } from "./lib/llm.mjs";
-import { ensureWorkspaceQmdReady } from "./lib/maintenance.mjs";
+import { ensureWorkspaceQmdReady, runMaintenanceIfDue } from "./lib/maintenance.mjs";
 
 // ─── Background update check ─────────────────────────────────────
 
@@ -191,6 +191,9 @@ export default {
 
     // Workspace QMD auto-init (fire-and-forget, non-blocking)
     ensureWorkspaceQmdReady(cfg, api.logger).catch(() => {});
+
+    // Throttled maintenance cycle (fire-and-forget, non-blocking)
+    runMaintenanceIfDue(cfg, api.logger).catch(() => {});
 
     // Background update check (fire-and-forget)
     checkForUpdates(api);
