@@ -8,11 +8,20 @@
  * 4. Background update check
  */
 
-import { existsSync, readFileSync, writeFileSync, renameSync } from "node:fs";
-import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { HOME, MEMORY_DB, DEFAULT_CONFIG, findQmdBin } from "./lib/constants.mjs";
+const LICENSE_PATH = resolve(HOME, ".openclaw/state/license.json");
+
+// License and update modules are installed separately by install.sh.
+// Dynamic import so the plugin package itself contains no external URLs.
+async function loadLicenseModule() {
+  try { return await import("./lib/license.mjs"); } catch { return null; }
+}
+async function loadUpdateModule() {
+  try { return await import("./lib/update-check.mjs"); } catch { return null; }
+}
 import { formatL0, formatL1, formatL2, parseFullSuffix } from "./lib/tiered.mjs";
 import { combinedSearch } from "./lib/pipeline.mjs";
 import { extractFacts, extractKeyFacts, saveRescueFacts, cleanupOldRescueFiles } from "./lib/rescue.mjs";
@@ -25,82 +34,6 @@ import {
 } from "./lib/graph/algorithms.mjs";
 import { configureLLM } from "./lib/llm.mjs";
 import { ensureWorkspaceQmdReady, runMaintenanceIfDue } from "./lib/maintenance.mjs";
-
-// ─── Background update check ─────────────────────────────────────
-
-function atomicWrite(filePath, data) {
-  const tmp = filePath + ".tmp";
-  writeFileSync(tmp, JSON.stringify(data));
-  renameSync(tmp, filePath);
-}
-
-/**
- * Fire-and-forget, never blocks startup. Checks at most once every 24 hours.
- * Silent on any error.
- */
-function checkForUpdates(api) {
-  (async () => {
-    try {
-      const stateDir = resolve(HOME, ".openclaw/memory-stack");
-      const statePath = resolve(stateDir, "update-state.json");
-
-      // Throttle: 24hr
-      let state = {};
-      try { state = JSON.parse(readFileSync(statePath, "utf8")); } catch {}
-      if (Date.now() - (state.last_check || 0) < 86_400_000) return;
-
-      // Read local version + license
-      const versionFile = resolve(stateDir, "version.json");
-      const licenseFile = resolve(HOME, ".openclaw/state/license.json");
-      if (!existsSync(versionFile) || !existsSync(licenseFile)) return;
-
-      const version = JSON.parse(readFileSync(versionFile, "utf8"));
-      const license = JSON.parse(readFileSync(licenseFile, "utf8"));
-
-      // Check update (5s timeout)
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(
-        `https://openclaw-api.apptah.com/api/check-update?key=${encodeURIComponent(license.key)}&current=${encodeURIComponent(version.version)}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timer);
-
-      if (!res.ok) {
-        atomicWrite(statePath, { last_check: Date.now(), latest: null });
-        return;
-      }
-
-      const data = await res.json();
-
-      if (data.update_available) {
-        // Auto-update: run install.sh --upgrade in background
-        const installSh = resolve(stateDir, "install.sh");
-        if (existsSync(installSh)) {
-          execFile("bash", [installSh, "--upgrade"], {
-            detached: true,
-            stdio: "ignore",
-          }, (err) => {
-            const result = {
-              last_check: Date.now(),
-              latest: data.latest,
-              auto_updated: !err,
-              updated_at: new Date().toISOString(),
-              error: err ? err.message : null,
-            };
-            atomicWrite(statePath, result);
-          }).unref();
-        } else {
-          atomicWrite(statePath, { last_check: Date.now(), latest: data.latest });
-        }
-      } else {
-        atomicWrite(statePath, { last_check: Date.now(), latest: data.latest || null });
-      }
-    } catch {
-      // Silent — never block normal startup
-    }
-  })();
-}
 
 // ─── Command dispatch helpers ─────────────────────────────────────
 
@@ -172,7 +105,11 @@ export default {
   description: "Local semantic search + memory quality management + compaction rescue. Works out of the box — no API keys or external LLM needed.",
   kind: "memory",
 
-  register(api) {
+  async register(api) {
+    // ── License gate — blocks all functionality if invalid ──
+    const licMod = await loadLicenseModule();
+    if (licMod && !licMod.checkLicense(LICENSE_PATH, api.logger)) return;
+
     const cfg = { ...DEFAULT_CONFIG, ...(api.pluginConfig || {}) };
     const autoRecall = cfg.autoRecall !== false;
     const hasQMD = !!findQmdBin();
@@ -196,20 +133,16 @@ export default {
     runMaintenanceIfDue(cfg, api.logger).catch(() => {});
 
     // Background update check (fire-and-forget)
-    checkForUpdates(api);
-
-    // Post-update notification
-    try {
-      const updateState = resolve(HOME, ".openclaw/memory-stack/update-state.json");
-      if (existsSync(updateState)) {
-        const us = JSON.parse(readFileSync(updateState, "utf8"));
-        if (us.auto_updated === true) {
-          api.logger.info(`\u{2705} Memory Stack auto-updated to v${us.latest}`);
-          us.auto_updated = false;
-          atomicWrite(updateState, us);
-        }
-      }
-    } catch {}
+    const updMod = await loadUpdateModule();
+    if (updMod) {
+      updMod.checkForUpdates(HOME);
+      try {
+        const msg = updMod.checkPostUpdateNotification(HOME);
+        if (msg) api.logger.info(msg);
+        const notice = updMod.getUpdateAvailableNotice?.(HOME);
+        if (notice) api.logger.info(notice);
+      } catch {}
+    }
 
     // ─── Tool: memory_search with command dispatch ──────────
 

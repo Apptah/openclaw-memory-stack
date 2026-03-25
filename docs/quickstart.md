@@ -60,6 +60,18 @@ openclaw-memory --version    # Should show v0.1.0
 openclaw-memory --help       # Show all commands
 ```
 
+## Updating
+
+```bash
+openclaw-memory upgrade
+```
+
+This downloads the latest version for your license, verifies the download, and installs it. Your memory data and license are preserved. Restart OpenClaw after upgrading:
+
+```bash
+openclaw gateway restart
+```
+
 ## Advanced: Per-project code search
 
 The basic install gives you conversation memory out of the box. If you also want to search your codebase by keyword or meaning, initialize Memory Stack in a specific project:
@@ -124,14 +136,14 @@ openclaw-memory --backend totalrecall search "JWT"
 
 **"QMD skipped (bun not installed)"** — Install Bun from https://bun.sh, then re-run `openclaw-memory init` in a new repo (or manually run `qmd collection add`).
 
-**"License verification required"** — Connect to the internet. The CLI re-verifies your license every 7 days with a 3-day offline grace period.
+**"License verification required"** — Connect to the internet. The CLI re-verifies your license every 7 days with a 10-day offline grace period.
 
-**"Device activation limit reached"** — Manage devices at https://openclaw-site-53r.pages.dev/manage
+**"Device activation limit reached"** — Manage devices at https://openclaw-memory.apptah.com/manage
 
 ## Device management
 
 Your license allows up to 3 devices. To free up a slot:
 
-1. Visit https://openclaw-site-53r.pages.dev/manage
+1. Visit https://openclaw-memory.apptah.com/manage
 2. Enter your license key and purchase email
 3. Remove old devices (up to 2 resets per month)
