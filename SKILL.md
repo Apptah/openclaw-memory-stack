@@ -81,9 +81,9 @@ metadata:
 
 Your agent forgets past decisions and burns tokens re-reading the same context. Memory Stack runs 5 search engines locally, returns only what matters, and never loses a fact.
 
-> **$49 one-time purchase.** No subscription, no cloud API costs.
-> All search and storage runs on your machine. One-time license activation requires internet.
-> Buy at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com)
+> **Free and open source. MIT license.** No subscription, no cloud API costs.
+> All search and storage runs entirely on your machine.
+> GitHub: [github.com/Apptah/openclaw-memory-stack](https://github.com/Apptah/openclaw-memory-stack)
 
 ## Architecture
 
@@ -214,7 +214,7 @@ Zero maintenance. The plugin takes care of itself.
 | Cross-agent | No | CLI + drop zone, works with any tool |
 | Memory across projects | Separate per workspace | Unified global memory — follows you everywhere |
 | Self-healing | No | Auto-maintain, auto-fallback |
-| Runs locally | Yes | Yes — all search local, one-time activation online |
+| Runs locally | Yes | Yes — all search runs locally, no cloud dependency |
 
 ## Install
 
@@ -222,9 +222,13 @@ Zero maintenance. The plugin takes care of itself.
 npx clawhub@latest package install openclaw-memory-stack
 ```
 
-Then run `./install.sh --key=oc-starter-xxxxxxxxxxxx` to activate with your license key.
+Or clone and run directly:
 
-Purchase at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com).
+```bash
+git clone https://github.com/Apptah/openclaw-memory-stack
+cd openclaw-memory-stack
+./install.sh
+```
 
 Runs on macOS, Linux, and Windows (WSL2). Requires bash, python3, and OpenClaw 2026.3.2 or later. Bun is optional (enables QMD vector search).
 
@@ -233,19 +237,16 @@ Runs on macOS, Linux, and Windows (WSL2). Requires bash, python3, and OpenClaw 2
 The included `install.sh` performs the following actions:
 
 - **Files**: Copies plugin and backend files to `~/.openclaw/memory-stack/`, registers plugin in `~/.openclaw/extensions/openclaw-memory-stack/`, updates `~/.openclaw/openclaw.json`
-- **License activation**: Sends your license key and a device fingerprint (SHA-256 of machine ID) to `openclaw-api.apptah.com/api/activate` — one-time, at install
-- **Periodic verification**: Re-verifies license every 7 days (background, non-blocking). Sends only `{ key, device_id }`. 10-day offline grace period
-- **Upgrade downloads**: `install.sh --upgrade` downloads new versions from `openclaw-api.apptah.com` with mandatory SHA-256 checksum verification
-- **No telemetry**: No usage data, memory content, or analytics are ever sent. Only license key and device ID leave your machine
+- **Upgrade downloads**: `install.sh --upgrade` downloads new versions with mandatory SHA-256 checksum verification
+- **No telemetry**: No usage data, memory content, or analytics are ever sent
 - **Optional LLM**: `OPENCLAW_LLM_API_KEY` / `OPENAI_API_KEY` env vars are optional, used only for LLM-powered fact extraction. If not set, falls back to local Ollama/MLX. These keys are sent only to the endpoint you configure (default: api.openai.com), never to our servers
 
 All search and storage runs entirely on your machine.
 
 ## License
 
-Proprietary. $49 one-time purchase. All features included. No subscription.
-See full terms at [openclaw-memory.apptah.com](https://openclaw-memory.apptah.com).
+MIT. Free and open source. See [LICENSE](https://github.com/Apptah/openclaw-memory-stack/blob/main/LICENSE).
 
 ## Support
 
-Questions or issues? Contact us at **support@apptah.com**.
+Questions or issues? Open a GitHub issue at [github.com/Apptah/openclaw-memory-stack](https://github.com/Apptah/openclaw-memory-stack/issues).
