@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /manage
+
+Content-Signal: ai-train=no, search=yes, ai-input=yes
 
 Sitemap: https://openclaw-memory.apptah.com/sitemap.xml

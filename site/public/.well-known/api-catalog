@@ -1,0 +1,29 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://openclaw-memory.apptah.com/",
+      "item": [
+        {
+          "href": "https://github.com/Apptah/openclaw-memory-stack",
+          "type": "text/html",
+          "title": "OpenClaw Memory Stack — GitHub Repository"
+        },
+        {
+          "href": "https://openclaw-memory.apptah.com/llms.txt",
+          "type": "text/plain",
+          "title": "LLM-readable product description"
+        },
+        {
+          "href": "https://openclaw-memory.apptah.com/.well-known/mcp/server-card.json",
+          "type": "application/json",
+          "title": "MCP Server Card"
+        },
+        {
+          "href": "https://openclaw-memory.apptah.com/.well-known/agent-skills/index.json",
+          "type": "application/json",
+          "title": "Agent Skills Index"
+        }
+      ]
+    }
+  ]
+}

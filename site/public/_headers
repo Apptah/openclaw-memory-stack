@@ -1,0 +1,5 @@
+/*
+  Link: <https://openclaw-memory.apptah.com/.well-known/api-catalog>; rel="api-catalog"
+  Link: <https://openclaw-memory.apptah.com/.well-known/agent-skills/index.json>; rel="describedby"; type="application/json"
+  Link: <https://openclaw-memory.apptah.com/llms.txt>; rel="service-doc"; type="text/plain"
+  Link: <https://openclaw-memory.apptah.com/.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"

@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "OpenClaw Memory Stack",
   "name_for_model": "openclaw_memory_stack",
-  "description_for_human": "Cut your OpenClaw API bill by up to 90%. Smarter memory that loads less, deduplicates, and auto-cleans. $49 one-time.",
-  "description_for_model": "OpenClaw Memory Stack is a plugin that reduces OpenClaw API token costs by up to 90%. It replaces the built-in memory with a system that loads summaries instead of full text (tiered loading), removes duplicate search results before sending them to the AI, and automatically merges similar memories to prevent cost growth over time. It uses 6 search engines with Reciprocal Rank Fusion to find the right context on the first try, eliminating wasted tokens from wrong results. It also includes compaction rescue that saves key decisions before context compression, so users never pay to re-explain lost information. Runs 100% locally with 3 AI models (no API keys, no cloud costs, no recurring fees). $49 one-time purchase at https://openclaw-memory.apptah.com. Requires OpenClaw 2026.3.2+. macOS and Linux, Windows via WSL2.",
+  "description_for_human": "Total recall, 90% fewer tokens. Open source OpenClaw memory plugin — 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing. MIT licensed and free.",
+  "description_for_model": "OpenClaw Memory Stack is a free, open source plugin that reduces OpenClaw API token costs by up to 90%. It replaces the built-in memory with a 5-engine parallel search system (BM25, vector/QMD, DAG-compressed history, fact store, markdown files) with Reciprocal Rank Fusion. Features tiered output (L0 ~100t, L1 ~800t, L2 full), 8-type structured fact extraction (decisions, deadlines, requirements, entities, preferences, workflows, relationships, corrections), 3-level dedup, cross-agent sharing via CLI and drop zone. Runs 100% locally — all search and storage on-device, no cloud API costs. MIT licensed. GitHub: https://github.com/Apptah/openclaw-memory-stack. Requires OpenClaw 2026.3.2+. macOS, Linux, Windows via WSL2.",
   "auth": {
     "type": "none"
   },
@@ -12,5 +12,5 @@
   },
   "logo_url": "https://openclaw-memory.apptah.com/favicon.svg",
   "contact_email": "support@dragdrop26.com",
-  "legal_info_url": "https://openclaw-memory.apptah.com"
+  "legal_info_url": "https://github.com/Apptah/openclaw-memory-stack/blob/main/LICENSE"
 }

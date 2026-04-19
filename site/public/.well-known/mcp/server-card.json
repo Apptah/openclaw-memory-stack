@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "name": "openclaw-memory-stack",
+  "display_name": "OpenClaw Memory Stack",
+  "description": "Total recall, 90% fewer tokens. Free, open source, local-only memory plugin for OpenClaw agents. 5-engine parallel search, structured fact extraction, smart dedup, cross-agent sharing.",
+  "version": "0.5.8",
+  "license": "MIT",
+  "homepage": "https://github.com/Apptah/openclaw-memory-stack",
+  "repository": "https://github.com/Apptah/openclaw-memory-stack",
+  "contact": "https://github.com/Apptah/openclaw-memory-stack/issues",
+  "capabilities": [
+    "memory-read",
+    "memory-write",
+    "fact-extraction",
+    "semantic-search",
+    "full-text-search",
+    "cross-agent-sharing"
+  ],
+  "data_handling": {
+    "local_only": true,
+    "telemetry": false,
+    "remote_data": "none",
+    "note": "All search and storage runs on-device. Memory content never transmitted to external servers."
+  },
+  "install": {
+    "clawhub": "npx clawhub@latest package install openclaw-memory-stack",
+    "manual": "git clone https://github.com/Apptah/openclaw-memory-stack && ./install.sh"
+  },
+  "requires": {
+    "platform": ["macOS", "Linux", "Windows WSL2"],
+    "runtime": ["bash", "python3", "sqlite3"],
+    "optional": ["bun", "qmd"]
+  }
+}

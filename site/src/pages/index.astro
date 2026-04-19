@@ -1109,5 +1109,27 @@ import Layout from "../layouts/Layout.astro";
       document.addEventListener('mouseleave', () => glow.classList.remove('active'));
       setTimeout(() => glow.classList.add('active'), 100);
     })();
+
+    // WebMCP — provide structured context to AI agents browsing this page
+    if (typeof navigator !== 'undefined' && (navigator as any).modelContext) {
+      try {
+        (navigator as any).modelContext.provideContext({
+          title: 'OpenClaw Memory Stack',
+          description: 'Free, open source OpenClaw memory plugin. 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing. MIT licensed.',
+          links: [
+            { rel: 'repository', href: 'https://github.com/Apptah/openclaw-memory-stack' },
+            { rel: 'install', href: 'https://github.com/Apptah/openclaw-memory-stack#install' },
+            { rel: 'agent-skills', href: 'https://openclaw-memory.apptah.com/.well-known/agent-skills/index.json' },
+            { rel: 'mcp-server-card', href: 'https://openclaw-memory.apptah.com/.well-known/mcp/server-card.json' },
+          ],
+          metadata: {
+            version: '0.5.8',
+            license: 'MIT',
+            pricing: 'free',
+            local_only: true,
+          }
+        });
+      } catch (_) {}
+    }
   </script>
 </Layout>
