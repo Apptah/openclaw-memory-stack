@@ -63,11 +63,11 @@ Ratings reflect each backend's effectiveness for a specific capability. Five sta
 
 **Starter tier is usually sufficient.**
 
-| Configuration | Backends | Monthly cost | Best for |
-|---------------|----------|-------------|----------|
-| Minimal | Total Recall only | $49 (one-time) | Side projects, experiments, quick prototypes |
-| Standard | QMD + Total Recall | $49 (one-time) | Active development on a single project |
-| Full | All four | $49 + $9/month | Long-running projects where architecture decisions accumulate |
+| Configuration | Backends | Cost | Best for |
+|---------------|----------|------|----------|
+| Minimal | Total Recall only | Free (MIT) | Side projects, experiments, quick prototypes |
+| Standard | QMD + Total Recall | Free (MIT) | Active development on a single project |
+| Full | All four | Free (MIT) | Long-running projects where architecture decisions accumulate |
 
 **Upgrade signal**: If you find yourself re-explaining past decisions to the agent or asking "how does X connect to Y" frequently, Pro tier pays for itself in saved context tokens.
 

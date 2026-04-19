@@ -10,29 +10,24 @@ Get memory working in under 5 minutes.
 - **Bun** (optional, for QMD backend; install from https://bun.sh)
 - **python3** (used for JSON processing)
 
-## Step 1: Download
-
-After purchase, you'll receive an email with your license key and a download link.
+## Step 1: Clone
 
 ```bash
-# Download and extract
-unzip openclaw-memory-stack-v0.1.0.zip
-cd openclaw-memory-stack-v0.1.0
+git clone https://github.com/Apptah/openclaw-memory-stack.git
+cd openclaw-memory-stack
 ```
 
 ## Step 2: Install
 
 ```bash
-./install.sh --key=oc-starter-xxxxxxxxxxxx
+./install.sh
 ```
 
 This will:
-1. Verify your license key with the server
-2. Register this device (up to 3 devices per license)
-3. Install files to `~/.openclaw/memory-stack/`
-4. Copy plugin files to `~/.openclaw/extensions/openclaw-memory-stack/`
-5. Register Memory Stack as OpenClaw's memory provider via `plugins.slots.memory`
-6. Symlink `openclaw-memory` to `~/.openclaw/bin/`
+1. Install files to `~/.openclaw/memory-stack/`
+2. Copy plugin files to `~/.openclaw/extensions/openclaw-memory-stack/`
+3. Register Memory Stack as OpenClaw's memory provider via `plugins.slots.memory`
+4. Symlink `openclaw-memory` to `~/.openclaw/bin/`
 
 If `~/.openclaw/bin` is not in your PATH, add it:
 
@@ -66,7 +61,7 @@ openclaw-memory --help       # Show all commands
 openclaw-memory upgrade
 ```
 
-This downloads the latest version for your license, verifies the download, and installs it. Your memory data and license are preserved. Restart OpenClaw after upgrading:
+This downloads the latest version, verifies the download, and installs it. Your memory data is preserved. Restart OpenClaw after upgrading:
 
 ```bash
 openclaw gateway restart
@@ -128,22 +123,8 @@ openclaw-memory --backend totalrecall search "JWT"
 
 ## Troubleshooting
 
-**"License not found"** — Run `install.sh` first.
-
 **"Memory Stack not active after restart"** — Check that the plugin registered correctly: look for `openclaw-memory-stack` in `~/.openclaw/extensions/`. If missing, re-run `install.sh`.
 
 **"This repo hasn't been initialized"** — This means per-project search isn't set up. Run `openclaw-memory init` in your project directory. (Basic memory still works without this.)
 
 **"QMD skipped (bun not installed)"** — Install Bun from https://bun.sh, then re-run `openclaw-memory init` in a new repo (or manually run `qmd collection add`).
-
-**"License verification required"** — Connect to the internet. The CLI re-verifies your license every 7 days with a 10-day offline grace period.
-
-**"Device activation limit reached"** — Manage devices at https://openclaw-memory.apptah.com/manage
-
-## Device management
-
-Your license allows up to 3 devices. To free up a slot:
-
-1. Visit https://openclaw-memory.apptah.com/manage
-2. Enter your license key and purchase email
-3. Remove old devices (up to 2 resets per month)

@@ -16,7 +16,7 @@ We did the research so you don't have to.
 
 ---
 
-## What's Included — $49 one-time
+## What's Included — Free & Open Source
 
 | Component | What it does |
 |-----------|-------------|
@@ -26,15 +26,15 @@ We did the research so you don't have to.
 | **Plugin integration** | Installs as OpenClaw's memory provider automatically — just restart and go |
 | Quickstart guide | Get running in under 5 minutes |
 
-One purchase, no subscription. You get the v1 snapshot as-is.
+MIT licensed. No purchase required.
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Install with your license key
-./install.sh --key=oc-starter-xxxxxxxxxxxx
+# 1. Install
+./install.sh
 
 # 2. Restart OpenClaw
 openclaw gateway restart
@@ -67,6 +67,24 @@ The router matches your query against a rule table — keyword patterns, not AI 
 | Recent context: `what did we just discuss` | Total Recall | QMD |
 | File/path: `in src/models/*.ts` | QMD (BM25 search) | Total Recall |
 | Ambiguous: single words, vague references | QMD (hybrid) | Total Recall |
+
+---
+
+## How It Compares
+
+Most AI memory systems make you choose between control and convenience.
+
+| | Hermes Agent | Google Always-On | Memory Stack |
+|---|---|---|---|
+| **Routing** | Agent decides (opaque) | Google decides (black box) | 7 deterministic rules — inspectable |
+| **Fallback** | None | Uncontrollable | Sequential chain — poor result → next backend |
+| **Storage** | Developer-managed DB | Google cloud | Local git + SQLite — nothing leaves your machine |
+| **Token control** | None | None | 3 tiers: ~100 / ~800 / full |
+| **Deduplication** | Manual | Unknown | 4-level auto-dedup |
+| **Offline** | Depends | No | Yes |
+| **Open source** | Varies | No | MIT |
+
+Hermes gives control but no routing infrastructure. Google gives convenience but no privacy. Memory Stack gives you both — deterministic, local, and debuggable.
 
 ---
 

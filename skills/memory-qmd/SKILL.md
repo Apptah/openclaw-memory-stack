@@ -13,7 +13,7 @@ metadata:
 
 QMD is a BM25 + vector search engine for code and documentation. It indexes files into named collections using glob patterns and stores them in a local SQLite database with FTS5 full-text search. QMD supports three search modes: BM25 keyword search for exact symbol/name lookups, vector semantic search for concept-based queries, and hybrid search that combines both. It is the most versatile general-purpose memory backend in the OpenClaw Memory Stack, ideal for code search, documentation lookup, and finding specific symbols or behavioral patterns across a codebase.
 
-**Tier: Starter** — included in the $49 package. Note: requires Bun runtime and SQLite FTS5 extension (Bun's built-in SQLite includes FTS5, so no separate installation is needed).
+**Tier: Starter** — free and open source (MIT). Note: requires Bun runtime and SQLite FTS5 extension (Bun's built-in SQLite includes FTS5, so no separate installation is needed).
 
 ## Prerequisites
 
@@ -189,4 +189,4 @@ Vector search (`vsearch`) scores are already in 0.0-1.0 range and do not need no
 
 ## Tier
 
-**Starter** — included in the $49 OpenClaw Memory Stack package. Requires Bun runtime (free, open source) and no paid API keys. The only barrier to entry is installing Bun.
+**Starter** — free and open source (MIT). Requires Bun runtime and no paid API keys. The only barrier to entry is installing Bun.

@@ -239,4 +239,4 @@ The `normalized_relevance` field in the response is the highest relevance score 
 
 ## Tier
 
-**Starter** — Included in the $49 package. Zero additional cost, zero additional dependencies.
+**Starter** — Free and open source (MIT). Zero additional cost, zero additional dependencies.
