@@ -216,6 +216,24 @@ Zero maintenance. The plugin takes care of itself.
 | Self-healing | No | Auto-maintain, auto-fallback |
 | Runs locally | Yes | Yes — all search runs locally, no cloud dependency |
 
+## Memory Stack vs Other AI Memory Systems
+
+Most AI memory systems make you choose between control and convenience. Memory Stack doesn't.
+
+| | Hermes Agent | Google Always-On | Memory Stack |
+|---|---|---|---|
+| **Trigger** | Explicit tool call | Automatic (Google decides) | Deterministic router — 7 explicit rules |
+| **Routing logic** | Agent judgment (opaque) | Black box | Keyword pattern matching — fully inspectable |
+| **Fallback on poor recall** | None | Uncontrollable | Sequential chain — relevance < 0.4 → next backend |
+| **Storage location** | Developer-managed DB | Google cloud | Local git branch + SQLite — nothing leaves your machine |
+| **Token control** | None | None | 3 tiers: ~100 / ~800 / full |
+| **Deduplication** | Manual | Unknown | 4-level auto-dedup |
+| **Works offline** | Depends on DB | No | Yes — core search fully offline |
+| **Open source** | Varies | No | MIT — full source on GitHub |
+| **Setup time** | Hours | Minutes (Gemini only) | One command, any MCP client |
+
+Hermes gives developers control but no routing or fallback infrastructure. Google gives convenience but no privacy and no control. Memory Stack gives you both.
+
 ## Install
 
 ```bash

@@ -706,6 +706,7 @@ import Layout from "../layouts/Layout.astro";
     <div class="nav-links" id="nav-links">
       <a href="#features">Features</a>
       <a href="#compare">vs Native</a>
+      <a href="#vs-ai-memory">vs AI Memory</a>
       <a href="#faq">FAQ</a>
       <a href="https://clawhub.ai/Apptah/openclaw-memory-stack" target="_blank" rel="noopener">ClawHub</a>
       <a href="https://github.com/Apptah/openclaw-memory-stack" target="_blank" rel="noopener">GitHub</a>
@@ -1026,6 +1027,99 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
+
+  <div class="section" id="vs-ai-memory">
+    <div class="section-label">// vs ai memory systems</div>
+    <h2>Built for developers, not black boxes.</h2>
+    <p class="section-desc">Hermes agents and Google Always-On both store memory. Neither gives you control over how.</p>
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Hermes Agent</th>
+            <th>Google Always-On</th>
+            <th>Memory Stack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="compare-group"><td colspan="4">Control &amp; Transparency</td></tr>
+          <tr>
+            <td>How is memory triggered?</td>
+            <td class="partial">Agent decides via explicit tool call</td>
+            <td class="no">Automatic — Google decides what to save</td>
+            <td class="yes">Agent calls router — 7 deterministic rules, debuggable</td>
+          </tr>
+          <tr>
+            <td>Can you inspect routing decisions?</td>
+            <td class="no">No — agent reasoning is opaque</td>
+            <td class="no">No — black box</td>
+            <td class="yes">Yes — rule table is plain text, every decision is logged</td>
+          </tr>
+          <tr>
+            <td>What happens when recall quality is poor?</td>
+            <td class="no">No fallback — one backend, one shot</td>
+            <td class="no">Google retries internally, no user control</td>
+            <td class="yes">Sequential fallback chain — relevance &lt; 0.4 triggers next backend automatically</td>
+          </tr>
+
+          <tr class="compare-group"><td colspan="4">Privacy &amp; Data</td></tr>
+          <tr>
+            <td>Where is memory stored?</td>
+            <td class="partial">Developer-managed external DB</td>
+            <td class="no">Google cloud — you cannot opt out</td>
+            <td class="yes">Your machine — git branch + local SQLite. Nothing leaves your device</td>
+          </tr>
+          <tr>
+            <td>Who owns the data?</td>
+            <td class="partial">You (if you host the DB)</td>
+            <td class="no">Google</td>
+            <td class="yes">You — MIT licensed, fully local</td>
+          </tr>
+          <tr>
+            <td>Works offline?</td>
+            <td class="partial">Depends on your DB setup</td>
+            <td class="no">Requires Google account and connection</td>
+            <td class="yes">Core search runs fully offline. No API key required</td>
+          </tr>
+
+          <tr class="compare-group"><td colspan="4">Token Cost &amp; Efficiency</td></tr>
+          <tr>
+            <td>Token budget control?</td>
+            <td class="no">None — returns full content</td>
+            <td class="no">None — Google injects what it wants</td>
+            <td class="yes">3 tiers: L0 ~100 tokens / L1 ~800 / L2 full — on demand</td>
+          </tr>
+          <tr>
+            <td>Deduplication before recall?</td>
+            <td class="no">No — developer responsibility</td>
+            <td class="no">Unknown — no visibility</td>
+            <td class="yes">4-level auto-dedup — you never pay twice for the same fact</td>
+          </tr>
+
+          <tr class="compare-group"><td colspan="4">Setup &amp; Maintenance</td></tr>
+          <tr>
+            <td>Time to get running?</td>
+            <td class="no">Hours — wire up DB, tool schemas, prompts</td>
+            <td class="partial">Minutes — but only works inside Google ecosystem</td>
+            <td class="yes">One curl command — registered and running in under 5 minutes</td>
+          </tr>
+          <tr>
+            <td>Works with your existing tools?</td>
+            <td class="partial">Whatever you build</td>
+            <td class="no">Gemini only</td>
+            <td class="yes">Claude Code, Cursor, Windsurf, any MCP client</td>
+          </tr>
+          <tr>
+            <td>Open source?</td>
+            <td class="partial">Model weights open, memory tooling varies</td>
+            <td class="no">No</td>
+            <td class="yes">MIT — full source on GitHub</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <div class="section" id="faq">
     <div class="section-label">// frequently asked</div>
