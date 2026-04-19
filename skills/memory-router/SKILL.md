@@ -25,7 +25,7 @@ The router adds zero storage — it is purely a dispatch and fallback coordinato
 ## Prerequisites
 
 - `~/.openclaw/state/backends.json` must exist and list installed backends.
-- At least one backend must be installed (QMD and Total Recall are always present in Starter).
+- At least one backend must be installed (QMD and Total Recall are included in the default install).
 - The router itself has no runtime dependencies beyond the ability to read JSON and invoke backend skills.
 
 ## Routing Rules
@@ -34,9 +34,9 @@ The router adds zero storage — it is purely a dispatch and fallback coordinato
 
 Before evaluating rules, the router reads `~/.openclaw/state/backends.json` to build the **candidate list** of available backends. If a backend appears in a routing rule but is not in the candidate list, it is silently skipped — no error, no warning. The fallback chain advances to the next available backend.
 
-**Starter tier** (QMD + Total Recall): Cognee and Lossless rules are effectively disabled — queries that would route to them fall through to QMD or Total Recall alternatives automatically.
+**Default install** (QMD + Total Recall): Cognee and Lossless rules are effectively disabled — queries that would route to them fall through to QMD or Total Recall alternatives automatically.
 
-**Pro tier** (all 4 backends): The full routing table is active.
+**Full install** (all 4 backends): The full routing table is active. Install Cognee and Lossless separately to enable their routing rules.
 
 ### Rule Table
 
@@ -89,9 +89,9 @@ The fallback mechanism is sequential and deterministic:
 
 ### Fallback Behavior with Missing Backends
 
-When a backend in the fallback chain is not installed (not in `backends.json`), the router skips it silently and advances to the next entry. This is how Starter tier works naturally — Cognee and Lossless are simply not in the candidate list, so rules 2 and 3 fall through to their QMD/Total Recall alternatives.
+When a backend in the fallback chain is not installed (not in `backends.json`), the router skips it silently and advances to the next entry. This is how default install works naturally — Cognee and Lossless are simply not in the candidate list, so rules 2 and 3 fall through to their QMD/Total Recall alternatives.
 
-**Example — Rule 2 on Starter tier:**
+**Example — Rule 2 without Cognee installed:**
 - Primary: Cognee (not installed) — skip
 - Fallback 1: QMD vsearch — execute
 - Fallback 2: Total Recall — execute if QMD result is poor
@@ -109,13 +109,13 @@ When a backend in the fallback chain is not installed (not in `backends.json`), 
 **2. "how does the auth middleware relate to the session store"**
 - Signal: `relate` keyword, two identifiable entities
 - Rule matched: #2 (relationship)
-- Routed to: Cognee (if Pro), else QMD `vsearch` (Starter fallthrough)
+- Routed to: Cognee (if installed), else QMD `vsearch`
 - Fallback chain: [QMD vsearch, Total Recall]
 
 **3. "what did we decide about the database schema in the morning session"**
 - Signal: `decide` keyword, `morning session`
 - Rule matched: #3 (decision recall)
-- Routed to: Lossless (if Pro), else Total Recall (Starter fallthrough)
+- Routed to: Lossless (if installed), else Total Recall
 - Fallback chain: [Total Recall, QMD search]
 
 **4. "how does error handling work in the API layer"**
@@ -145,13 +145,13 @@ When a backend in the fallback chain is not installed (not in `backends.json`), 
 **8. "what's the relationship between OrderController and PaymentService"**
 - Signal: `relationship` keyword, two CamelCase entities
 - Rule matched: #2 (relationship)
-- Routed to: Cognee (Pro) / QMD vsearch (Starter)
+- Routed to: Cognee (if installed) / QMD vsearch (fallback)
 - Fallback chain: [QMD vsearch, Total Recall]
 
 **9. "recall the architecture decision from this morning"**
 - Signal: `recall.*decision`, `morning`
 - Rule matched: #3 (decision recall)
-- Routed to: Lossless (Pro) / Total Recall (Starter)
+- Routed to: Lossless (if installed) / Total Recall (fallback)
 - Fallback chain: [Total Recall, QMD search]
 
 **10. "explain the caching strategy"**
@@ -186,7 +186,7 @@ When a backend in the fallback chain is not installed (not in `backends.json`), 
 **14. "why did we do it that way"**
 - Signal: `why did we` maps to decision recall.
 - Rule matched: #3 (decision recall)
-- Routed to: Lossless (Pro) / Total Recall (Starter)
+- Routed to: Lossless (if installed) / Total Recall (fallback)
 - Fallback chain: [Total Recall, QMD search]
 - Rationale: "why did we" is a strong decision-recall signal. The user wants the reasoning behind a past choice. Lossless DAG traces causal chains to reconstruct the decision rationale.
 
@@ -252,7 +252,7 @@ The router wraps backend responses in a router envelope that adds routing metada
 ## Error Handling
 
 ### Backend Not Installed
-If a backend appears in a routing rule but is not listed in `~/.openclaw/state/backends.json`, the router skips it and advances to the next entry in the fallback chain. No error is logged — this is normal operation for Starter tier.
+If a backend appears in a routing rule but is not listed in `~/.openclaw/state/backends.json`, the router skips it and advances to the next entry in the fallback chain. No error is logged — this is expected behavior for partial installs.
 
 ### Backend Returns Error
 Log the error to `~/.openclaw/state/router.log` with timestamp, backend name, error code, and error message. Then advance to the next entry in the fallback chain.
@@ -304,4 +304,4 @@ The router does not write to `backends.json` — that file is managed by the ins
 
 ## Tier
 
-**Starter** — The router itself is always available. Its effectiveness scales with the number of installed backends: Starter tier routes to QMD and Total Recall; Pro tier unlocks Cognee and Lossless routing rules.
+**Default install** — The router itself is always available. Its effectiveness scales with the number of installed backends: default install routes to QMD and Total Recall; installing Cognee and Lossless unlocks their routing rules.

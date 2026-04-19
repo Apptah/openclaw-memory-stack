@@ -71,7 +71,7 @@ metadata:
         purpose: "Override backends config path (local only)"
     dataFlow:
       localOnly: "All search/storage (5 engines, sqlite3, markdown) runs on-device. Shell execution targets only local databases."
-      remote: "License verify sends {key, device_id} only. LLM extraction sends conversation excerpts to user-configured endpoint."
+      remote: "LLM extraction sends conversation excerpts to user-configured endpoint only. No license verification, no activation keys."
       neverTransmitted: "Raw memory content never sent to apptah.com. No telemetry or analytics."
 ---
 

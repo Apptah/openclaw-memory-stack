@@ -103,10 +103,10 @@
     "endpoints": [
       {
         "host": "openclaw-api.apptah.com",
-        "purpose": "license-activation-and-verification",
-        "when": "install (once) + background re-verify every 7 days",
-        "dataSent": ["license_key", "device_id (SHA-256 of machine ID)"],
-        "dataNeverSent": ["memory content", "conversation data", "file contents", "usage analytics"]
+        "purpose": "update-check-on-upgrade",
+        "when": "manual upgrade via install.sh --upgrade",
+        "dataSent": ["current_version"],
+        "dataNeverSent": ["memory content", "conversation data", "file contents", "usage analytics", "license keys"]
       },
       {
         "host": "openclaw-api.apptah.com",
@@ -162,7 +162,7 @@
       "Shell execution (sqlite3, qmd) operates only on local databases"
     ],
     "remote": [
-      "License verification: sends only {key, device_id} to openclaw-api.apptah.com",
+      "Update check: sends only current_version to openclaw-api.apptah.com on manual upgrade",
       "LLM fact extraction: sends conversation excerpts to user-configured endpoint (local or cloud)"
     ],
     "neverTransmitted": [
