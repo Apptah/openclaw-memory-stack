@@ -19,22 +19,11 @@ distill_load_config() {
   [ ! -f "$config_file" ] && return 0
 
   if has_command python3; then
-    eval "$(python3 -c "
-import json
-try:
-    with open('$config_file') as f:
-        cfg = json.load(f).get('distill', {})
-    if cfg.get('model'):
-        print(f'DISTILL_MODEL=\"{cfg[\"model\"]}\"')
-    if cfg.get('endpoint'):
-        print(f'DISTILL_ENDPOINT=\"{cfg[\"endpoint\"]}\"')
-    if cfg.get('min_score'):
-        print(f'DISTILL_MIN_SCORE=\"{cfg[\"min_score\"]}\"')
-    if cfg.get('max_facts'):
-        print(f'DISTILL_MAX_FACTS=\"{cfg[\"max_facts\"]}\"')
-except:
-    pass
-" 2>/dev/null)" || true
+    local _val
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('distill',{}); v=cfg.get('model',''); print(v) if v else exit(1)" 2>/dev/null) && DISTILL_MODEL="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('distill',{}); v=cfg.get('endpoint',''); print(v) if v else exit(1)" 2>/dev/null) && DISTILL_ENDPOINT="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('distill',{}); v=cfg.get('min_score',''); print(v) if v else exit(1)" 2>/dev/null) && DISTILL_MIN_SCORE="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('distill',{}); v=cfg.get('max_facts',''); print(v) if v else exit(1)" 2>/dev/null) && DISTILL_MAX_FACTS="$_val"
   fi
 }
 

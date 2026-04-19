@@ -9,7 +9,7 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 ROUTER="$INSTALL_ROOT/skills/memory-router/router.sh"
 
 # Version
-VERSION="0.5.7"
+VERSION="0.5.8"
 
 # Source libraries
 source "$INSTALL_ROOT/lib/platform.sh"
@@ -55,7 +55,7 @@ if [ "${1:-}" = "upgrade" ]; then
   INSTALLER="$INSTALL_ROOT/install.sh"
   if [ ! -f "$INSTALLER" ]; then
     echo "Error: installer not found at $INSTALLER" >&2
-    echo "  Re-download from your purchase email or run the install script manually." >&2
+    echo "  Re-run install.sh from the repository." >&2
     exit 1
   fi
   exec bash "$INSTALLER" --upgrade

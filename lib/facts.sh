@@ -4,7 +4,51 @@
 
 FACTS_DB="${HOME}/.openclaw/memory/facts.sqlite"
 
+facts_ensure_db() {
+  [ -f "$FACTS_DB" ] && return 0
+  mkdir -p "$(dirname "$FACTS_DB")"
+  sqlite3 "$FACTS_DB" "
+    CREATE TABLE IF NOT EXISTS facts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL DEFAULT 'fact',
+      content TEXT NOT NULL DEFAULT '',
+      source TEXT DEFAULT 'cli',
+      timestamp TEXT,
+      key TEXT DEFAULT '',
+      value TEXT DEFAULT '',
+      scope TEXT DEFAULT 'global',
+      confidence REAL DEFAULT 1.0,
+      evidence TEXT DEFAULT '',
+      supersedes INTEGER,
+      entities TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS facts_archive (
+      id INTEGER,
+      type TEXT,
+      content TEXT,
+      source TEXT,
+      timestamp TEXT,
+      created_at TEXT,
+      key TEXT,
+      value TEXT,
+      scope TEXT,
+      confidence REAL,
+      evidence TEXT,
+      supersedes INTEGER,
+      entities TEXT,
+      archived_at TEXT,
+      reason TEXT
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(
+      content, type, key, value, scope, entities,
+      content='facts', content_rowid='id'
+    );
+  " 2>/dev/null
+}
+
 facts_query_json() {
+  facts_ensure_db
   local query="$1"
   local limit="${2:-10}"
   # FTS search returning JSON
@@ -12,6 +56,7 @@ facts_query_json() {
 }
 
 facts_recent_json() {
+  facts_ensure_db
   local days="${1:-7}"
   local limit="${2:-20}"
   local cutoff
@@ -20,6 +65,7 @@ facts_recent_json() {
 }
 
 facts_insert_structured() {
+  facts_ensure_db
   local type="$1" key="$2" value="$3" scope="${4:-global}" entities="${5:-}"
   local content="${value}"
   local now

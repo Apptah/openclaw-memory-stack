@@ -1,5 +1,6 @@
-import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { execSync } from "../exec.mjs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 import { RESCUE_DIR, RESCUE_DB } from "../constants.mjs";
 import { initRescueDB } from "../rescue.mjs";
 
@@ -69,8 +70,11 @@ function searchJSON(query, options, maxResults) {
   const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   const results = [];
   try {
-    const files = execSync(`ls -t "${RESCUE_DIR}"/*.json 2>/dev/null`, { encoding: "utf-8" })
-      .trim().split("\n").filter(Boolean).slice(0, 20);
+    const files = readdirSync(RESCUE_DIR)
+      .filter(f => f.endsWith(".json"))
+      .map(f => resolve(RESCUE_DIR, f))
+      .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)
+      .slice(0, 20);
     for (const file of files) {
       try {
         const data = JSON.parse(readFileSync(file, "utf-8"));

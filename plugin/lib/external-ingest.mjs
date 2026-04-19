@@ -7,7 +7,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { execSync } from "node:child_process";
+import { execSync } from "./exec.mjs";
 import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 

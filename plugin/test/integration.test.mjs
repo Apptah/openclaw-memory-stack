@@ -1,5 +1,6 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
+import { _resetInitForTesting } from "../index.mjs";
 
 describe("plugin default export (integration)", () => {
   let plugin;
@@ -19,12 +20,13 @@ describe("plugin default export (integration)", () => {
     assert.equal(typeof plugin.register, "function");
   });
 
-  it("register calls registerTool and on()", () => {
+  it("register calls registerTool and on()", async () => {
+    _resetInitForTesting();
     const calls = { registerTool: 0, on: {}, loggerInfo: [] };
 
     const fakeApi = {
       pluginConfig: {},
-      logger: { info: (msg) => calls.loggerInfo.push(msg) },
+      logger: { info: (msg) => calls.loggerInfo.push(msg), error: () => {}, warn: () => {} },
       registerTool: (_factory, _opts) => {
         calls.registerTool++;
         // Verify factory returns tools array
@@ -43,7 +45,7 @@ describe("plugin default export (integration)", () => {
       },
     };
 
-    plugin.register(fakeApi);
+    await plugin.register(fakeApi);
 
     assert.equal(calls.registerTool, 1, "should call registerTool once");
     assert.equal(calls.on["before_agent_start"], 1, "should register before_agent_start");
@@ -51,16 +53,17 @@ describe("plugin default export (integration)", () => {
     assert.ok(calls.loggerInfo.length >= 2, "should log at least 2 messages");
   });
 
-  it("register with autoRecall=false skips before_agent_start", () => {
+  it("register with autoRecall=false skips before_agent_start", async () => {
+    _resetInitForTesting();
     const calls = { on: {} };
     const fakeApi = {
       pluginConfig: { autoRecall: false },
-      logger: { info: () => {} },
+      logger: { info: () => {}, error: () => {}, warn: () => {} },
       registerTool: () => {},
       on: (event) => { calls.on[event] = (calls.on[event] || 0) + 1; },
     };
 
-    plugin.register(fakeApi);
+    await plugin.register(fakeApi);
 
     assert.equal(calls.on["before_agent_start"], undefined, "should NOT register before_agent_start");
     assert.equal(calls.on["agent_end"], 1, "should still register agent_end");
@@ -172,16 +175,18 @@ describe("maintenance.mjs", () => {
 describe("command dispatch (unit)", () => {
   let execute;
 
+  before(() => { _resetInitForTesting(); });
+
   it("setup: get execute function", async () => {
     const plugin = (await import("../index.mjs")).default;
     let tools;
     const fakeApi = {
       pluginConfig: {},
-      logger: { info: () => {} },
+      logger: { info: () => {}, error: () => {}, warn: () => {} },
       registerTool: (factory) => { tools = factory(); },
       on: () => {},
     };
-    plugin.register(fakeApi);
+    await plugin.register(fakeApi);
     execute = tools[0].execute;
     assert.ok(execute);
   });

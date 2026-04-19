@@ -4,7 +4,7 @@ import { handleWebhook } from "./webhook";
 import { handleActivate } from "./activate";
 import { handleVerify } from "./verify";
 import { handleResetDevice } from "./reset-device";
-import { handleDownloadToken, handleDownload, handleDownloadLatest } from "./download";
+import { handleDownloadToken, handleDownload, handleDownloadLatest, handleDownloadLatestSha256 } from "./download";
 import { handleCheckUpdate } from "./check-update";
 import { handleRevoke } from "./revoke";
 import { handleSessionStatus } from "./session-status";
@@ -37,19 +37,21 @@ export default {
         response = await handleWebhook(request, env);
       } else if (method === "POST" && path === "/api/activate") {
         response = await handleActivate(request, env);
-      } else if (method === "GET" && path === "/api/verify") {
+      } else if ((method === "GET" || method === "POST") && path === "/api/verify") {
         response = await handleVerify(request, env);
       } else if (method === "POST" && path === "/api/reset-device") {
         response = await handleResetDevice(request, env);
       } else if (method === "POST" && path === "/api/download-token") {
         response = await handleDownloadToken(request, env);
+      } else if (method === "GET" && path === "/api/download/latest/sha256") {
+        response = await handleDownloadLatestSha256(request, env);
       } else if (method === "GET" && path === "/api/download/latest") {
         response = await handleDownloadLatest(request, env);
       } else if (method === "GET" && path.startsWith("/api/download/")) {
         response = await handleDownload(request, env);
       } else if (method === "GET" && path === "/api/session-status") {
         response = await handleSessionStatus(request, env);
-      } else if (method === "GET" && path === "/api/check-update") {
+      } else if ((method === "GET" || method === "POST") && path === "/api/check-update") {
         response = await handleCheckUpdate(request, env);
       } else if (method === "POST" && path === "/api/revoke") {
         response = await handleRevoke(request, env);

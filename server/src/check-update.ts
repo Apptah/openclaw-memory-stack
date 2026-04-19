@@ -2,9 +2,23 @@ import { Env, jsonResponse, errorResponse, rateLimitCheck, LicenseData } from ".
 import { resolveVersion, isNewer, isValidSemver } from "./download";
 
 export async function handleCheckUpdate(request: Request, env: Env): Promise<Response> {
-  const url = new URL(request.url);
-  const key = url.searchParams.get("key");
-  const current = url.searchParams.get("current");
+  // Support both GET (query params) and POST (JSON body)
+  let key: string | null = null;
+  let current: string | null = null;
+
+  if (request.method === "POST") {
+    try {
+      const body = (await request.json()) as { key?: string; current?: string };
+      key = body.key ?? null;
+      current = body.current ?? null;
+    } catch {
+      return errorResponse("Invalid JSON body");
+    }
+  } else {
+    const url = new URL(request.url);
+    key = url.searchParams.get("key");
+    current = url.searchParams.get("current");
+  }
 
   if (!key) {
     return errorResponse("Missing key");

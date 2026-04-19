@@ -38,11 +38,12 @@ export async function handleClaimFree(request: Request, env: Env): Promise<Respo
   };
   await env.KV.put(`license:${key}`, JSON.stringify(license));
 
-  // Mark email as claimed
+  // Mark email as claimed + reverse index for Pro upgrade
   await env.KV.put(`claim:${email}`, key);
+  await env.KV.put(`email:${email}`, key);
 
   // Send email with install command
-  const installCmd = `curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=${key}`;
+  const installCmd = `curl -fsSL https://openclaw-api.apptah.com/api/install.sh | bash -s -- --key=${key}`;
 
   const emailBody = JSON.stringify({
     from: "OpenClaw Memory Stack <noreply@apptah.com>",

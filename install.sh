@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # OpenClaw Memory Stack — Installer
-# Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx
+# Usage: ./install.sh [--upgrade] [--skip-models]
 #
 # Installs to ~/.openclaw/memory-stack/
 # Does NOT touch any git repository or project directory.
@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_ROOT="$HOME/.openclaw/memory-stack"
 STATE_DIR="$HOME/.openclaw/state"
 BIN_DIR="$HOME/.openclaw/bin"
-ACTIVATE_URL="${OPENCLAW_ACTIVATE_URL:-https://openclaw-api.apptah.com/api/activate}"
+RELEASE_BASE_URL="${OPENCLAW_RELEASE_URL:-https://openclaw-api.apptah.com/api}"
 
 # ── Color helpers (disabled when not a terminal) ────────────────────
 if [[ -t 1 ]]; then
@@ -36,30 +36,27 @@ info() { printf "${BLUE}  [..]${NC}    %s\n" "$1"; }
 header() { printf "\n${BOLD}%s${NC}\n" "$1"; }
 
 # ── Parse arguments ─────────────────────────────────────────────────
-LICENSE_KEY=""
 SKIP_MODELS=false
 UPGRADE=false
 FROM_SELF=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --key=*) LICENSE_KEY="${1#--key=}"; shift ;;
-    --key)   LICENSE_KEY="$2"; shift 2 ;;
     --upgrade) UPGRADE=true; shift ;;
     --from-self) FROM_SELF=true; shift ;;
     --skip-models) SKIP_MODELS=true; shift ;;
     -h|--help)
-      echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx"
+      echo "Usage: ./install.sh [--upgrade] [--skip-models]"
       echo ""
-      echo "  --key <key>    Your license key (received via email after purchase)"
-      echo "  --upgrade      Upgrade to latest version (reads key from license.json)"
-      echo "  --help         Show this help"
+      echo "  --upgrade       Upgrade to latest version"
+      echo "  --skip-models   Skip downloading QMD embedding models"
+      echo "  --help          Show this help"
       echo ""
-      echo "Purchase: https://openclaw-site-53r.pages.dev"
+      echo "Source: https://github.com/openclaw/memory-stack"
       exit 0
       ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx" >&2
+      echo "Usage: ./install.sh" >&2
       exit 1
       ;;
   esac
@@ -71,35 +68,18 @@ if [[ "$FROM_SELF" == true && "$UPGRADE" != true ]]; then
   exit 1
 fi
 
-if [[ "$UPGRADE" == true && -n "$LICENSE_KEY" ]]; then
-  echo "Error: --upgrade and --key are mutually exclusive. --upgrade reads key from license.json." >&2
-  exit 1
-fi
-
 # ── Upgrade flow ───────────────────────────────────────────────────
 if [[ "$UPGRADE" == true && "$FROM_SELF" != true ]]; then
   header "Upgrade — Phase 1: Download"
 
-  if [[ ! -f "$STATE_DIR/license.json" ]]; then
-    fail "No license.json found at $STATE_DIR/license.json"
-    echo "  Run a fresh install with --key instead." >&2
-    exit 1
-  fi
-
-  LICENSE_KEY=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['key'])" 2>/dev/null)
   CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('$INSTALL_ROOT/version.json'))['version'])" 2>/dev/null || echo "0.0.0")
-
-  if [[ -z "$LICENSE_KEY" ]]; then
-    fail "Could not read license key from $STATE_DIR/license.json"
-    exit 1
-  fi
 
   info "Current version: $CURRENT_VERSION"
   info "Downloading latest release..."
 
-  DOWNLOAD_URL="${ACTIVATE_URL%/activate}/download/latest?key=$LICENSE_KEY"
-  TMP_TAR="/tmp/openclaw-update-$$.tar.gz"
-  TMP_DIR="/tmp/openclaw-update-$$"
+  DOWNLOAD_URL="$RELEASE_BASE_URL/download/latest"
+  TMP_TAR="${TMPDIR:-/tmp}/openclaw-update-$$.tar.gz"
+  TMP_DIR="${TMPDIR:-/tmp}/openclaw-update-$$"
 
   HTTP_CODE=$(curl -sL -w "%{http_code}" -o "$TMP_TAR" "$DOWNLOAD_URL")
   if [[ "$HTTP_CODE" != "200" ]]; then
@@ -107,6 +87,34 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" != true ]]; then
     rm -f "$TMP_TAR"
     exit 1
   fi
+
+  # Verify SHA-256 checksum (mandatory — prevents tampered downloads)
+  SHA256_URL="$RELEASE_BASE_URL/download/latest/sha256"
+  [[ -n "$ENCODED_EMAIL" ]] && SHA256_URL="${SHA256_URL}&email=$ENCODED_EMAIL"
+  EXPECTED_SHA=$(curl -sf "$SHA256_URL" 2>/dev/null || echo "")
+  if [[ -z "$EXPECTED_SHA" ]]; then
+    fail "Could not fetch checksum from server — aborting for safety"
+    fail "  If this persists, contact support@apptah.com"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+  if command -v shasum &>/dev/null; then
+    ACTUAL_SHA=$(shasum -a 256 "$TMP_TAR" | cut -d' ' -f1)
+  elif command -v sha256sum &>/dev/null; then
+    ACTUAL_SHA=$(sha256sum "$TMP_TAR" | cut -d' ' -f1)
+  else
+    fail "Neither shasum nor sha256sum found — cannot verify download integrity"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+  if [[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]]; then
+    fail "Checksum mismatch — download may be corrupted or tampered"
+    fail "  Expected: $EXPECTED_SHA"
+    fail "  Actual:   $ACTUAL_SHA"
+    rm -f "$TMP_TAR"
+    exit 1
+  fi
+  ok "SHA-256 checksum verified"
 
   # Verify tarball integrity
   if ! tar -tzf "$TMP_TAR" > /dev/null 2>&1; then
@@ -168,8 +176,6 @@ fi
 if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
   header "Upgrade — Phase 2: Install"
 
-  LICENSE_KEY=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['key'])" 2>/dev/null)
-  DEVICE_ID=$(python3 -c "import json; print(json.load(open('$STATE_DIR/license.json'))['device_id'])" 2>/dev/null)
   NEW_VERSION=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/version.json'))['version'])" 2>/dev/null || echo "unknown")
 
   # Copy files
@@ -197,10 +203,13 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" == true ]]; then
   cp "$SCRIPT_DIR/plugin/package.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/plugin/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/plugin/openclaw.plugin.json" "$EXT_DIR/"
   [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]] && cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
-  # Copy lib/ modules (engines, grep, pipeline, etc.) — needed by CLI shim
+  # Copy lib/ modules to both paths needed by the bundle:
+  #   dist/index.mjs imports ./lib/llm.mjs  → $EXT_DIR/dist/lib/
+  #   dist/index.mjs imports ../lib/llm.mjs → $EXT_DIR/lib/
   if [[ -d "$SCRIPT_DIR/plugin/lib" ]]; then
-    rm -rf "$EXT_DIR/lib"
+    rm -rf "$EXT_DIR/lib" "$EXT_DIR/dist/lib"
     cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/lib"
+    cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/dist/lib"
   fi
   ok "Plugin updated"
 
@@ -241,18 +250,9 @@ with open(config_path, 'w') as f:
     "$INSTALL_ROOT/.venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt" --quiet 2>/dev/null && ok "Python deps updated" || warn "Python deps update failed (non-fatal)"
   fi
 
-  # Verify license still valid
-  VERIFY_URL="${ACTIVATE_URL%/activate}/verify?key=$LICENSE_KEY&device_id=$DEVICE_ID"
-  VERIFY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$VERIFY_URL" 2>/dev/null || echo "000")
-  if [[ "$VERIFY_STATUS" == "200" ]]; then
-    ok "License verified"
-  else
-    warn "License verification returned HTTP $VERIFY_STATUS (non-fatal)"
-  fi
-
   # Clean up tmp dir if we were exec'd from Phase 1
   PARENT_TMP=$(dirname "$SCRIPT_DIR")
-  if [[ "$PARENT_TMP" == /tmp/openclaw-update-* ]]; then
+  if [[ "$PARENT_TMP" == "${TMPDIR:-/tmp}/openclaw-update-"* ]] || [[ "$PARENT_TMP" == /tmp/openclaw-update-* ]]; then
     rm -rf "$PARENT_TMP"
   fi
 
@@ -272,14 +272,6 @@ with open(config_path, 'w') as f:
   exit 0
 fi
 
-if [[ -z "$LICENSE_KEY" ]]; then
-  echo "Error: license key required." >&2
-  echo "Usage: ./install.sh --key=oc-starter-xxxxxxxxxxxx" >&2
-  echo "" >&2
-  echo "Purchase: https://openclaw-site-53r.pages.dev" >&2
-  exit 1
-fi
-
 # ── Banner ──────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}=========================================${NC}"
@@ -288,85 +280,8 @@ echo -e "${BOLD}=========================================${NC}"
 echo -e "  Date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 echo ""
 
-# ── Step 1: Generate device fingerprint ─────────────────────────────
-header "Step 1/6 — Generating device fingerprint"
-
-generate_device_id() {
-  local raw=""
-  if [[ "$(uname -s)" == "Darwin" ]]; then
-    raw=$(ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null | awk -F'"' '/IOPlatformUUID/{print $4}')
-  fi
-  if [[ -z "$raw" ]] && [[ -f /etc/machine-id ]]; then
-    raw=$(cat /etc/machine-id)
-  fi
-  if [[ -z "$raw" ]]; then
-    raw="$(hostname)$(whoami)$(uname -s)"
-  fi
-  echo -n "$raw" | shasum -a 256 | cut -c1-16
-}
-
-generate_device_name() {
-  echo "$(hostname) ($(whoami))"
-}
-
-DEVICE_ID=$(generate_device_id)
-DEVICE_NAME=$(generate_device_name)
-ok "Device ID: ${DEVICE_ID:0:8}..."
-ok "Device name: $DEVICE_NAME"
-
-# ── Step 2: Activate license ────────────────────────────────────────
-header "Step 2/6 — Activating license"
-
-info "Contacting license server..."
-ACTIVATE_RESPONSE=$(curl -sf -X POST "$ACTIVATE_URL" \
-  -H "Content-Type: application/json" \
-  -d "{\"key\":\"$LICENSE_KEY\",\"device_id\":\"$DEVICE_ID\",\"device_name\":\"$DEVICE_NAME\"}" \
-  2>/dev/null) || {
-  fail "Could not reach license server."
-  echo "  Check your internet connection and try again." >&2
-  echo "  If the problem persists, contact support." >&2
-  exit 1
-}
-
-# Parse response
-if command -v python3 &>/dev/null; then
-  VALID=$(echo "$ACTIVATE_RESPONSE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('valid',''))" 2>/dev/null)
-  REASON=$(echo "$ACTIVATE_RESPONSE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('reason',''))" 2>/dev/null)
-  TIER=$(echo "$ACTIVATE_RESPONSE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tier','starter'))" 2>/dev/null)
-elif command -v jq &>/dev/null; then
-  VALID=$(echo "$ACTIVATE_RESPONSE" | jq -r '.valid // empty')
-  REASON=$(echo "$ACTIVATE_RESPONSE" | jq -r '.reason // empty')
-  TIER=$(echo "$ACTIVATE_RESPONSE" | jq -r '.tier // "starter"')
-else
-  fail "python3 or jq required to parse server response." >&2
-  exit 1
-fi
-
-if [[ "$VALID" != "true" ]] && [[ "$VALID" != "True" ]]; then
-  case "$REASON" in
-    invalid_key)
-      fail "Invalid license key."
-      echo "  Check your key and try again." >&2
-      echo "  Purchase: https://openclaw-site-53r.pages.dev" >&2
-      ;;
-    activation_limit_reached)
-      fail "Device activation limit reached."
-      echo "  Manage your devices: https://openclaw-site-53r.pages.dev/manage" >&2
-      ;;
-    revoked)
-      fail "This license has been revoked."
-      ;;
-    *)
-      fail "Activation failed: ${REASON:-unknown error}"
-      ;;
-  esac
-  exit 1
-fi
-
-ok "License verified"
-
-# ── Step 3: Detect platform capabilities ────────────────────────────
-header "Step 3/6 — Checking platform"
+# ── Step 1: Detect platform capabilities ────────────────────────────
+header "Step 1/5 — Checking platform"
 
 OS="unknown"
 case "$(uname -s)" in
@@ -376,6 +291,25 @@ case "$(uname -s)" in
 esac
 ok "Platform: $OS"
 
+# ── Runtime bootstrap helpers ────────────────────────────────────────
+install_git() {
+  if command -v git &>/dev/null; then
+    return 0
+  fi
+  info "Installing git..."
+  local _sudo=""
+  command -v sudo &>/dev/null && _sudo="sudo"
+  if command -v apt-get &>/dev/null; then
+    $_sudo apt-get update -qq 2>/dev/null && $_sudo apt-get install -y git --quiet 2>/dev/null && ok "git installed" && return 0
+  elif command -v yum &>/dev/null; then
+    $_sudo yum install -y git --quiet 2>/dev/null && ok "git installed" && return 0
+  elif command -v pacman &>/dev/null; then
+    $_sudo pacman -Sy --noconfirm git 2>/dev/null && ok "git installed" && return 0
+  fi
+  warn "Could not auto-install git. Install manually: sudo apt-get install git"
+  return 1
+}
+
 # Check runtime capabilities for backends
 GIT_READY=false
 BUN_READY=false
@@ -384,7 +318,12 @@ if command -v git &>/dev/null; then
   ok "git: $(git --version 2>/dev/null | head -1)"
   GIT_READY=true
 else
-  warn "git not found. Total Recall will not be available."
+  install_git && GIT_READY=true
+  if $GIT_READY; then
+    ok "git: $(git --version 2>/dev/null | head -1)"
+  else
+    warn "git not found. Total Recall will not be available."
+  fi
 fi
 
 if command -v bun &>/dev/null; then
@@ -397,17 +336,33 @@ fi
 
 command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
 
-# ── Runtime bootstrap helpers ────────────────────────────────────────
 install_bun() {
+  # Check if bun is already in PATH or at known location
   if command -v bun &>/dev/null; then
     ok "bun: v$(bun --version 2>/dev/null)"
     return 0
   fi
-  info "Installing Bun..."
-  curl -fsSL https://bun.sh/install | bash 2>/dev/null
-  export BUN_INSTALL="$HOME/.bun"
-  export PATH="$BUN_INSTALL/bin:$PATH"
-  ok "bun: v$(bun --version 2>/dev/null)"
+  # Bun may be installed but not in PATH (common on WSL after fresh install)
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+    ok "bun: v$(bun --version 2>/dev/null) (added to PATH)"
+  else
+    info "Installing Bun..."
+    curl -fsSL https://bun.sh/install | bash 2>/dev/null
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+    ok "bun: v$(bun --version 2>/dev/null)"
+  fi
+  # Persist bun PATH in shell profile
+  local shell_profile=""
+  if [ -f "$HOME/.bashrc" ]; then shell_profile="$HOME/.bashrc"
+  elif [ -f "$HOME/.zshrc" ]; then shell_profile="$HOME/.zshrc"
+  fi
+  if [ -n "$shell_profile" ] && ! grep -q '\.bun/bin' "$shell_profile" 2>/dev/null; then
+    echo 'export PATH="$HOME/.bun/bin:$PATH"' >> "$shell_profile"
+    ok "Added bun to $shell_profile"
+  fi
 }
 
 install_uv() {
@@ -423,23 +378,37 @@ install_uv() {
 
 setup_python_venv() {
   local venv_dir="$HOME/.openclaw/venv"
-  if [ -f "$venv_dir/bin/activate" ]; then
+  # Windows venvs use Scripts/pip.exe; Unix venvs use bin/pip
+  if [ -f "$venv_dir/bin/pip" ] || [ -f "$venv_dir/Scripts/pip.exe" ]; then
     ok "Python venv: $venv_dir (exists)"
     return 0
   fi
+  # On Debian/Ubuntu, python3-venv may not be installed
+  if ! python3 -c "import ensurepip" 2>/dev/null; then
+    info "Installing python3-venv (required for backend dependencies)..."
+    if command -v apt-get &>/dev/null; then
+      sudo apt-get install -y python3-venv --quiet 2>/dev/null || true
+    fi
+  fi
   info "Creating Python venv..."
-  uv venv "$venv_dir" --python 3.12 2>/dev/null || python3 -m venv "$venv_dir" 2>/dev/null
+  rm -rf "$venv_dir"
+  uv venv "$venv_dir" --python 3.12 --seed 2>/dev/null || python3 -m venv "$venv_dir" 2>/dev/null
+  if [ ! -f "$venv_dir/bin/pip" ] && [ ! -f "$venv_dir/Scripts/pip.exe" ]; then
+    warn "Python venv created but pip missing — some backends may be unavailable"
+    return 0
+  fi
   ok "Python venv: $venv_dir"
 }
 
 # ── Step 4: Install files ──────────────────────────────────────────
-header "Step 4/6 — Installing files"
+header "Step 2/5 — Installing files"
 
 mkdir -p "$INSTALL_ROOT" "$STATE_DIR" "$BIN_DIR"
 
-# Copy bin/, lib/
+# Copy bin/, lib/, and install.sh itself (needed by `openclaw-memory upgrade`)
 cp -r "$SCRIPT_DIR/bin" "$INSTALL_ROOT/"
 cp -r "$SCRIPT_DIR/lib" "$INSTALL_ROOT/"
+cp "$SCRIPT_DIR/install.sh" "$INSTALL_ROOT/"
 
 # Copy all backend skills dynamically
 mkdir -p "$INSTALL_ROOT/skills"
@@ -456,8 +425,8 @@ chmod +x "$INSTALL_ROOT/bin/openclaw-memory-qmd"
 
 ok "Files installed to $INSTALL_ROOT"
 
-# ── Step 4b/6 — Installing backend dependencies ─────────────────────
-header "Step 4b/6 — Installing backend dependencies"
+# ── Step 3/5 — Installing backend dependencies ─────────────────────
+header "Step 3/5 — Installing backend dependencies"
 
 # Bootstrap Python venv + ensure PATH includes openclaw bins
 install_uv
@@ -477,7 +446,7 @@ for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do
   [[ -z "$install_hint" ]] && continue
 
   info "Installing $bname..."
-  if eval "$install_hint" 2>&1 | tail -3; then
+  if bash -c "$install_hint" 2>&1 | tail -3; then
     ok "$bname installed"
   else
     warn "$bname: install failed (non-fatal)"
@@ -491,7 +460,7 @@ if ! $SKIP_MODELS && command -v qmd &>/dev/null; then
 fi
 
 # ── Step 5: Create symlink ─────────────────────────────────────────
-header "Step 5/6 — Setting up PATH"
+header "Step 4/5 — Setting up PATH"
 
 ln -sf "$INSTALL_ROOT/bin/openclaw-memory" "$BIN_DIR/openclaw-memory"
 ln -sf "$INSTALL_ROOT/bin/openclaw-memory-qmd" "$BIN_DIR/openclaw-memory-qmd"
@@ -508,9 +477,10 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
 fi
 
 # ── Step 6: Write state files ──────────────────────────────────────
-header "Step 6/6 — Writing configuration"
+header "Step 5/5 — Writing configuration"
 
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+VERSION=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/version.json'))['version'])" 2>/dev/null || echo "0.0.0")
 
 # version.json
 cat > "$INSTALL_ROOT/version.json" <<JSONEOF
@@ -520,21 +490,6 @@ cat > "$INSTALL_ROOT/version.json" <<JSONEOF
 }
 JSONEOF
 ok "version.json"
-
-# license.json
-cat > "$STATE_DIR/license.json" <<JSONEOF
-{
-  "key": "$LICENSE_KEY",
-  "tier": "$TIER",
-  "device_id": "$DEVICE_ID",
-  "device_name": "$DEVICE_NAME",
-  "activated_at": "$NOW",
-  "last_verified": "$NOW",
-  "verify_interval_s": 604800,
-  "revoked": false
-}
-JSONEOF
-ok "license.json"
 
 # backends.json — dynamic discovery from installed wrappers
 _gen_backends() {
@@ -563,7 +518,7 @@ _gen_backends() {
 _gen_backends > "$STATE_DIR/backends.json"
 ok "backends.json"
 
-# ── Step 6b/6 — Register as OpenClaw memory plugin ──────────────────
+# ── Step 5b/5 — Register as OpenClaw memory plugin ──────────────────
 header "Step 6b/6 — Connecting to OpenClaw"
 
 # Copy plugin to OpenClaw extensions directory (same structure as npm-installed plugins)
@@ -577,6 +532,15 @@ if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
   if [[ -f "$SCRIPT_DIR/plugin/dist/index.mjs" ]]; then
     mkdir -p "$EXT_DIR/dist"
     cp "$SCRIPT_DIR/plugin/dist/index.mjs" "$EXT_DIR/dist/"
+    # External modules are resolved relative to dist/index.mjs via two paths:
+    #   ./lib/llm.mjs  → $EXT_DIR/dist/lib/llm.mjs
+    #   ../lib/llm.mjs → $EXT_DIR/lib/llm.mjs
+    # Both must exist for the bundled plugin to load.
+    if [[ -d "$SCRIPT_DIR/plugin/lib" ]]; then
+      rm -rf "$EXT_DIR/dist/lib" "$EXT_DIR/lib"
+      cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/dist/lib"
+      cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/lib"
+    fi
   else
     cp "$SCRIPT_DIR/plugin/index.mjs" "$EXT_DIR/"
   fi
@@ -586,11 +550,7 @@ if [[ -f "$OPENCLAW_JSON" ]] && command -v python3 &>/dev/null; then
   elif [[ -f "$SCRIPT_DIR/openclaw.plugin.json" ]]; then
     cp "$SCRIPT_DIR/openclaw.plugin.json" "$EXT_DIR/"
   fi
-  # Copy lib/ modules (engines, pipeline, graph, etc.)
-  if [[ -d "$SCRIPT_DIR/plugin/lib" ]]; then
-    rm -rf "$EXT_DIR/lib"
-    cp -R "$SCRIPT_DIR/plugin/lib" "$EXT_DIR/lib"
-  fi
+  # lib/ modules are mirrored into dist/lib/ (above) — no separate copy needed
   ok "Plugin files → $EXT_DIR"
 
   # 2. Register in openclaw.json (matching native openclaw plugins install format)

@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execSync, silenceStderr } from "../exec.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { findQmdBin, DEFAULT_CONFIG, HOME } from "../constants.mjs";
@@ -49,7 +49,7 @@ function execQmd(mode, query, collection, maxResults) {
   if (!QMD_BIN) return null;
   const safeQuery = query.replace(/"/g, '\\"');
   const collectionFlag = collection ? ` -c ${collection}` : "";
-  const cmd = `"${QMD_BIN}" ${mode} "${safeQuery}"${collectionFlag} --limit ${maxResults} --json 2>/dev/null`;
+  const cmd = `"${QMD_BIN}" ${mode} "${safeQuery}"${collectionFlag} --limit ${maxResults} --json ${silenceStderr()}`;
   try {
     const result = execSync(cmd, { encoding: "utf-8", timeout: 8000 });
     const data = JSON.parse(result || "{}");

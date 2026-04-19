@@ -83,6 +83,13 @@ import Layout from "../layouts/Layout.astro";
       text-transform: uppercase;
     }
     .badge::before { content: '//'; color: var(--muted); }
+    .badge { transition: all 0.2s; }
+    .badge:hover {
+      background: rgba(0, 229, 255, 0.18);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+      transform: translateY(-1px);
+    }
     .hero h1 {
       font-size: clamp(2.5rem, 6vw, 4rem);
       font-weight: 800;
@@ -145,6 +152,11 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 229, 255, 0.05);
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .terminal:hover {
+      border-color: var(--accent);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 60px rgba(0, 229, 255, 0.1);
     }
     .terminal-bar {
       display: flex;
@@ -224,9 +236,13 @@ import Layout from "../layouts/Layout.astro";
       transition: all 0.3s;
     }
     .feature-card:hover {
-      border-color: var(--border-bright);
-      box-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
-      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 24px rgba(0, 229, 255, 0.1), 0 0 0 1px rgba(0, 229, 255, 0.08);
+      transform: translateY(-4px);
+    }
+    .feature-card:hover .feature-icon {
+      background: rgba(0, 229, 255, 0.2);
+      box-shadow: 0 0 12px var(--accent-glow);
     }
     .feature-icon {
       width: 36px; height: 36px;
@@ -235,6 +251,7 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 8px;
       margin-bottom: 1rem;
       font-size: 1rem;
+      transition: all 0.3s;
     }
     .feature-card h3 {
       font-size: 1rem;
@@ -247,6 +264,105 @@ import Layout from "../layouts/Layout.astro";
       font-size: 0.88rem;
       color: var(--muted);
       line-height: 1.6;
+    }
+    .feature-card .v2-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #00e676;
+      background: rgba(0, 230, 118, 0.1);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── Pricing plans ── */
+    .pricing-plans {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      max-width: 760px;
+      margin: 2rem auto 0;
+    }
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .plan-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+      position: relative;
+    }
+    .plan-card.featured::before {
+      content: 'RECOMMENDED';
+      position: absolute;
+      top: -0.7rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 0.15rem 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .plan-card h3 {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--fg-bright);
+      margin-bottom: 0.5rem;
+    }
+    .plan-card .plan-price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--fg-bright);
+      margin: 0.5rem 0 0.25rem;
+    }
+    .plan-card .plan-price span {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+    .plan-card .plan-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .plan-card ul {
+      text-align: left;
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+    }
+    .plan-card ul li {
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .plan-card ul li::before {
+      content: '✓ ';
+      color: #00e676;
+      font-weight: 700;
+    }
+    .plan-card ul li.disabled {
+      color: rgba(255,255,255,0.25);
+    }
+    .plan-card ul li.disabled::before {
+      content: '— ';
+      color: rgba(255,255,255,0.15);
     }
 
     /* ── Routing flow ── */
@@ -266,6 +382,15 @@ import Layout from "../layouts/Layout.astro";
       font-size: 0.85rem;
       overflow: hidden;
       word-break: break-word;
+      transition: all 0.25s;
+    }
+    .route-item:hover {
+      border-color: var(--border-bright);
+      background: rgba(0, 229, 255, 0.03);
+      transform: translateX(4px);
+    }
+    .route-item:hover .route-arrow {
+      text-shadow: 0 0 8px var(--accent-glow);
     }
     .route-label {
       color: var(--fg-bright);
@@ -297,6 +422,15 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 10px;
       padding: 1.5rem;
       text-align: center;
+      transition: all 0.25s;
+    }
+    .compare-stat:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .compare-stat:hover .compare-stat-number {
+      text-shadow: 0 0 20px var(--accent-glow);
     }
     .compare-stat-number {
       font-family: var(--font-mono);
@@ -393,6 +527,11 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 16px;
       position: relative;
       overflow: hidden;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .cta-box:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.08);
     }
     .cta-box::before {
       content: '';
@@ -437,6 +576,12 @@ import Layout from "../layouts/Layout.astro";
       border: 1px solid var(--border);
       border-radius: 6px;
       line-height: 1.5;
+      transition: all 0.2s;
+    }
+    .disclaimers li:hover {
+      border-color: var(--border-bright);
+      background: rgba(0, 229, 255, 0.03);
+      transform: translateY(-1px);
     }
     .disclaimers li strong {
       color: var(--fg);
@@ -480,6 +625,7 @@ import Layout from "../layouts/Layout.astro";
     .faq-item[open] summary::after {
       transform: rotate(45deg);
     }
+    .faq-item summary:hover { background: rgba(0, 229, 255, 0.03); }
     .faq-item summary::-webkit-details-marker { display: none; }
     .faq-item p {
       padding: 0 1.25rem 1rem;
@@ -517,7 +663,28 @@ import Layout from "../layouts/Layout.astro";
       .terminal-wrap { padding: 0 1.25rem; }
       .cta-section { padding: 3rem 1.25rem; }
     }
+
+    /* ── Cursor spotlight ── */
+    .cursor-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.3s;
+      background: radial-gradient(
+        600px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+        rgba(0, 229, 255, 0.06),
+        transparent 60%
+      );
+    }
+    .cursor-glow.active { opacity: 1; }
+    @media (hover: none) and (pointer: coarse) {
+      .cursor-glow { display: none; }
+    }
   </style>
+
+  <div class="cursor-glow" id="cursor-glow"></div>
 
   <nav>
     <div class="nav-logo">
@@ -550,8 +717,8 @@ import Layout from "../layouts/Layout.astro";
     <h1>Total recall.<br/><span class="glow">90% fewer tokens.</span></h1>
     <p class="subtitle">
       Your agent forgets past decisions and burns tokens re-reading the same context.
-      Memory Stack runs 5 search engines locally, returns only what matters, and never loses a fact.
-      Bring your own API key to unlock LLM-powered fact extraction for the complete experience.
+      Memory Stack runs 5 search engines plus built-in code search — all locally — returns only what matters, and never loses a fact.
+      Works across all your tools, cleans up after itself, and updates automatically.
     </p>
     <div id="promo-hero" style="display:none">
       <div style="margin-bottom:1rem">
@@ -569,7 +736,7 @@ import Layout from "../layouts/Layout.astro";
         Get Memory Stack
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <span class="hero-price">$49 &mdash; one-time purchase, no subscription</span>
+      <span class="hero-price">$49 &mdash; one-time purchase, all features included</span>
     </div>
   </div>
 
@@ -607,32 +774,42 @@ import Layout from "../layouts/Layout.astro";
       <div class="feature-card">
         <div class="feature-icon">&#x1F4A1;</div>
         <h3>3-Tier Token Control</h3>
-        <p>Native memory dumps full text every time. Memory Stack gives you three tiers: L0 auto-recall at ~100 tokens, L1 summaries at ~800, L2 full content on demand. 90% fewer tokens per search — your agent gets exactly what it needs, nothing more.</p>
+        <p>Native memory dumps full text every time. Memory Stack gives you three tiers: compact auto-recall at ~100 tokens, summaries at ~800, full content on demand. 90% fewer tokens per search — your agent gets exactly what it needs, nothing more.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F50D;</div>
         <h3>5-Engine Search Fusion</h3>
-        <p>One search fires 5 engines in parallel — full-text, semantic, markdown, fact store, and compressed history. Results merge with rank fusion and diversity reranking. Right answer on the first try. No wasted tokens chasing wrong context.</p>
+        <p>One search fires 5 engines in parallel — full-text, semantic, markdown, fact store, and compressed history. Results merge with rank fusion and diversity reranking. Right answer on the first try, no wasted tokens chasing wrong context.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F50E;</div>
+        <h3>Built-in Code Search</h3>
+        <p>Find function names, variable names, or any pattern across your entire memory — instantly. Memory Stack has its own search engine that narrows thousands of entries down to a handful of matches before even opening a file. No extra tools needed, works offline, gets faster the more you use it.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F6E1;</div>
-        <h3>Never Forget a Decision</h3>
-        <p>When conversations get long, compression eats old messages. Memory Stack extracts key facts — decisions, deadlines, requirements — into a dedicated store before they disappear. Your agent recalls them instantly instead of you re-explaining. Zero wasted tokens.</p>
+        <h3>Structured Fact Memory</h3>
+        <p>Long conversations get compressed and old messages disappear. Memory Stack captures 8 types of facts — decisions, deadlines, requirements, preferences, and more — with full context attached. When you say "We will NOT use MongoDB", it remembers the negation correctly. Your agent recalls key facts instantly instead of you re-explaining.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F517;</div>
         <h3>Entity Tracking</h3>
-        <p>Flat text search forces your agent to re-read everything to find connections. Memory Stack automatically tracks entities and their relationships — who changed what, what depends on what, how things evolved. Queryable on demand, not buried in old conversations.</p>
+        <p>Memory Stack automatically tracks entities and their relationships — who changed what, what depends on what, how things evolved over time. Queryable on demand, not buried in old conversations.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x1F9F9;</div>
         <h3>Self-Cleaning Memory</h3>
-        <p>Duplicates and junk cost real money every time your agent reads them. 4-level deduplication (exact, normalized, substring, cosine) runs automatically. Health score 0-100 shows exactly what's wasting tokens. Your memory stays lean, your bill stays flat.</p>
+        <p>Duplicates and outdated info cost real money every time your agent reads them. Memory Stack catches duplicates at 3 levels before they're even saved, and when a fact changes — say "use PostgreSQL" becomes "use MySQL" — the old version is automatically archived and the new one takes over. Health score tells you exactly what's wasting tokens.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F310;</div>
+        <h3>Works Across All Your Tools</h3>
+        <p>Memory Stack isn't locked to one editor. Share memory between Claude Code, Cursor, Windsurf, or any MCP-compatible tool. Drop a markdown file into the memory folder and it's instantly searchable. Use the command line to query or add facts from scripts, pipelines, or other agents.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#x26A1;</div>
-        <h3>Bring Your Key. Unlock Full Power.</h3>
-        <p>Core search runs offline out of the box. Add any LLM API key — OpenAI, Anthropic, Ollama, MLX, or any OpenAI-compatible endpoint — and Memory Stack auto-detects it. LLM-powered fact extraction kicks in: every conversation produces structured decisions, deadlines, and entities stored permanently. A few cents per session saves dollars of wasted tokens. Your key, your choice of provider.</p>
+        <h3>Zero Maintenance</h3>
+        <p>Install once and forget about it. Memory Stack sets up its own search index, rebuilds it if anything goes wrong, cleans out stale entries after 90 days, and updates itself in the background. If part of the system isn't available, it keeps working with what it has. Add any LLM API key to unlock smarter fact extraction — your key, your choice of provider.</p>
       </div>
     </div>
   </div>
@@ -775,6 +952,28 @@ import Layout from "../layouts/Layout.astro";
             <td class="no">Vector search needs an embedding provider.</td>
             <td class="yes">Core search runs offline. Bring your own LLM key (OpenAI, Anthropic, Ollama, MLX — any provider) to unlock structured fact extraction from every conversation. Full experience with your key.</td>
           </tr>
+
+          <tr class="compare-group"><td colspan="3">Works everywhere, maintains itself</td></tr>
+          <tr>
+            <td>Can other tools access the same memory?</td>
+            <td class="no">Locked to one client. No external access.</td>
+            <td class="yes">CLI commands let any tool read/write facts. Drop a file into the memory folder — instantly searchable from Claude Code, Cursor, Windsurf, or any MCP client.</td>
+          </tr>
+          <tr>
+            <td>Does memory follow you across projects?</td>
+            <td class="no">Separate memory per workspace.</td>
+            <td class="yes">Unified global memory under one directory. Your facts, entities, and history follow you everywhere.</td>
+          </tr>
+          <tr>
+            <td>What happens when something breaks?</td>
+            <td class="no">Manual troubleshooting.</td>
+            <td class="yes">Self-healing. Rebuilds its own index if corrupted, archives stale entries after 90 days, and falls back to keyword search if vector isn't available. Zero maintenance.</td>
+          </tr>
+          <tr>
+            <td>When a fact changes, does the old version disappear?</td>
+            <td class="no">Old and new versions pile up. You pay tokens for both.</td>
+            <td class="yes">Automatic supersede — old fact archived, new one takes over. Full audit trail, zero token waste.</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -842,7 +1041,7 @@ import Layout from "../layouts/Layout.astro";
   <div class="cta-section">
     <div class="cta-box">
       <div class="price" id="cta-price">$49</div>
-      <div class="price-note" id="cta-note">One-time. No subscription. Pays for itself in the first week of saved API costs.</div>
+      <div class="price-note" id="cta-note">One-time. No subscription. All features included. Pays for itself in the first week of saved API costs.</div>
       <div class="cta-btn-wrap">
         <div id="promo-cta" style="display:none">
           <input type="email" id="promo-email-2" placeholder="your@email.com" style="padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--fg-bright);font-size:1rem;width:280px;max-width:100%;font-family:var(--font-mono);margin-bottom:0.75rem">
@@ -890,11 +1089,11 @@ import Layout from "../layouts/Layout.astro";
       </details>
       <details class="faq-item">
         <summary>Is it a subscription?</summary>
-        <p>No. One-time purchase of $49. You own the code. No recurring fees, no SaaS, no data collection. Just files that live on your machine.</p>
+        <p>No. One-time purchase of $49. You get every feature — search, code search, structured facts, cross-agent sharing, self-healing, everything. No recurring fees, no data collection. Just files that live on your machine.</p>
       </details>
       <details class="faq-item">
         <summary>Do I get updates?</summary>
-        <p>Yes. Memory Stack checks for new versions automatically when it starts up. When an update is available, you'll see a one-line prompt — run the command and you're done. Bug fixes within your version are always free. No manual checking, no update subscriptions.</p>
+        <p>Yes. Memory Stack checks for new versions automatically when it starts up. New features and bug fixes are included. Run one command when prompted and you're done.</p>
       </details>
     </div>
   </div>
@@ -904,8 +1103,8 @@ import Layout from "../layouts/Layout.astro";
       <li><strong>OpenClaw plugin.</strong> One command installs and auto-updates. Requires OpenClaw 2026.3.2 or later.</li>
       <li><strong>Bring your own LLM.</strong> Supports OpenAI, Anthropic, Ollama, MLX — any provider. Auto-detected. Core search works offline; add a key for complete fact extraction.</li>
       <li><strong>macOS + Linux.</strong> Windows via WSL2.</li>
-      <li><strong>One-time purchase.</strong> You own the code. No subscription. No data leaves your machine.</li>
-      <li><strong>Free updates.</strong> Bug fixes within your version are automatic. Just run one command when prompted.</li>
+      <li><strong>One-time purchase.</strong> $49. All features. No subscription. No data leaves your machine.</li>
+      <li><strong>Free updates.</strong> New features and bug fixes ship automatically. Run one command when prompted.</li>
     </ul>
   </div>
 
@@ -915,13 +1114,14 @@ import Layout from "../layouts/Layout.astro";
       <a href="https://clawhub.ai/Apptah/openclaw-memory-stack" target="_blank" rel="noopener">ClawHub</a>
       <a href="/manage">Manage License</a>
       <a href="/thanks">Post-Purchase</a>
+      <a href="mailto:support@apptah.com">Support</a>
     </div>
   </footer>
 
   <script>
     const PAYMENT_LINK = "https://buy.stripe.com/4gM9AT5Qv8go7ni8NueUU00";
-    const API = "https://openclaw-license.busihoward.workers.dev";
-    const PROMO_END = new Date("2026-03-29T23:59:59Z");
+    const API = "https://openclaw-api.apptah.com";
+    const PROMO_END = new Date("2026-03-01T00:00:00Z");
 
     // Check if promo is active
     const now = new Date();
@@ -1010,5 +1210,18 @@ import Layout from "../layouts/Layout.astro";
         document.getElementById("nav-links")?.classList.remove("open");
       });
     });
+    // ── Cursor spotlight ──
+    (() => {
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+      const glow = document.getElementById('cursor-glow');
+      if (!glow) return;
+      document.addEventListener('mousemove', (e: MouseEvent) => {
+        glow.style.setProperty('--glow-x', e.clientX + 'px');
+        glow.style.setProperty('--glow-y', e.clientY + 'px');
+      });
+      document.addEventListener('mouseenter', () => glow.classList.add('active'));
+      document.addEventListener('mouseleave', () => glow.classList.remove('active'));
+      setTimeout(() => glow.classList.add('active'), 100);
+    })();
   </script>
 </Layout>

@@ -1,6 +1,7 @@
-import { execSync } from "node:child_process";
+import { execSync, silenceStderr } from "./exec.mjs";
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, basename } from "node:path";
 import { MAINTENANCE_STATE, MEMORY_DB, RESCUE_DB, findQmdBin } from "./constants.mjs";
 import { initRescueDB, rebuildFactsFTS } from "./rescue.mjs";
 import { analyzeMemoryHealth } from "./quality.mjs";
@@ -26,42 +27,41 @@ export async function ensureWorkspaceQmdReady(cfg = {}, logger = null) {
   // Check if workspace has a collection
   try {
     const cwd = cfg.workspaceDir || process.cwd();
-    const status = execSync(`${qmdBin} status --json 2>/dev/null || echo '{}'`, {
-      encoding: "utf-8",
-      timeout: 5000,
-      cwd,
-    }).trim();
+    // Derive a stable collection name from the workspace directory
+    const collName = basename(cwd).replace(/[^a-z0-9_-]/gi, "-").toLowerCase().slice(0, 50) || "workspace";
 
-    const parsed = JSON.parse(status || "{}");
+    // List existing collections and check if ours is present
+    let collectionExists = false;
+    try {
+      const listOut = execSync(`${qmdBin} collection list ${silenceStderr()} || true`, {
+        encoding: "utf-8",
+        timeout: 5000,
+        cwd,
+      }).trim();
+      collectionExists = listOut.includes(collName);
+    } catch {}
 
-    if (!parsed.collection) {
+    if (!collectionExists) {
       // No collection — try to create one
       log("No QMD collection found — creating workspace collection");
       try {
-        execSync(`${qmdBin} collection add "${cwd}" 2>/dev/null`, {
-          timeout: 10000,
+        execSync(
+          `${qmdBin} collection add "${collName}" --path "${cwd}" --pattern "**" ${silenceStderr()}`,
+          { timeout: 10000, cwd }
+        );
+        // Schedule background embed (detached so it doesn't block the plugin)
+        const embedProc = spawn(qmdBin, ["embed", collName], {
+          detached: true,
+          stdio: "ignore",
           cwd,
         });
-        // Schedule background embed
-        execSync(`${qmdBin} embed --bg 2>/dev/null`, {
-          timeout: 5000,
-          cwd,
-        });
+        embedProc.unref();
         log("QMD collection created, embedding scheduled");
         return { engineSummary: "fts5+qmd(embedding)", healthNote: null };
       } catch {
         log("Failed to create QMD collection — falling back to FTS5-only");
         return { engineSummary: "fts5-only", healthNote: "QMD collection creation failed" };
       }
-    }
-
-    // Collection exists — check embed status
-    if (parsed.embeddings === "pending" || parsed.embeddings === "stale") {
-      try {
-        execSync(`${qmdBin} embed --bg 2>/dev/null`, { timeout: 5000, cwd });
-        log("QMD embeddings stale — background embed scheduled");
-      } catch {}
-      return { engineSummary: "fts5+qmd(embedding)", healthNote: null };
     }
 
     return { engineSummary: "fts5+qmd", healthNote: null };
@@ -137,8 +137,7 @@ export async function runMaintenanceIfDue(cfg = {}, logger = null) {
       if (parseInt(staleCount) > 0) {
         execSync(
           `sqlite3 "${RESCUE_DB}" "INSERT INTO facts_archive SELECT id, type, content, source, timestamp, created_at, key, value, scope, confidence, evidence, supersedes, entities, datetime('now'), 'stale' FROM facts WHERE created_at < '${cutoff}'; DELETE FROM facts WHERE created_at < '${cutoff}';"`,
-          { timeout: 10000 }
-        );
+          { timeout: 10000 });
         log(`Archived ${staleCount} stale facts`);
         rebuildFactsFTS();
       }

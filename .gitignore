@@ -52,6 +52,28 @@ docker-compose.override.yml
 
 # Claude local
 CLAUDE.local.md
+.claude/
 
 # Screenshots
 *.png
+*.jpg
+*.jpeg
+
+# Plugin distribution archives (use GitHub Releases)
+*.zip
+
+# Backup files
+*.bak
+
+# Internal/marketing drafts
+email-preview.html
+promo-drafts.md
+tweet-snapshot.md
+
+# Local tool state
+.stitch/
+.openclaw-memory.json
+.clawhubignore
+
+# Internal planning docs
+docs/superpowers/

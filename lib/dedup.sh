@@ -19,22 +19,11 @@ dedup_load_config() {
   [ ! -f "$config_file" ] && return 0
 
   if has_command python3; then
-    eval "$(python3 -c "
-import json
-try:
-    with open('$config_file') as f:
-        cfg = json.load(f).get('dedup', {})
-    if 'enabled' in cfg:
-        print(f'DEDUP_ENABLED=\"{str(cfg[\"enabled\"]).lower()}\"')
-    if cfg.get('threshold'):
-        print(f'DEDUP_THRESHOLD=\"{cfg[\"threshold\"]}\"')
-    if cfg.get('merge_model'):
-        print(f'DEDUP_MERGE_MODEL=\"{cfg[\"merge_model\"]}\"')
-    if cfg.get('merge_endpoint'):
-        print(f'DEDUP_MERGE_ENDPOINT=\"{cfg[\"merge_endpoint\"]}\"')
-except:
-    pass
-" 2>/dev/null)" || true
+    local _val
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('dedup',{}); v=cfg.get('enabled',''); print(str(v).lower()) if v!='' else exit(1)" 2>/dev/null) && DEDUP_ENABLED="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('dedup',{}); v=cfg.get('threshold',''); print(v) if v else exit(1)" 2>/dev/null) && DEDUP_THRESHOLD="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('dedup',{}); v=cfg.get('merge_model',''); print(v) if v else exit(1)" 2>/dev/null) && DEDUP_MERGE_MODEL="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('dedup',{}); v=cfg.get('merge_endpoint',''); print(v) if v else exit(1)" 2>/dev/null) && DEDUP_MERGE_ENDPOINT="$_val"
   fi
 }
 

@@ -6,7 +6,7 @@
  * Phase 3: Binary posting file path for 80K+ chunks
  */
 
-import { execSync } from "node:child_process";
+import { execSync } from "./exec.mjs";
 import { existsSync, statSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { MEMORY_DB, RESCUE_DB } from "./constants.mjs";

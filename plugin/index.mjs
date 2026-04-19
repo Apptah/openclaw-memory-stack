@@ -12,13 +12,9 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { HOME, MEMORY_DB, DEFAULT_CONFIG, findQmdBin } from "./lib/constants.mjs";
-const LICENSE_PATH = resolve(HOME, ".openclaw/state/license.json");
-
-// License and update modules are installed separately by install.sh.
+import { IS_WIN, hasBinary } from "./lib/exec.mjs";
+// Update module is installed separately by install.sh.
 // Dynamic import so the plugin package itself contains no external URLs.
-async function loadLicenseModule() {
-  try { return await import("./lib/license.mjs"); } catch { return null; }
-}
 async function loadUpdateModule() {
   try { return await import("./lib/update-check.mjs"); } catch { return null; }
 }
@@ -99,6 +95,8 @@ function textResult(text) {
 
 // ─── Plugin registration ─────────────────────────────────────────
 
+let _initDone = false;
+
 export default {
   id: "openclaw-memory-stack",
   name: "OpenClaw Memory Stack",
@@ -106,10 +104,21 @@ export default {
   kind: "memory",
 
   async register(api) {
-    // ── License gate — blocks all functionality if invalid ──
-    const licMod = await loadLicenseModule();
-    if (licMod && !licMod.checkLicense(LICENSE_PATH, api.logger)) return;
+    // ── Guard: skip if already registered (gateway may call register() repeatedly) ──
+    if (_initDone) return;
+    _initDone = true;
 
+    try {
+      await _doRegister(api);
+    } catch (err) {
+      // NEVER crash the gateway — log and degrade gracefully
+      _initDone = false;
+      api.logger.error(`Memory Stack failed to initialize: ${err?.message || err}`);
+    }
+  },
+};
+
+async function _doRegister(api) {
     const cfg = { ...DEFAULT_CONFIG, ...(api.pluginConfig || {}) };
     const autoRecall = cfg.autoRecall !== false;
     const hasQMD = !!findQmdBin();
@@ -118,10 +127,22 @@ export default {
     // Wire user's LLM config into provider chain
     configureLLM(cfg);
 
+    // Platform diagnostics — helps Windows users debug startup issues
+    if (IS_WIN) {
+      const hasBash = hasBinary("bash");
+      const hasSqlite = hasBinary("sqlite3");
+      api.logger.info(`Memory Stack: Windows detected — bash=${hasBash}, sqlite3=${hasSqlite}, qmd=${hasQMD}`);
+      if (!hasBash) {
+        api.logger.warn("Memory Stack: bash not found. Install Git for Windows — it provides bash and sqlite3.");
+      } else if (!hasSqlite) {
+        api.logger.warn("Memory Stack: sqlite3 not found. Add sqlite3 to PATH or reinstall Git for Windows.");
+      }
+    }
+
     api.logger.info(`Memory Stack v2 initializing (qmd=${hasQMD}, db=${hasDB}, recall=${autoRecall})`);
 
     // Cleanup old rescue files (> 30 days)
-    cleanupOldRescueFiles(30);
+    try { cleanupOldRescueFiles(30); } catch { /* non-fatal — may fail on Windows if sqlite3 missing */ }
 
     // Ingest external markdown drop-zone files (fire-and-forget)
     ingestExternalMarkdown(cfg).catch(() => {});
@@ -355,5 +376,7 @@ export default {
       `Memory Stack v2 registered (engines: fts5${hasQMD ? "+qmd" : ""}+memorymd+rescue+lossless+graph, ` +
       `health=on, rescue=on, graph=${cfg.graphEnabled !== false ? "on" : "off"})`
     );
-  },
-};
+}
+
+// Test-only: reset registration guard so tests can call register() multiple times
+export function _resetInitForTesting() { _initDone = false; }

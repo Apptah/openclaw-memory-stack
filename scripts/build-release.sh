@@ -94,9 +94,48 @@ echo "  $BACKEND_COUNT backends present (all with wrapper.sh)"
 
 # Package
 cd "$PROJECT_ROOT/dist"
-tar czf "openclaw-memory-stack-v${VERSION}.tar.gz" "openclaw-memory-stack-v${VERSION}"
+COPYFILE_DISABLE=1 tar czf "openclaw-memory-stack-v${VERSION}.tar.gz" --no-xattrs "openclaw-memory-stack-v${VERSION}" 2>/dev/null || \
+COPYFILE_DISABLE=1 tar czf "openclaw-memory-stack-v${VERSION}.tar.gz" "openclaw-memory-stack-v${VERSION}"
+
+# Generate SHA-256 checksum (upload alongside tarball to R2)
+SHA256=$(shasum -a 256 "$ARTIFACT" | cut -d' ' -f1)
+echo "$SHA256" > "${ARTIFACT}.sha256"
+
+# ── Cross-platform compatibility checks ──────────────────────────
+echo "Cross-platform checks..."
+COMPAT_FAIL=0
+
+# No macOS extended attributes in tarball
+if tar -tzf "$ARTIFACT" 2>&1 | grep -q "apple\.\|LIBARCHIVE\.xattr"; then
+  echo "ERROR: tarball contains macOS extended attributes" >&2
+  COMPAT_FAIL=$((COMPAT_FAIL + 1))
+fi
+
+# No CRLF line endings in shell scripts
+for f in $(find "$BUILD_DIR" -name "*.sh" -type f); do
+  if file "$f" | grep -q "CRLF"; then
+    echo "ERROR: CRLF line endings in $(basename "$f")" >&2
+    COMPAT_FAIL=$((COMPAT_FAIL + 1))
+  fi
+done
+
+# No shasum without fallback in shipped scripts
+for f in "$BUILD_DIR/install.sh" "$BUILD_DIR/bin/openclaw-memory"; do
+  [ -f "$f" ] || continue
+  if grep -q 'shasum' "$f" && ! grep -q 'sha256sum' "$f"; then
+    echo "ERROR: $(basename "$f") uses shasum without sha256sum fallback" >&2
+    COMPAT_FAIL=$((COMPAT_FAIL + 1))
+  fi
+done
+
+if [ "$COMPAT_FAIL" -gt 0 ]; then
+  echo "ERROR: $COMPAT_FAIL cross-platform issue(s) found — fix before release" >&2
+  exit 1
+fi
+echo "  all checks passed"
 
 echo ""
 echo "Artifact: $ARTIFACT"
-echo "Size: $(du -h "$ARTIFACT" | cut -f1)"
+echo "SHA-256:  $SHA256"
+echo "Size:     $(du -h "$ARTIFACT" | cut -f1)"
 echo "Done."

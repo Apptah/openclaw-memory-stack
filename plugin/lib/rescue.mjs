@@ -1,5 +1,5 @@
-import { execSync } from "node:child_process";
-import { existsSync, readFileSync, mkdirSync, readdirSync, renameSync, copyFileSync } from "node:fs";
+import { execSync } from "./exec.mjs";
+import { existsSync, readFileSync, mkdirSync, readdirSync, renameSync, copyFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { HOME, RESCUE_DIR, RESCUE_DB } from "./constants.mjs";
 import { gateFactInsert, archiveFact } from "./dedup-gate.mjs";
@@ -393,7 +393,7 @@ export function cleanupOldRescueFiles(maxAgeDays) {
       for (const file of files) {
         const ts = parseInt(file.split("-")[0], 10);
         if (ts && ts < cutoff) {
-          try { execSync(`rm "${resolve(RESCUE_DIR, file)}"`); } catch { /* ignore */ }
+          try { unlinkSync(resolve(RESCUE_DIR, file)); } catch { /* ignore */ }
         }
       }
     } catch { /* no files */ }

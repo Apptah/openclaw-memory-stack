@@ -230,7 +230,7 @@ import Layout from "../layouts/Layout.astro";
         });
         const data = await res.json();
         if (data.download_url) {
-          const installCmd = `curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=${currentKey}`;
+          const installCmd = `curl -fsSL https://openclaw-api.apptah.com/api/install.sh | bash -s -- --key=${currentKey}`;
           showStatus(installCmd, "success");
           // Auto-copy to clipboard (with fallback)
           try {

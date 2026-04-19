@@ -21,14 +21,12 @@ export function checkForUpdates(home) {
       const state = readJsonSafe(statePath) || {};
       if (Date.now() - (state.last_check || 0) < 86_400_000) return;
 
-      // Read local version + license
+      // Read local version
       const versionFile = resolve(stateDir, "version.json");
-      const licenseFile = resolve(home, ".openclaw/state/license.json");
-      if (!existsSync(versionFile) || !existsSync(licenseFile)) return;
+      if (!existsSync(versionFile)) return;
 
       const version = readJsonSafe(versionFile);
-      const license = readJsonSafe(licenseFile);
-      if (!version || !license) return;
+      if (!version) return;
 
       // Check update (5s timeout)
       const controller = new AbortController();
@@ -36,7 +34,7 @@ export function checkForUpdates(home) {
       const res = await fetch("https://openclaw-api.apptah.com/api/check-update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: license.key, current: version.version }),
+        body: JSON.stringify({ current: version.version }),
         signal: controller.signal,
       });
       clearTimeout(timer);

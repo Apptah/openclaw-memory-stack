@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execSync } from "./exec.mjs";
 import { RESCUE_DB } from "./constants.mjs";
 
 function sqlEscape(val) {

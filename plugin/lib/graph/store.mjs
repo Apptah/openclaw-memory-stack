@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execSync } from "../exec.mjs";
 import { existsSync, readFileSync, renameSync, mkdirSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";

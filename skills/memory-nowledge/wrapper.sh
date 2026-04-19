@@ -270,7 +270,7 @@ cmd_health() {
   fi
 
   # L1: install check
-  if ! eval "$probe_l1" &>/dev/null; then
+  if ! bash -c "$probe_l1" &>/dev/null; then
     local hint
     hint=$(python3 -c "import json; print(json.load(open('$cap_file'))['install_hint'])" 2>/dev/null || echo "")
     contract_health "$BACKEND" "unavailable" "$BACKEND not found. Install: $hint"
@@ -278,7 +278,7 @@ cmd_health() {
   fi
 
   # L2: runtime check
-  if ! eval "$probe_l2" &>/dev/null; then
+  if ! bash -c "$probe_l2" &>/dev/null; then
     contract_health "$BACKEND" "installed" "Nowledge Mem not running at $NOWLEDGE_URL"
     return 0
   fi

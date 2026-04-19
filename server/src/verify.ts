@@ -1,9 +1,23 @@
 import { Env, jsonResponse, errorResponse, rateLimitCheck, LicenseData } from "./utils";
 
 export async function handleVerify(request: Request, env: Env): Promise<Response> {
-  const url = new URL(request.url);
-  const key = url.searchParams.get("key");
-  const deviceId = url.searchParams.get("device_id");
+  // Support both GET (query params) and POST (JSON body)
+  let key: string | null = null;
+  let deviceId: string | null = null;
+
+  if (request.method === "POST") {
+    try {
+      const body = (await request.json()) as { key?: string; device_id?: string };
+      key = body.key ?? null;
+      deviceId = body.device_id ?? null;
+    } catch {
+      return errorResponse("Invalid JSON body");
+    }
+  } else {
+    const url = new URL(request.url);
+    key = url.searchParams.get("key");
+    deviceId = url.searchParams.get("device_id");
+  }
 
   if (!key || !deviceId) {
     return errorResponse("Missing key or device_id");

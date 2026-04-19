@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Production Smoke Test — validates live deployment
-# Usage: OPENCLAW_PROD_URL=https://openclaw-license.busihoward.workers.dev bash test-production-smoke.sh
+# Usage: OPENCLAW_PROD_URL=https://openclaw-api.apptah.com bash test-production-smoke.sh
 set -euo pipefail
 
-PROD_URL="${OPENCLAW_PROD_URL:-https://openclaw-license.busihoward.workers.dev}"
+PROD_URL="${OPENCLAW_PROD_URL:-https://openclaw-api.apptah.com}"
 PASS=0 FAIL=0 WARN=0
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'

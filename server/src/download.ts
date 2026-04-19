@@ -1,31 +1,15 @@
-import { Env, jsonResponse, errorResponse, nanoid, LicenseData, toMinor } from "./utils";
+import { Env, jsonResponse, errorResponse, nanoid, LicenseData, rateLimitCheck } from "./utils";
 
 /**
  * Resolve the download version for a license.
- *
- * - subscriber → global latest (from R2 latest.json)
- * - starter    → latest patch within purchased_minor (from R2 v{minor}/latest-patch.json)
- *                Falls back to license.version if no latest-patch.json exists yet.
+ * All tiers get the global latest version.
  */
 export async function resolveVersion(license: LicenseData, env: Env): Promise<string> {
-  if (license.tier === "subscriber") {
-    // Subscribers get the global latest
-    const obj = await env.RELEASES.get("latest.json");
-    if (obj) {
-      const data = await obj.json<{ version: string }>();
-      return data.version;
-    }
-  }
-
-  // Starter: latest patch within their purchased minor
-  const minor = license.purchased_minor ?? toMinor(license.version);
-  const patchObj = await env.RELEASES.get(`v${minor}/latest-patch.json`);
-  if (patchObj) {
-    const data = await patchObj.json<{ version: string }>();
+  const obj = await env.RELEASES.get("latest.json");
+  if (obj) {
+    const data = await obj.json<{ version: string }>();
     return data.version;
   }
-
-  // Fallback: exact version at purchase
   return license.version;
 }
 
@@ -98,9 +82,17 @@ export async function handleDownload(request: Request, env: Env): Promise<Respon
 export async function handleDownloadLatest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const key = url.searchParams.get("key");
+  const email = url.searchParams.get("email");
+  const deviceId = url.searchParams.get("device_id");
 
-  if (!key) {
-    return errorResponse("Missing license key", 400);
+  if (!key || !email) {
+    return errorResponse("Missing license key or email", 400);
+  }
+
+  const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+  const allowed = await rateLimitCheck(env.KV, ip, 10);
+  if (!allowed) {
+    return errorResponse("Too many download requests — try again in a minute", 429);
   }
 
   const raw = await env.KV.get(`license:${key}`);
@@ -111,6 +103,12 @@ export async function handleDownloadLatest(request: Request, env: Env): Promise<
   const license: LicenseData = JSON.parse(raw);
   if (!license.active) {
     return errorResponse("License has been revoked", 403);
+  }
+  if (license.email !== email) {
+    return errorResponse("Email does not match license", 403);
+  }
+  if (deviceId && !license.devices.some(d => d.id === deviceId)) {
+    return errorResponse("Device not activated on this license", 403);
   }
 
   const version = await resolveVersion(license, env);
@@ -126,6 +124,48 @@ export async function handleDownloadLatest(request: Request, env: Env): Promise<
       "Content-Type": "application/gzip",
       "Content-Disposition": `attachment; filename="openclaw-memory-stack-v${version}.tar.gz"`,
     },
+  });
+}
+
+export async function handleDownloadLatestSha256(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const key = url.searchParams.get("key");
+  const email = url.searchParams.get("email");
+
+  if (!key || !email) {
+    return errorResponse("Missing license key or email", 400);
+  }
+
+  const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+  const allowed = await rateLimitCheck(env.KV, ip, 10);
+  if (!allowed) {
+    return errorResponse("Too many requests — try again in a minute", 429);
+  }
+
+  const raw = await env.KV.get(`license:${key}`);
+  if (!raw) {
+    return errorResponse("Invalid license key", 403);
+  }
+
+  const license: LicenseData = JSON.parse(raw);
+  if (!license.active) {
+    return errorResponse("License has been revoked", 403);
+  }
+  if (license.email !== email) {
+    return errorResponse("Email does not match license", 403);
+  }
+
+  const version = await resolveVersion(license, env);
+  const shaKey = `v${version}/openclaw-memory-stack-v${version}.tar.gz.sha256`;
+  const shaObj = await env.RELEASES.get(shaKey);
+
+  if (!shaObj) {
+    return errorResponse("Checksum not found", 404);
+  }
+
+  const sha256 = (await shaObj.text()).trim();
+  return new Response(sha256, {
+    headers: { "Content-Type": "text/plain" },
   });
 }
 

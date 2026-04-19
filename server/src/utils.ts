@@ -11,13 +11,20 @@ export interface Env {
 }
 
 export interface LicenseData {
-  tier: string;
+  tier: string;            // "starter" | "subscriber"
   email: string;
   created_at: string;
   active: boolean;
-  version: string;
+  version: string;         // exact version at purchase, e.g. "0.1.0"
+  purchased_minor: string; // major.minor at purchase, e.g. "0.1" — starter gets patches within this
   devices: { id: string; name: string; added_at: string }[];
   max_devices: number;
+}
+
+/** Parse "0.1.0" → "0.1" */
+export function toMinor(version: string): string {
+  const parts = version.split(".");
+  return `${parts[0]}.${parts[1]}`;
 }
 
 export function jsonResponse(data: unknown, status = 200): Response {

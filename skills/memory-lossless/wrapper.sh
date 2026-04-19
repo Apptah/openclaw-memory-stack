@@ -271,7 +271,7 @@ cmd_health() {
   fi
 
   # L1: install check
-  if ! eval "$probe_l1" &>/dev/null; then
+  if ! bash -c "$probe_l1" &>/dev/null; then
     local hint
     hint=$(python3 -c "import json; print(json.load(open('$cap_file'))['install_hint'])" 2>/dev/null || echo "")
     contract_health "$BACKEND" "unavailable" "$BACKEND not found. Install: $hint"
@@ -279,15 +279,34 @@ cmd_health() {
   fi
 
   # L2: runtime check
-  if ! eval "$probe_l2" &>/dev/null; then
+  if ! bash -c "$probe_l2" &>/dev/null; then
     contract_health "$BACKEND" "installed" "Runtime dependencies missing"
     return 0
   fi
 
-  # L3: functional probe (with timeout)
+  # L3: functional probe (with timeout — portable across macOS/Linux)
   local timeout_sec="${OPENCLAW_PROBE_TIMEOUT:-5}"
-  if ! timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null; then
-    if [[ $? -eq 124 ]]; then
+  local l3_exit=0
+  if command -v timeout &>/dev/null; then
+    timeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
+  elif command -v gtimeout &>/dev/null; then
+    gtimeout "$timeout_sec" bash -c "$probe_l3" 2>/dev/null || l3_exit=$?
+  else
+    # POSIX fallback: run probe in background, kill after timeout
+    bash -c "$probe_l3" 2>/dev/null &
+    local probe_pid=$!
+    ( sleep "$timeout_sec" && kill "$probe_pid" 2>/dev/null ) &
+    local watchdog_pid=$!
+    if wait "$probe_pid" 2>/dev/null; then
+      l3_exit=0
+    else
+      l3_exit=$?
+    fi
+    kill "$watchdog_pid" 2>/dev/null || true
+    wait "$watchdog_pid" 2>/dev/null || true
+  fi
+  if [ "$l3_exit" -ne 0 ]; then
+    if [ "$l3_exit" -eq 124 ] || [ "$l3_exit" -eq 137 ]; then
       contract_health "$BACKEND" "degraded" "Functional probe timed out (${timeout_sec}s)"
     else
       contract_health "$BACKEND" "degraded" "Functional probe failed"

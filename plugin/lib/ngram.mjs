@@ -6,7 +6,7 @@
  * Phase 3: Binary posting file builder (from SQLite → flat files)
  */
 
-import { execSync } from "node:child_process";
+import { execSync } from "./exec.mjs";
 import { resolve } from "node:path";
 import { PostingWriter } from "./posting.mjs";
 import { MEMORY_ROOT } from "./constants.mjs";

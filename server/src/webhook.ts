@@ -66,6 +66,27 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     return jsonResponse({ received: true });
   }
 
+  // Pro upgrade: update existing license tier, no new key
+  if (tier === "pro") {
+    const starterKey = session.metadata?.starter_key;
+    if (starterKey) {
+      const raw = await env.KV.get(`license:${starterKey}`);
+      if (raw) {
+        const existing: LicenseData = JSON.parse(raw);
+        existing.tier = "pro";
+        await env.KV.put(`license:${starterKey}`, JSON.stringify(existing));
+        console.log("License upgraded to Pro", { email, key_prefix: starterKey.slice(0, 12) + "..." });
+
+        // Store session mapping for /thanks page
+        const sessionId = session.id as string;
+        await env.KV.put(`session:${sessionId}`, JSON.stringify({ key: starterKey, plan: "pro" }), {
+          expirationTtl: 86400,
+        });
+      }
+    }
+    return jsonResponse({ received: true });
+  }
+
   // Generate license key
   const key = `oc-starter-${nanoid(24)}`;
 
@@ -88,6 +109,9 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   await env.KV.put(`session:${sessionId}`, JSON.stringify({ key, downloadUrl: "" }), {
     expirationTtl: 86400,
   });
+
+  // Store email → key reverse index (for Pro upgrade lookup by email)
+  await env.KV.put(`email:${email.toLowerCase()}`, key);
 
   // Send email via Resend (retry once on failure)
   const siteUrl = "https://openclaw-memory.apptah.com";
@@ -131,7 +155,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
           <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#1a1a2e;border-radius:8px;overflow:hidden">
             <tr><td style="padding:16px 20px">
               <p style="margin:0 0 8px;font-size:12px;color:#a0aec0;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">📋 Install Command (copy & paste into terminal)</p>
-              <code style="font-size:13px;color:#00e676;word-break:break-all;line-height:1.6">curl -fsSL https://openclaw-license.busihoward.workers.dev/api/install.sh | bash -s -- --key=${key}</code>
+              <code style="font-size:13px;color:#00e676;word-break:break-all;line-height:1.6">curl -fsSL https://openclaw-api.apptah.com/api/install.sh | bash -s -- --key=${key}</code>
             </td></tr>
           </table>
 

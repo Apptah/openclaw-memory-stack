@@ -1,6 +1,7 @@
 {
   "id": "openclaw-memory-stack",
   "kind": "memory",
+  "hosts": ["openclaw"],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -98,6 +99,84 @@
       }
     }
   },
+  "network": {
+    "endpoints": [
+      {
+        "host": "openclaw-api.apptah.com",
+        "purpose": "license-activation-and-verification",
+        "when": "install (once) + background re-verify every 7 days",
+        "dataSent": ["license_key", "device_id (SHA-256 of machine ID)"],
+        "dataNeverSent": ["memory content", "conversation data", "file contents", "usage analytics"]
+      },
+      {
+        "host": "openclaw-api.apptah.com",
+        "purpose": "update-check",
+        "when": "manual upgrade via install.sh --upgrade",
+        "dataSent": ["current_version"],
+        "dataNeverSent": ["memory content", "conversation data"]
+      },
+      {
+        "host": "localhost:8080",
+        "purpose": "local-llm-mlx",
+        "when": "fact extraction if MLX is running locally",
+        "dataSent": ["conversation excerpts for fact extraction"],
+        "note": "Local only — never leaves machine"
+      },
+      {
+        "host": "localhost:11434",
+        "purpose": "local-llm-ollama",
+        "when": "fact extraction if Ollama is running locally",
+        "dataSent": ["conversation excerpts for fact extraction"],
+        "note": "Local only — never leaves machine"
+      },
+      {
+        "host": "api.openai.com",
+        "purpose": "cloud-llm-fallback",
+        "when": "fact extraction only if user sets OPENCLAW_LLM_API_KEY or OPENAI_API_KEY",
+        "dataSent": ["conversation excerpts for fact extraction"],
+        "note": "User-configurable via llmEndpoint config. Disabled by default if no API key set."
+      }
+    ]
+  },
+  "permissions": {
+    "shellExecution": {
+      "binary": "sqlite3",
+      "purpose": "All shell commands execute sqlite3 for local database read/write. No arbitrary command execution.",
+      "scope": "~/.openclaw/memory-stack/*.sqlite and workspace .openclaw/ databases"
+    },
+    "shellExecution2": {
+      "binary": "qmd",
+      "purpose": "QMD CLI for vector search and collection management",
+      "scope": "Local index at ~/.cache/qmd/"
+    },
+    "fileAccess": {
+      "read": ["~/.openclaw/memory-stack/", "~/.openclaw/memory/external/", ".openclaw/"],
+      "write": ["~/.openclaw/memory-stack/", "~/.openclaw/memory/"],
+      "purpose": "Local memory database and markdown file storage"
+    }
+  },
+  "dataFlow": {
+    "localOnly": [
+      "All search and storage operations (5 engines) run entirely on-device",
+      "File reads (sqlite3, markdown) never leave the machine",
+      "Shell execution (sqlite3, qmd) operates only on local databases"
+    ],
+    "remote": [
+      "License verification: sends only {key, device_id} to openclaw-api.apptah.com",
+      "LLM fact extraction: sends conversation excerpts to user-configured endpoint (local or cloud)"
+    ],
+    "neverTransmitted": [
+      "Raw memory content is never sent to apptah.com servers",
+      "No telemetry, analytics, or usage tracking"
+    ]
+  },
+  "envVars": [
+    {"name": "OPENCLAW_LLM_API_KEY", "purpose": "API key for cloud LLM fact extraction (optional)", "sentTo": "user-configured llmEndpoint only"},
+    {"name": "OPENAI_API_KEY", "purpose": "Fallback API key for OpenAI (optional)", "sentTo": "api.openai.com or user-configured llmEndpoint"},
+    {"name": "OPENCLAW_LCM_DB", "purpose": "Override path to lossless compression database (local only)", "sentTo": "nowhere"},
+    {"name": "OPENCLAW_ROUTER_CONFIG", "purpose": "Override path to router config (local only)", "sentTo": "nowhere"},
+    {"name": "OPENCLAW_BACKENDS_JSON", "purpose": "Override path to backends config (local only)", "sentTo": "nowhere"}
+  ],
   "uiHints": {
     "autoRecall": {
       "label": "Auto Recall",

@@ -19,22 +19,11 @@ hyde_load_config() {
   [ ! -f "$config_file" ] && return 0
 
   if has_command python3; then
-    eval "$(python3 -c "
-import json, sys
-try:
-    with open('$config_file') as f:
-        cfg = json.load(f).get('hyde', {})
-    if cfg.get('model'):
-        print(f'HYDE_MODEL=\"{cfg[\"model\"]}\"')
-    if cfg.get('endpoint'):
-        print(f'HYDE_ENDPOINT=\"{cfg[\"endpoint\"]}\"')
-    if cfg.get('max_tokens'):
-        print(f'HYDE_MAX_TOKENS=\"{cfg[\"max_tokens\"]}\"')
-    if cfg.get('temperature'):
-        print(f'HYDE_TEMPERATURE=\"{cfg[\"temperature\"]}\"')
-except:
-    pass
-" 2>/dev/null)" || true
+    local _val
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('hyde',{}); v=cfg.get('model',''); print(v) if v else exit(1)" 2>/dev/null) && HYDE_MODEL="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('hyde',{}); v=cfg.get('endpoint',''); print(v) if v else exit(1)" 2>/dev/null) && HYDE_ENDPOINT="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('hyde',{}); v=cfg.get('max_tokens',''); print(v) if v else exit(1)" 2>/dev/null) && HYDE_MAX_TOKENS="$_val"
+    _val=$(python3 -c "import json; cfg=json.load(open('$config_file')).get('hyde',{}); v=cfg.get('temperature',''); print(v) if v else exit(1)" 2>/dev/null) && HYDE_TEMPERATURE="$_val"
   fi
 }
 
