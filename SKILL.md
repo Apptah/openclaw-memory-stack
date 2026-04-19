@@ -1,8 +1,8 @@
 ---
 name: openclaw-memory-stack
-description: "Total recall, 90% fewer tokens. The best OpenClaw memory plugin — 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing, and self-healing. Replace native memory with something that actually remembers. No cloud API, no subscription."
-version: "0.5.7"
-license: proprietary
+description: "Total recall, 90% fewer tokens. Open source OpenClaw memory plugin — 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing, and self-healing. Replace native memory with something that actually remembers. No cloud API, no subscription, MIT licensed and free."
+version: "0.5.8"
+license: mit
 metadata:
   openclaw:
     requires:
@@ -14,7 +14,7 @@ metadata:
         - bun
         - qmd
     emoji: "\U0001F9E0"
-    homepage: https://openclaw-memory.apptah.com
+    homepage: https://github.com/Apptah/openclaw-memory-stack
     tags:
       - memory
       - search
@@ -33,14 +33,12 @@ metadata:
       - dedup
       - persistence
     pricing:
-      model: one-time
-      amount: 49
+      model: free
+      amount: 0
       currency: usd
-      url: https://openclaw-memory.apptah.com
-      note: "$49 one-time purchase. No subscription, no cloud API costs. One-time activation requires internet."
+      url: https://github.com/Apptah/openclaw-memory-stack
+      note: "Free and open source under MIT license. No activation, no cloud dependency."
     network:
-      - host: openclaw-api.apptah.com
-        purpose: "License activation (install, once) and re-verification (every 7 days, background). Sends only license_key and device_id. Never sends memory content."
       - host: openclaw-api.apptah.com
         purpose: "Update check on manual upgrade. Sends only current_version."
       - host: localhost:8080
