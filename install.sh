@@ -63,6 +63,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Guards ─────────────────────────────────────────────────────────
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*)
+    echo ""
+    echo "  [ERROR] Windows is not supported natively."
+    echo ""
+    echo "  OpenClaw Memory Stack requires a POSIX shell environment."
+    echo "  Run it inside WSL2 (recommended) or Git Bash:"
+    echo ""
+    echo "    WSL2:     wsl --install  (then re-run ./install.sh inside Ubuntu)"
+    echo "    Git Bash: may work but path/symlink issues are possible"
+    echo ""
+    echo "  If you see 'plugin not found' in OpenClaw, remove the plugin entry:"
+    echo "    openclaw plugin remove openclaw-memory-stack"
+    echo ""
+    exit 1
+    ;;
+esac
+
 if [[ "$FROM_SELF" == true && "$UPGRADE" != true ]]; then
   echo "Error: --from-self is an internal flag. Use --upgrade instead." >&2
   exit 1
