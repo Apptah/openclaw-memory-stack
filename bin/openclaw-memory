@@ -9,7 +9,7 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 ROUTER="$INSTALL_ROOT/skills/memory-router/router.sh"
 
 # Version
-VERSION="0.5.8"
+VERSION="0.6.0"
 
 # Source libraries
 source "$INSTALL_ROOT/lib/platform.sh"
@@ -32,6 +32,11 @@ Usage:
                                          Insert structured fact (no license required)
   openclaw-memory recent [--days N] [--format json] [--limit N]
                                          Show recently added facts
+  openclaw-memory tier set <file> --l0 "<text>" --l1 "<text>"
+                                         Store agent-generated L0/L1 summaries for <file>
+  openclaw-memory tier show <file> [--level L0|L1|L2]
+                                         Read stored summary at the requested tier
+  openclaw-memory tier auto <file>       Heuristic fallback when no agent context available
 
 Options:
   --hint <hint>       Routing hint: exact, semantic, timeline
@@ -162,6 +167,106 @@ if not data: print('No recent facts.')
 " 2>/dev/null || echo "$RESULT"
   fi
   exit 0
+fi
+
+# ── tier: agent-provided L0/L1 summaries ─────────────────────────
+# The OpenClaw agent (an LLM) summarizes content from its own context and
+# calls this subcommand to store the summaries. No external LLM service required.
+if [ "${1:-}" = "tier" ]; then
+  shift
+  source "$INSTALL_ROOT/lib/tiered-loading.sh"
+  ACTION="${1:-}"; shift || true
+  case "$ACTION" in
+    set)
+      FILE="" L0="" L1=""
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --l0)   L0="$2"; shift 2 ;;
+          --l1)   L1="$2"; shift 2 ;;
+          --file) FILE="$2"; shift 2 ;;
+          *)      [ -z "$FILE" ] && FILE="$1"; shift ;;
+        esac
+      done
+      if [ -z "$FILE" ]; then
+        echo '{"status":"error","reason":"--file (or first arg) is required"}' >&2
+        exit 1
+      fi
+      if [ -z "$L0" ] && [ -z "$L1" ]; then
+        echo '{"status":"error","reason":"provide at least one of --l0 or --l1"}' >&2
+        exit 1
+      fi
+      set_tiers_explicit "$FILE" "$L0" "$L1"
+      echo '{"status":"ok"}'
+      exit 0
+      ;;
+    show)
+      FILE="" LEVEL="L0"
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --level) LEVEL="$2"; shift 2 ;;
+          --file)  FILE="$2"; shift 2 ;;
+          *)       [ -z "$FILE" ] && FILE="$1"; shift ;;
+        esac
+      done
+      if [ -z "$FILE" ]; then
+        echo '{"status":"error","reason":"--file (or first arg) is required"}' >&2
+        exit 1
+      fi
+      DIR="$(dirname "$FILE")"
+      BASE="$(basename "$FILE")"
+      case "$LEVEL" in
+        L0) SIDECAR="$DIR/.abstract" ;;
+        L1) SIDECAR="$DIR/.overview" ;;
+        L2) cat "$FILE" 2>/dev/null; exit 0 ;;
+        *) echo "Unknown level: $LEVEL (use L0|L1|L2)" >&2; exit 1 ;;
+      esac
+      if [ ! -f "$SIDECAR" ]; then
+        echo "(no $LEVEL summary stored for $BASE)"
+        exit 0
+      fi
+      python3 - "$SIDECAR" "$BASE" << 'PYEOF'
+import sys
+sidecar, target = sys.argv[1], sys.argv[2]
+with open(sidecar) as f:
+    text = f.read()
+sections = {}
+key = None; buf = []
+for line in text.split('\n'):
+    if line.startswith('## '):
+        if key: sections[key] = '\n'.join(buf).strip()
+        key = line[3:].strip(); buf = []
+    else:
+        buf.append(line)
+if key: sections[key] = '\n'.join(buf).strip()
+print(sections.get(target, f'(no entry for {target})'))
+PYEOF
+      exit 0
+      ;;
+    auto)
+      # Heuristic fallback: derive L0/L1 from the file itself (no LLM, no agent).
+      FILE="${1:-}"
+      [ -z "$FILE" ] && { echo "Usage: tier auto <file>" >&2; exit 1; }
+      generate_tiers "$FILE"
+      echo '{"status":"ok","mode":"heuristic"}'
+      exit 0
+      ;;
+    "")
+      cat <<TIERHELP
+Usage:
+  openclaw-memory tier set <file> --l0 "<one-sentence abstract>" --l1 "<~800-token overview>"
+  openclaw-memory tier show <file> [--level L0|L1|L2]
+  openclaw-memory tier auto <file>     # heuristic-only fallback (no LLM)
+
+The OpenClaw agent should generate L0/L1 summaries from its own context and
+call \`tier set\`. \`tier auto\` is a non-LLM fallback for offline/unattended use.
+TIERHELP
+      exit 0
+      ;;
+    *)
+      echo "Unknown tier action: $ACTION (use: set | show | auto)" >&2
+      exit 1
+      ;;
+  esac
 fi
 
 # ── Parse remaining arguments ─────────────────────────────────────
