@@ -1,7 +1,7 @@
 ---
 name: openclaw-memory-stack
 description: "Total recall, 90% fewer tokens. Open source OpenClaw memory plugin — 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing, and self-healing. Replace native memory with something that actually remembers. No cloud API, no subscription, MIT licensed and free."
-version: "0.6.0"
+version: "0.6.1"
 license: mit
 metadata:
   openclaw:

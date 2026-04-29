@@ -81,6 +81,61 @@ case "$(uname -s 2>/dev/null)" in
     ;;
 esac
 
+# WSL detection (Linux only). WSL2 is supported; WSL1 is refused because its
+# Plan9 filesystem and lack of a real Linux kernel break sqlite locking + bun.
+# WSL2 detection uses multiple signals because kernel naming varies — some
+# WSL2 kernels report only `*-microsoft-standard` without an explicit `WSL2`
+# suffix. Any one signal is sufficient for WSL2.
+IS_WSL=false
+IS_WSL2=false
+if [[ "$(uname -s 2>/dev/null)" == "Linux" ]]; then
+  if grep -qi microsoft /proc/version 2>/dev/null || grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+    IS_WSL=true
+    KMAJOR=$(uname -r 2>/dev/null | cut -d. -f1)
+    if [ -d /run/WSL ] \
+       || [ -e /proc/sys/fs/binfmt_misc/WSLInterop-late ] \
+       || grep -qi "WSL2" /proc/sys/kernel/osrelease 2>/dev/null \
+       || grep -qi "WSL2" /proc/version 2>/dev/null \
+       || { [ -n "$KMAJOR" ] && [ "$KMAJOR" -ge 5 ] 2>/dev/null; }; then
+      IS_WSL2=true
+    fi
+  fi
+fi
+
+if [[ "$IS_WSL" == true && "$IS_WSL2" != true ]]; then
+  echo ""
+  echo "  [ERROR] WSL1 is not supported."
+  echo ""
+  echo "  WSL1 uses a translation layer that breaks SQLite locking and Bun."
+  echo "  Upgrade to WSL2 from PowerShell (admin):"
+  echo ""
+  echo "    wsl --set-version <distro> 2"
+  echo "    wsl --set-default-version 2"
+  echo ""
+  echo "  Verify with: wsl -l -v   (VERSION column should show 2)"
+  echo ""
+  exit 1
+fi
+
+# WSL2 + project sitting on /mnt/c (or any /mnt/<drive>): non-fatal warning.
+# Cross-filesystem IO is ~10x slower and chmod/symlink semantics are unreliable,
+# which causes intermittent breakage in qmd, git hooks, and node_modules.
+if [[ "$IS_WSL2" == true ]]; then
+  if [[ "$SCRIPT_DIR" == /mnt/* || "$HOME" == /mnt/* ]]; then
+    echo ""
+    echo "  [WARN] Running from a Windows-mounted path (/mnt/...)."
+    echo ""
+    echo "  WSL2 cross-filesystem IO is slow and chmod/symlinks may misbehave."
+    echo "  Recommended: clone into your Linux home and re-run:"
+    echo ""
+    echo "    cp -R \"$SCRIPT_DIR\" ~/openclaw-memory-stack"
+    echo "    cd ~/openclaw-memory-stack && ./install.sh"
+    echo ""
+    echo "  Continuing in 5 seconds — Ctrl+C to abort..."
+    sleep 5
+  fi
+fi
+
 if [[ "$FROM_SELF" == true && "$UPGRADE" != true ]]; then
   echo "Error: --from-self is an internal flag. Use --upgrade instead." >&2
   exit 1
@@ -108,7 +163,7 @@ if [[ "$UPGRADE" == true && "$FROM_SELF" != true ]]; then
 
   # Verify SHA-256 checksum (mandatory — prevents tampered downloads)
   SHA256_URL="$RELEASE_BASE_URL/download/latest/sha256"
-  [[ -n "$ENCODED_EMAIL" ]] && SHA256_URL="${SHA256_URL}&email=$ENCODED_EMAIL"
+  [[ -n "${ENCODED_EMAIL:-}" ]] && SHA256_URL="${SHA256_URL}&email=$ENCODED_EMAIL"
   EXPECTED_SHA=$(curl -sf "$SHA256_URL" 2>/dev/null || echo "")
   if [[ -z "$EXPECTED_SHA" ]]; then
     fail "Could not fetch checksum from server — aborting for safety"
@@ -347,9 +402,12 @@ fi
 if command -v bun &>/dev/null; then
   ok "bun: v$(bun --version 2>/dev/null)"
   BUN_READY=true
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+  export PATH="$HOME/.bun/bin:$PATH"
+  ok "bun: v$(bun --version 2>/dev/null) (found at \$HOME/.bun/bin)"
+  BUN_READY=true
 else
-  warn "bun not found. QMD will not be available."
-  warn "Install: https://bun.sh/docs/installation"
+  warn "bun not found — will attempt to install in Step 3."
 fi
 
 command -v python3 &>/dev/null && ok "python3: $(python3 --version 2>/dev/null)" || warn "python3 not found."
@@ -449,6 +507,18 @@ header "Step 3/5 — Installing backend dependencies"
 # Bootstrap Python venv + ensure PATH includes openclaw bins
 install_uv
 setup_python_venv
+
+# Bootstrap bun if missing — qmd's install_hint depends on it.
+if ! $BUN_READY; then
+  install_bun || true
+  if command -v bun &>/dev/null; then
+    BUN_READY=true
+  else
+    warn "bun install failed — qmd backend will be skipped"
+    warn "  retry manually: curl -fsSL https://bun.sh/install | bash"
+  fi
+fi
+
 export PATH="$BIN_DIR:$INSTALL_ROOT/bin:$PATH"
 
 for skill_dir in "$INSTALL_ROOT/skills/memory-"*; do

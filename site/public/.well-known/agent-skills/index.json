@@ -10,7 +10,7 @@
       "id": "openclaw-memory-stack",
       "name": "OpenClaw Memory Stack",
       "description": "Total recall, 90% fewer tokens. 5-engine local search (BM25, vector, DAG-compressed history, fact store, markdown), structured fact extraction, smart dedup, cross-agent sharing. MIT licensed and free.",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "license": "MIT",
       "tags": [
         "memory", "search", "rag", "vector-search", "code-search",

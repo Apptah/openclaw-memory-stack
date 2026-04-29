@@ -9,7 +9,7 @@ INSTALL_ROOT="${OPENCLAW_INSTALL_ROOT:-$HOME/.openclaw/memory-stack}"
 ROUTER="$INSTALL_ROOT/skills/memory-router/router.sh"
 
 # Version
-VERSION="0.6.0"
+VERSION="0.6.1"
 
 # Source libraries
 source "$INSTALL_ROOT/lib/platform.sh"
