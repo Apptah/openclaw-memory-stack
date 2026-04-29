@@ -1,7 +1,7 @@
 ---
 name: openclaw-memory-stack
 description: "Total recall, 90% fewer tokens. Open source OpenClaw memory plugin — 5-engine local search, structured fact extraction, smart dedup, cross-agent sharing, and self-healing. Replace native memory with something that actually remembers. No cloud API, no subscription, MIT licensed and free."
-version: "0.5.8"
+version: "0.6.1"
 license: mit
 metadata:
   openclaw:
@@ -170,6 +170,30 @@ Every wasted token is money burned. Memory Stack eliminates the waste.
 | L0 | ~100 | Auto-recall every turn — minimal cost |
 | L1 | ~800 | On-demand search summary |
 | L2 | full | Full content on request |
+
+**The agent generates summaries — no separate LLM service required.**
+
+When the OpenClaw agent stores or surfaces a memory, it should also produce L0/L1
+summaries from its own context (it is already an LLM) and persist them via:
+
+```bash
+openclaw-memory tier set <file> \
+  --l0 "<one-sentence abstract, ≤100 tokens>" \
+  --l1 "<focused overview, ≤800 tokens, covers what + why + when to use>"
+```
+
+Read back at any tier:
+
+```bash
+openclaw-memory tier show <file> --level L0   # or L1, L2
+```
+
+For unattended/offline contexts where no agent is available, fall back to a pure
+heuristic (first non-empty line for L0, char-bounded prefix for L1):
+
+```bash
+openclaw-memory tier auto <file>
+```
 
 ## Structured Fact Memory
 

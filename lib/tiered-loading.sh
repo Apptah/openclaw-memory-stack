@@ -6,16 +6,16 @@
 TIERED_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$TIERED_LIB_DIR/platform.sh"
 
-# Tier token budgets
+# Tier token budgets — must stay aligned with landing claim "3 tiers: ~100 / ~800 / full"
 TIER_L0_TOKENS="${TIER_L0_TOKENS:-100}"
-TIER_L1_TOKENS="${TIER_L1_TOKENS:-2000}"
+TIER_L1_TOKENS="${TIER_L1_TOKENS:-800}"
 
 # Thresholds for auto-expansion
 TIER_AUTO_EXPAND_THRESHOLD="${TIER_AUTO_EXPAND_THRESHOLD:-0.6}"
 
-# LLM config for tiered-generate subcommand
-TIER_MODEL="${TIER_MODEL:-qwen2.5:7b}"
-TIER_ENDPOINT="${TIER_ENDPOINT:-http://localhost:11434}"
+# Tier summarization is performed by the OpenClaw agent (which IS an LLM) and
+# stored via `openclaw-memory tier set` — no separate Ollama/MLX install required.
+# `generate_tiers` (heuristic) remains as an offline fallback.
 
 # ── L0: Abstract (~100 tokens) ──────────────────────────────
 # One-sentence summary for relevance checking.
@@ -60,9 +60,9 @@ print(Path('$file_path').stem.replace('-', ' ').replace('_', ' '))
 " 2>/dev/null
 }
 
-# ── L1: Overview (~2K tokens) ────────────────────────────────
+# ── L1: Overview (~800 tokens) ───────────────────────────────
 # Core info + usage scenarios.
-# Heuristic: first ~2000 tokens (approx chars / 0.75).
+# Heuristic: first ~TIER_L1_TOKENS tokens (approx chars / 0.75).
 
 _extract_l1_heuristic() {
   local file_path="$1"
@@ -202,102 +202,28 @@ generate_tiers_dir() {
   echo "Generated tiers for $count files in $directory"
 }
 
-# ── LLM-powered tier generation ──────────────────────────────
-# Usage: generate_tiers_llm <file_path>
-# Requires Ollama. Falls back to heuristic on failure.
-generate_tiers_llm() {
-  local file_path="$1"
+# ── Agent-provided tier summaries ────────────────────────────
+# Usage: set_tiers_explicit <file_path> <l0_text> <l1_text>
+# The OpenClaw agent (an LLM) generates summaries from its own context and
+# stores them via this helper. No separate Ollama/MLX service required.
+# Either l0_text or l1_text may be empty to leave that tier unchanged.
+set_tiers_explicit() {
+  local file_path="$1" l0_text="$2" l1_text="$3"
 
   if [ ! -f "$file_path" ]; then
     echo "Error: file not found: $file_path" >&2
     return 1
   fi
 
-  # Check Ollama
-  if ! curl -sf "${TIER_ENDPOINT}/api/tags" >/dev/null 2>&1; then
-    echo "Ollama not available, falling back to heuristic" >&2
-    generate_tiers "$file_path"
-    return 0
-  fi
-
-  local content
-  content=$(head -c 8000 "$file_path" 2>/dev/null)
   local dir basename
   dir="$(dirname "$file_path")"
   basename="$(basename "$file_path")"
 
-  # Generate L0 via LLM
-  local l0_prompt="Summarize this document in exactly one sentence (max 100 tokens). Be specific about what it contains and its purpose.\n\nDocument:\n${content}"
-  local l0_payload
-  l0_payload=$(python3 -c "
-import json
-print(json.dumps({
-    'model': '$TIER_MODEL',
-    'prompt': '''$l0_prompt''',
-    'stream': False,
-    'options': {'num_predict': 100, 'temperature': 0.3}
-}))
-" 2>/dev/null) || {
-    generate_tiers "$file_path"
-    return 0
-  }
-
-  local l0_response l0_text
-  l0_response=$(curl -sf --max-time 30 \
-    -X POST "${TIER_ENDPOINT}/api/generate" \
-    -H "Content-Type: application/json" \
-    -d "$l0_payload" 2>/dev/null) || true
-
-  l0_text=$(python3 -c "
-import json
-data = json.loads('''${l0_response}''')
-print(data.get('response', '').strip())
-" 2>/dev/null) || true
-
   if [ -n "$l0_text" ]; then
     _update_tier_file "$dir/.abstract" "$basename" "$l0_text"
-  else
-    local heuristic_l0
-    heuristic_l0=$(_extract_l0_heuristic "$file_path")
-    _update_tier_file "$dir/.abstract" "$basename" "$heuristic_l0"
   fi
-
-  # Generate L1 via LLM
-  local l1_prompt="Write a concise overview (~500 words) of this document. Include: what it does, key concepts, usage scenarios, and important details. Skip boilerplate.\n\nDocument:\n${content}"
-  local l1_payload
-  l1_payload=$(python3 -c "
-import json
-print(json.dumps({
-    'model': '$TIER_MODEL',
-    'prompt': '''$l1_prompt''',
-    'stream': False,
-    'options': {'num_predict': 700, 'temperature': 0.3}
-}))
-" 2>/dev/null) || {
-    local heuristic_l1
-    heuristic_l1=$(_extract_l1_heuristic "$file_path")
-    _update_tier_file "$dir/.overview" "$basename" "$heuristic_l1"
-    return 0
-  }
-
-  local l1_response l1_text
-  l1_response=$(curl -sf --max-time 60 \
-    -X POST "${TIER_ENDPOINT}/api/generate" \
-    -H "Content-Type: application/json" \
-    -d "$l1_payload" 2>/dev/null) || true
-
-  l1_text=$(python3 -c "
-import json
-data = json.loads('''${l1_response}''')
-print(data.get('response', '').strip())
-" 2>/dev/null) || true
-
   if [ -n "$l1_text" ]; then
     _update_tier_file "$dir/.overview" "$basename" "$l1_text"
-  else
-    local heuristic_l1
-    heuristic_l1=$(_extract_l1_heuristic "$file_path")
-    _update_tier_file "$dir/.overview" "$basename" "$heuristic_l1"
   fi
 }
 

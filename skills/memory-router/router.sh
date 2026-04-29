@@ -288,12 +288,14 @@ detect_rule() {
   local query_lower
   query_lower=$(echo "$QUERY" | tr '[:upper:]' '[:lower:]')
 
-  # Rules checked in order (first match wins, except ambiguous_default is last)
-  echo "$query_lower" | python3 - "$ROUTER_CONFIG" << 'PYEOF' 2>/dev/null
+  # Rules checked in order (first match wins, except ambiguous_default is last).
+  # Query passed as argv[2] — NOT via stdin — because heredoc and pipe both target
+  # stdin, and pipe wins, which would feed the query in as the Python script.
+  python3 - "$ROUTER_CONFIG" "$query_lower" << 'PYEOF' 2>/dev/null
 import json, re, sys
 
 config_path = sys.argv[1]
-query = sys.stdin.read().strip()
+query = sys.argv[2].strip()
 
 with open(config_path) as f:
     config = json.load(f)

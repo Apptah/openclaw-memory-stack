@@ -11,6 +11,11 @@ import { resolve } from "node:path";
 import { PostingWriter } from "./posting.mjs";
 import { MEMORY_ROOT } from "./constants.mjs";
 
+// SQL single-quote escape — defense in depth. chunk_id and hash come from the
+// local chunks table, but we still escape so a future writer that accepts
+// arbitrary text cannot break the inline SQL.
+const sqlQ = (s) => String(s ?? "").replace(/'/g, "''");
+
 // =============================================================================
 // Trigram Extraction
 // =============================================================================
@@ -224,9 +229,12 @@ export function ensureTrigramSchema(dbPath) {
  * @param {string} hash
  */
 export function indexChunkTrigrams(dbPath, chunkId, text, hash) {
+  const cid = sqlQ(chunkId);
+  const h = sqlQ(hash);
+
   // Check if already indexed with same hash
   try {
-    const checkSql = `SELECT indexed_hash FROM trigram_meta WHERE chunk_id = '${chunkId}'`;
+    const checkSql = `SELECT indexed_hash FROM trigram_meta WHERE chunk_id = '${cid}'`;
     const existing = execSync(`sqlite3 -json "${dbPath}" "${checkSql}"`, { encoding: "utf-8", timeout: 3000 });
     const rows = JSON.parse(existing || "[]");
     if (rows.length > 0 && rows[0].indexed_hash === hash) return; // Already up to date
@@ -235,20 +243,20 @@ export function indexChunkTrigrams(dbPath, chunkId, text, hash) {
   const trigrams = extractTrigrams(text);
 
   // Always delete old entries first (handles shrunk/empty text clearing stale postings)
-  const deleteSql = `DELETE FROM trigrams WHERE chunk_id = '${chunkId}'; DELETE FROM trigram_meta WHERE chunk_id = '${chunkId}';`;
+  const deleteSql = `DELETE FROM trigrams WHERE chunk_id = '${cid}'; DELETE FROM trigram_meta WHERE chunk_id = '${cid}';`;
 
   if (trigrams.size === 0) {
     // No trigrams — just clear old postings and record the hash so we don't revisit
-    const metaSql = `INSERT OR REPLACE INTO trigram_meta (chunk_id, indexed_hash) VALUES ('${chunkId}','${hash}');`;
+    const metaSql = `INSERT OR REPLACE INTO trigram_meta (chunk_id, indexed_hash) VALUES ('${cid}','${h}');`;
     execSync(`sqlite3 "${dbPath}" "${deleteSql} ${metaSql}"`, { encoding: "utf-8", timeout: 10000 });
     return;
   }
 
   // Insert new trigrams + meta
   const insertValues = [...trigrams].map(t =>
-    `('${t.replace(/'/g, "''")}','${chunkId}')`
+    `('${sqlQ(t)}','${cid}')`
   ).join(",");
-  const insertSql = `INSERT OR IGNORE INTO trigrams (trigram, chunk_id) VALUES ${insertValues}; INSERT OR REPLACE INTO trigram_meta (chunk_id, indexed_hash) VALUES ('${chunkId}','${hash}');`;
+  const insertSql = `INSERT OR IGNORE INTO trigrams (trigram, chunk_id) VALUES ${insertValues}; INSERT OR REPLACE INTO trigram_meta (chunk_id, indexed_hash) VALUES ('${cid}','${h}');`;
 
   execSync(`sqlite3 "${dbPath}" "${deleteSql} ${insertSql}"`, { encoding: "utf-8", timeout: 10000 });
 }

@@ -76,7 +76,7 @@ Most AI memory systems make you choose between control and convenience.
 
 | | Hermes Agent | Google Always-On | Memory Stack |
 |---|---|---|---|
-| **Routing** | Agent decides (opaque) | Google decides (black box) | 7 deterministic rules — inspectable |
+| **Routing** | Agent decides (opaque) | Google decides (black box) | 13 deterministic rules — inspectable |
 | **Fallback** | None | Uncontrollable | Sequential chain — poor result → next backend |
 | **Storage** | Developer-managed DB | Google cloud | Local git + SQLite — nothing leaves your machine |
 | **Token control** | None | None | 3 tiers: ~100 / ~800 / full |
@@ -94,6 +94,7 @@ Hermes gives control but no routing infrastructure. Google gives convenience but
 |----------|--------|
 | macOS | Fully tested. |
 | Linux | Documented. Not fully validated at launch. |
+| Windows | Not supported natively. Use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) (recommended) or Git Bash. |
 
 ---
 
